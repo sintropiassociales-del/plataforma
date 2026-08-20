@@ -125,6 +125,90 @@ var PRIORIDADES = ['Alta', 'Media', 'Baja'];
 var CATS_PLA02 = ['Objetivo general', 'Objetivo específico', 'Resultado esperado'];
 var PLAZOS = ['Corto plazo (menos de 6 meses)', 'Mediano plazo (6-18 meses)', 'Largo plazo (más de 18 meses)'];
 var ESTATUS_PROYECTO = ['Activo', 'Pausado', 'Cerrado'];
+var CATS_DIA01 = ['Necesidad percibida', 'Recurso disponible', 'Expectativa del cliente', 'Riesgo inicial', 'Antecedente relevante', 'Restricción / limitante'];
+var URGENCIAS_DIA01 = ['Alta', 'Media', 'Baja'];
+var FORMATOS_DESCARGA = [['pdf', 'PDF'], ['docx', 'Word'], ['gdoc', 'Google Doc'], ['xlsx', 'Excel'], ['gsheet', 'Google Sheet']];
+
+/* ============================================================
+ * Catálogo de instrumentos disponibles en la plataforma. Para
+ * agregar un instrumento nuevo: define su entrada aquí (tabla +
+ * formulario) y las funciones apiListarXXX/apiGuardarFilaXXX/... del
+ * lado del backend (WebApp.gs) — el resto de la interfaz (pestañas,
+ * tabla, modal de captura, validar, descargar) se genera solo.
+ * ============================================================ */
+var INSTRUMENTOS = {
+  dia01: {
+    titulo: 'INS-DIA-01 Ficha de diagnóstico',
+    listar: 'listarDIA01', guardar: 'guardarFilaDIA01', eliminar: 'eliminarFilaDIA01',
+    validar: 'validarDIA01', descargar: 'generarDescargableDIA01',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'categoria', label: 'Categoría' },
+      { key: 'descripcion', label: 'Descripción' },
+      { key: 'fuente', label: 'Fuente' },
+      { key: 'urgencia', label: 'Urgencia' }
+    ],
+    campos: [
+      { key: 'categoria', label: 'Categoría', tipo: 'select', opciones: CATS_DIA01 },
+      { key: 'descripcion', label: 'Descripción *', tipo: 'textarea', requerido: true },
+      { key: 'fuente', label: 'Fuente (quién lo dijo o de dónde se obtuvo)', tipo: 'text' },
+      { key: 'urgencia', label: 'Nivel de urgencia / relevancia', tipo: 'select', opciones: URGENCIAS_DIA01 },
+      { key: 'fecha', label: 'Fecha de levantamiento', tipo: 'date' },
+      { key: 'notas', label: 'Notas', tipo: 'textarea' }
+    ]
+  },
+  pla01: {
+    titulo: 'INS-PLA-01 Árbol de problemas',
+    listar: 'listarPLA01', guardar: 'guardarFilaPLA01', eliminar: 'eliminarFilaPLA01',
+    validar: 'validarPLA01', descargar: 'generarDescargablePLA01',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'problema', label: 'Problema' },
+      { key: 'categoria', label: 'Categoría' },
+      { key: 'nivel', label: 'Nivel' },
+      { key: 'relacionado', label: 'Relacionado' },
+      { key: 'prioridad', label: 'Prioridad' }
+    ],
+    campos: [
+      { key: 'problema', label: 'Problema identificado *', tipo: 'textarea', requerido: true },
+      { key: 'categoria', label: 'Categoría', tipo: 'select', opciones: CATS_PLA01 },
+      { key: 'nivel', label: 'Nivel jerárquico', tipo: 'number' },
+      { key: 'relacionado', label: 'Código relacionado (si no es Problema central)', tipo: 'text', placeholder: 'ej. PRO-01' },
+      { key: 'evidencia', label: 'Evidencia / fuente de verificación', tipo: 'text' },
+      { key: 'poblacion', label: 'Población / territorio afectado', tipo: 'text' },
+      { key: 'prioridad', label: 'Prioridad', tipo: 'select', opciones: PRIORIDADES },
+      { key: 'notas', label: 'Notas', tipo: 'textarea' }
+    ]
+  },
+  pla02: {
+    titulo: 'INS-PLA-02 Árbol de objetivos',
+    listar: 'listarPLA02', guardar: 'guardarFilaPLA02', eliminar: 'eliminarFilaPLA02',
+    validar: 'validarPLA02', descargar: 'generarDescargablePLA02',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'objetivo', label: 'Objetivo' },
+      { key: 'categoria', label: 'Categoría' },
+      { key: 'problemaOrigen', label: 'Origen' },
+      { key: 'plazo', label: 'Plazo' }
+    ],
+    campos: [
+      { key: 'objetivo', label: 'Objetivo *', tipo: 'textarea', requerido: true },
+      { key: 'categoria', label: 'Categoría', tipo: 'select', opciones: CATS_PLA02 },
+      { key: 'problemaOrigen', label: 'Código de problema origen (PLA-01)', tipo: 'text', placeholder: 'ej. PRO-01' },
+      { key: 'indicador', label: 'Indicador preliminar de éxito', tipo: 'text' },
+      { key: 'responsable', label: 'Responsable / actor clave', tipo: 'text' },
+      { key: 'plazo', label: 'Plazo estimado', tipo: 'select', opciones: PLAZOS },
+      { key: 'notas', label: 'Notas', tipo: 'textarea' }
+    ]
+  }
+};
+
+// Instrumentos cuya pestaña de datos en el Sheet debe instalarse una sola
+// vez desde el panel de administración antes de poder usarse (PLA-01 y
+// PLA-02 ya vienen instalados desde el arranque del piloto).
+var INSTRUMENTOS_INSTALABLES = [
+  { clave: 'DIA01', nombre: 'INS-DIA-01 — Ficha de diagnóstico inicial' }
+];
 
 /* ============================================================
  * Estado de sesión (persistido localmente en este navegador)
@@ -136,12 +220,11 @@ try {
 } catch (e) { session = null; }
 
 var state = {
-  view: 'proyectos',      // proyectos | usuarios | cuenta
+  view: 'proyectos',      // proyectos | usuarios | instrumentos | cuenta
   proyectos: [],
   proyectoActivo: null,   // objeto proyecto seleccionado
-  subtab: 'pla01',        // pla01 | pla02
-  filasPLA01: [],
-  filasPLA02: [],
+  subtab: 'dia01',        // clave dentro de INSTRUMENTOS
+  filas: {},              // { dia01: [...], pla01: [...], pla02: [...] }
   usuarios: []
 };
 
@@ -290,7 +373,10 @@ async function doLogin() {
 /* ---------------- APP SHELL ---------------- */
 function renderApp() {
   var tabs = '<button data-tab="proyectos" class="' + (state.view === 'proyectos' ? 'active' : '') + '">Proyectos</button>';
-  if (esAdmin()) tabs += '<button data-tab="usuarios" class="' + (state.view === 'usuarios' ? 'active' : '') + '">Usuarios</button>';
+  if (esAdmin()) {
+    tabs += '<button data-tab="usuarios" class="' + (state.view === 'usuarios' ? 'active' : '') + '">Usuarios</button>';
+    tabs += '<button data-tab="instrumentos" class="' + (state.view === 'instrumentos' ? 'active' : '') + '">Instrumentos</button>';
+  }
   tabs += '<button data-tab="cuenta" class="' + (state.view === 'cuenta' ? 'active' : '') + '">Mi cuenta</button>';
 
   root.innerHTML =
@@ -317,6 +403,8 @@ function renderMain() {
     if (state.proyectoActivo) renderProyectoDetalle(); else renderProyectos();
   } else if (state.view === 'usuarios' && esAdmin()) {
     renderUsuarios();
+  } else if (state.view === 'instrumentos' && esAdmin()) {
+    renderInstrumentos();
   } else if (state.view === 'cuenta') {
     renderCuenta();
   }
@@ -362,10 +450,9 @@ function renderProyectos() {
 function abrirProyecto(codigo) {
   var p = state.proyectos.filter(function (x) { return x.codigo === codigo; })[0];
   state.proyectoActivo = p;
-  state.subtab = 'pla01';
+  state.subtab = Object.keys(INSTRUMENTOS)[0];
   renderMain();
-  cargarPLA01();
-  cargarPLA02();
+  Object.keys(INSTRUMENTOS).forEach(function (tipo) { cargarInstrumento(tipo); });
 }
 
 function abrirModalNuevoProyecto() {
@@ -414,19 +501,20 @@ function abrirModalNuevoProyecto() {
   };
 }
 
-/* ---------------- PROYECTO: DETALLE (PLA-01 / PLA-02) ---------------- */
+/* ---------------- PROYECTO: DETALLE (instrumentos, según catálogo) ---------------- */
 function renderProyectoDetalle() {
   var main = document.getElementById('main');
   var p = state.proyectoActivo;
+  var subtabsHtml = Object.keys(INSTRUMENTOS).map(function (k) {
+    return '<button data-sub="' + k + '" class="' + (state.subtab === k ? 'active' : '') + '">' + INSTRUMENTOS[k].titulo + '</button>';
+  }).join('');
+
   main.innerHTML =
     '<div class="breadcrumb" id="bcVolver">&larr; Volver a <span>Proyectos</span></div>' +
     '<div class="card">' +
       '<h2 style="margin-bottom:2px">' + p.codigo + ' — ' + p.cliente + '</h2>' +
       '<p class="subtle">Eje: ' + (p.ejeNombre || '—') + (p.servicioNombre ? ' &middot; Servicio: ' + p.servicioNombre : '') + '</p>' +
-      '<div class="subtabs">' +
-        '<button data-sub="pla01" class="' + (state.subtab === 'pla01' ? 'active' : '') + '">INS-PLA-01 Árbol de problemas</button>' +
-        '<button data-sub="pla02" class="' + (state.subtab === 'pla02' ? 'active' : '') + '">INS-PLA-02 Árbol de objetivos</button>' +
-      '</div>' +
+      '<div class="subtabs">' + subtabsHtml + '</div>' +
       '<div id="subContent"></div>' +
     '</div>';
 
@@ -435,54 +523,34 @@ function renderProyectoDetalle() {
     b.onclick = function () { state.subtab = b.getAttribute('data-sub'); renderProyectoDetalle(); };
   });
 
-  if (state.subtab === 'pla01') renderPLA01(); else renderPLA02();
+  renderInstrumento(state.subtab);
 }
 
-/* ---- PLA-01 ---- */
-async function cargarPLA01() {
-  var r = await api('listarPLA01', { proyecto: state.proyectoActivo.codigo });
-  if (r.ok) state.filasPLA01 = r.data;
-  if (state.view === 'proyectos' && state.proyectoActivo && state.subtab === 'pla01') renderInstrumento('pla01');
-}
-
-function renderPLA01() { renderInstrumento('pla01'); }
-function renderPLA02() { renderInstrumento('pla02'); }
-
-async function cargarPLA02() {
-  var r = await api('listarPLA02', { proyecto: state.proyectoActivo.codigo });
-  if (r.ok) state.filasPLA02 = r.data;
-  if (state.view === 'proyectos' && state.proyectoActivo && state.subtab === 'pla02') renderInstrumento('pla02');
+async function cargarInstrumento(tipo) {
+  var cfg = INSTRUMENTOS[tipo];
+  var r = await api(cfg.listar, { proyecto: state.proyectoActivo.codigo });
+  if (r.ok) state.filas[tipo] = r.data;
+  if (state.view === 'proyectos' && state.proyectoActivo && state.subtab === tipo) renderInstrumento(tipo);
 }
 
 function renderInstrumento(tipo) {
   var box = document.getElementById('subContent');
   if (!box) return;
-  var esPLA01 = tipo === 'pla01';
-  var filas = esPLA01 ? state.filasPLA01 : state.filasPLA02;
+  var cfg = INSTRUMENTOS[tipo];
+  var filas = state.filas[tipo] || [];
 
-  var thead, trs;
-  if (esPLA01) {
-    thead = '<tr><th>Código</th><th>Problema</th><th>Categoría</th><th>Nivel</th><th>Relacionado</th><th>Prioridad</th><th></th></tr>';
-    trs = filas.map(function (f) {
-      return '<tr><td>' + f.codigo + '</td><td>' + escapeHtml(f.problema) + '</td><td>' + f.categoria + '</td>' +
-        '<td>' + (f.nivel || '') + '</td><td>' + (f.relacionado || '—') + '</td><td>' + (f.prioridad || '—') + '</td>' +
-        '<td><button class="small edit" data-codigo="' + f.codigo + '">Editar</button> ' +
-        '<button class="small del" data-codigo="' + f.codigo + '">Eliminar</button></td></tr>';
+  var thead = '<tr>' + cfg.columnas.map(function (c) { return '<th>' + c.label + '</th>'; }).join('') + '<th></th></tr>';
+  var trs = filas.map(function (f) {
+    var tds = cfg.columnas.map(function (c) {
+      var v = f[c.key];
+      return '<td>' + (v === undefined || v === null || v === '' ? '—' : escapeHtml(v)) + '</td>';
     }).join('');
-  } else {
-    thead = '<tr><th>Código</th><th>Objetivo</th><th>Categoría</th><th>Origen</th><th>Plazo</th><th></th></tr>';
-    trs = filas.map(function (f) {
-      return '<tr><td>' + f.codigo + '</td><td>' + escapeHtml(f.objetivo) + '</td><td>' + f.categoria + '</td>' +
-        '<td>' + (f.problemaOrigen || '—') + '</td><td>' + (f.plazo || '—') + '</td>' +
-        '<td><button class="small edit" data-codigo="' + f.codigo + '">Editar</button> ' +
-        '<button class="small del" data-codigo="' + f.codigo + '">Eliminar</button></td></tr>';
-    }).join('');
-  }
+    return '<tr>' + tds +
+      '<td><button class="small edit" data-codigo="' + f.codigo + '">Editar</button> ' +
+      '<button class="small del" data-codigo="' + f.codigo + '">Eliminar</button></td></tr>';
+  }).join('');
 
-  var formatos = esPLA01
-    ? [['pdf','PDF'],['docx','Word'],['gdoc','Google Doc'],['xlsx','Excel'],['gsheet','Google Sheet']]
-    : [['pdf','PDF'],['docx','Word'],['gdoc','Google Doc'],['xlsx','Excel'],['gsheet','Google Sheet']];
-  var opcionesFormato = formatos.map(function (f) { return '<option value="' + f[0] + '">' + f[1] + '</option>'; }).join('');
+  var opcionesFormato = FORMATOS_DESCARGA.map(function (f) { return '<option value="' + f[0] + '">' + f[1] + '</option>'; }).join('');
 
   box.innerHTML =
     '<div class="toolbar" style="justify-content:space-between">' +
@@ -495,7 +563,7 @@ function renderInstrumento(tipo) {
     '</div>' +
     '<div id="validacionBox"></div>' +
     (filas.length === 0
-      ? '<p class="subtle">Todavía no hay filas capturadas.</p>'
+      ? '<p class="subtle">Todavía no hay filas capturadas. Si al validar o generar aparece un error de pestaña no encontrada, pide a tu administrador que lo instale en "Instrumentos".</p>'
       : '<table><thead>' + thead + '</thead><tbody>' + trs + '</tbody></table>');
 
   document.getElementById('btnAgregarFila').onclick = function () { abrirModalFila(tipo, null); };
@@ -512,10 +580,9 @@ function renderInstrumento(tipo) {
     b.onclick = async function () {
       if (!confirm('¿Eliminar esta fila? No se puede deshacer.')) return;
       var codigo = b.getAttribute('data-codigo');
-      var accion = esPLA01 ? 'eliminarFilaPLA01' : 'eliminarFilaPLA02';
-      var r = await api(accion, { proyecto: state.proyectoActivo.codigo, codigo: codigo });
+      var r = await api(cfg.eliminar, { proyecto: state.proyectoActivo.codigo, codigo: codigo });
       if (!r.ok) { alert(r.error); return; }
-      if (esPLA01) await cargarPLA01(); else await cargarPLA02();
+      await cargarInstrumento(tipo);
     };
   });
 }
@@ -525,7 +592,7 @@ function escapeHtml(s) {
 }
 
 async function validarInstrumento(tipo) {
-  var accion = tipo === 'pla01' ? 'validarPLA01' : 'validarPLA02';
+  var accion = INSTRUMENTOS[tipo].validar;
   var r = await api(accion, { proyecto: state.proyectoActivo.codigo });
   var box = document.getElementById('validacionBox');
   if (!r.ok) { box.innerHTML = '<div class="msg error">' + r.error + '</div>'; return; }
@@ -547,7 +614,7 @@ async function validarInstrumento(tipo) {
 
 async function generarDescargable(tipo) {
   var formato = document.getElementById('selFormato').value;
-  var accion = tipo === 'pla01' ? 'generarDescargablePLA01' : 'generarDescargablePLA02';
+  var accion = INSTRUMENTOS[tipo].descargar;
   var btn = document.getElementById('btnGenerar');
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Generando...';
   var r = await api(accion, { proyecto: state.proyectoActivo.codigo, formato: formato });
@@ -562,36 +629,24 @@ async function generarDescargable(tipo) {
 }
 
 function abrirModalFila(tipo, fila) {
-  var esPLA01 = tipo === 'pla01';
+  var cfg = INSTRUMENTOS[tipo];
   var editando = !!fila;
-  var camposHtml;
 
-  if (esPLA01) {
-    var opcCat = CATS_PLA01.map(function (c) { return '<option ' + (fila && fila.categoria === c ? 'selected' : '') + '>' + c + '</option>'; }).join('');
-    var opcPri = PRIORIDADES.map(function (p) { return '<option ' + (fila && fila.prioridad === p ? 'selected' : '') + '>' + p + '</option>'; }).join('');
-    camposHtml =
-      '<label>Problema identificado *</label><textarea id="fProblema">' + escapeHtml(fila ? fila.problema : '') + '</textarea>' +
-      '<div class="row">' +
-        '<div><label>Categoría</label><select id="fCategoria">' + opcCat + '</select></div>' +
-        '<div><label>Nivel jerárquico</label><input type="number" id="fNivel" value="' + (fila ? fila.nivel || '' : '') + '"></div>' +
-      '</div>' +
-      '<label>Código relacionado (si no es Problema central)</label><input type="text" id="fRelacionado" value="' + (fila ? fila.relacionado || '' : '') + '" placeholder="ej. PRO-01">' +
-      '<label>Evidencia / fuente de verificación</label><input type="text" id="fEvidencia" value="' + (fila ? escapeHtml(fila.evidencia) || '' : '') + '">' +
-      '<label>Población / territorio afectado</label><input type="text" id="fPoblacion" value="' + (fila ? escapeHtml(fila.poblacion) || '' : '') + '">' +
-      '<div><label>Prioridad</label><select id="fPrioridad">' + opcPri + '</select></div>' +
-      '<label>Notas</label><textarea id="fNotas">' + (fila ? escapeHtml(fila.notas) || '' : '') + '</textarea>';
-  } else {
-    var opcCat2 = CATS_PLA02.map(function (c) { return '<option ' + (fila && fila.categoria === c ? 'selected' : '') + '>' + c + '</option>'; }).join('');
-    var opcPlazo = PLAZOS.map(function (p) { return '<option ' + (fila && fila.plazo === p ? 'selected' : '') + '>' + p + '</option>'; }).join('');
-    camposHtml =
-      '<label>Objetivo *</label><textarea id="fObjetivo">' + escapeHtml(fila ? fila.objetivo : '') + '</textarea>' +
-      '<label>Categoría</label><select id="fCategoria">' + opcCat2 + '</select>' +
-      '<label>Código de problema origen (PLA-01)</label><input type="text" id="fProblemaOrigen" value="' + (fila ? fila.problemaOrigen || '' : '') + '" placeholder="ej. PRO-01">' +
-      '<label>Indicador preliminar de éxito</label><input type="text" id="fIndicador" value="' + (fila ? escapeHtml(fila.indicador) || '' : '') + '">' +
-      '<label>Responsable / actor clave</label><input type="text" id="fResponsable" value="' + (fila ? escapeHtml(fila.responsable) || '' : '') + '">' +
-      '<label>Plazo estimado</label><select id="fPlazo">' + opcPlazo + '</select>' +
-      '<label>Notas</label><textarea id="fNotas">' + (fila ? escapeHtml(fila.notas) || '' : '') + '</textarea>';
-  }
+  var camposHtml = cfg.campos.map(function (c) {
+    var id = 'f_' + c.key;
+    var val = fila ? (fila[c.key] != null ? fila[c.key] : '') : '';
+    if (c.tipo === 'select') {
+      var opts = c.opciones.map(function (o) {
+        return '<option ' + (fila && fila[c.key] === o ? 'selected' : '') + '>' + o + '</option>';
+      }).join('');
+      return '<label>' + c.label + '</label><select id="' + id + '">' + opts + '</select>';
+    }
+    if (c.tipo === 'textarea') {
+      return '<label>' + c.label + '</label><textarea id="' + id + '">' + escapeHtml(val) + '</textarea>';
+    }
+    return '<label>' + c.label + '</label><input type="' + c.tipo + '" id="' + id + '" value="' + escapeHtml(val) + '"' +
+      (c.placeholder ? ' placeholder="' + c.placeholder + '"' : '') + '>';
+  }).join('');
 
   var modal = el(
     '<div class="modal-bg"><div class="modal">' +
@@ -612,33 +667,21 @@ function abrirModalFila(tipo, fila) {
     var params = { proyecto: state.proyectoActivo.codigo };
     if (editando) params.codigo = fila.codigo;
 
-    if (esPLA01) {
-      params.problema = modal.querySelector('#fProblema').value.trim();
-      if (!params.problema) { msgBox.innerHTML = '<div class="msg error">El problema no puede estar vacío.</div>'; return; }
-      params.categoria = modal.querySelector('#fCategoria').value;
-      params.nivel = modal.querySelector('#fNivel').value;
-      params.relacionado = modal.querySelector('#fRelacionado').value.trim();
-      params.evidencia = modal.querySelector('#fEvidencia').value.trim();
-      params.poblacion = modal.querySelector('#fPoblacion').value.trim();
-      params.prioridad = modal.querySelector('#fPrioridad').value;
-      params.notas = modal.querySelector('#fNotas').value.trim();
-    } else {
-      params.objetivo = modal.querySelector('#fObjetivo').value.trim();
-      if (!params.objetivo) { msgBox.innerHTML = '<div class="msg error">El objetivo no puede estar vacío.</div>'; return; }
-      params.categoria = modal.querySelector('#fCategoria').value;
-      params.problemaOrigen = modal.querySelector('#fProblemaOrigen').value.trim();
-      params.indicador = modal.querySelector('#fIndicador').value.trim();
-      params.responsable = modal.querySelector('#fResponsable').value.trim();
-      params.plazo = modal.querySelector('#fPlazo').value;
-      params.notas = modal.querySelector('#fNotas').value.trim();
-    }
+    var faltante = null;
+    cfg.campos.forEach(function (c) {
+      var elx = modal.querySelector('#f_' + c.key);
+      var v = elx.value;
+      if (c.tipo !== 'select' && c.tipo !== 'date') v = v.trim();
+      if (c.requerido && !v && !faltante) faltante = c.label;
+      params[c.key] = v;
+    });
+    if (faltante) { msgBox.innerHTML = '<div class="msg error">El campo "' + faltante.replace(' *', '') + '" no puede estar vacío.</div>'; return; }
 
     btn.disabled = true; btn.textContent = 'Guardando...';
-    var accion = esPLA01 ? 'guardarFilaPLA01' : 'guardarFilaPLA02';
-    var r = await api(accion, params);
+    var r = await api(cfg.guardar, params);
     if (!r.ok) { msgBox.innerHTML = '<div class="msg error">' + r.error + '</div>'; btn.disabled = false; btn.textContent = 'Guardar'; return; }
     modal.remove();
-    if (esPLA01) await cargarPLA01(); else await cargarPLA02();
+    await cargarInstrumento(tipo);
   };
 }
 
@@ -724,6 +767,39 @@ function abrirModalNuevoUsuario() {
     alert('Usuario creado.\nContraseña temporal: ' + r.tempPassword + '\n\n(También se envió por correo, si el envío fue posible).');
     renderUsuarios();
   };
+}
+
+/* ---------------- INSTRUMENTOS (solo Administrador) ---------------- */
+function renderInstrumentos() {
+  var main = document.getElementById('main');
+  var filas = INSTRUMENTOS_INSTALABLES.map(function (i) {
+    return '<div class="card" style="margin-bottom:10px">' +
+      '<div class="toolbar" style="justify-content:space-between">' +
+        '<div><strong>' + i.nombre + '</strong>' +
+          '<p class="subtle" style="margin:4px 0 0">Crea la pestaña de datos en el Sheet — solo hace falta una vez, ya nunca hay que volver a Apps Script para esto.</p></div>' +
+        '<button class="secondary" data-clave="' + i.clave + '">Instalar pestaña de datos</button>' +
+      '</div>' +
+      '<div id="instMsg_' + i.clave + '"></div>' +
+    '</div>';
+  }).join('');
+
+  main.innerHTML =
+    '<h2 style="color:var(--purple);margin:0 0 6px">Instrumentos</h2>' +
+    '<p class="subtle">PLA-01 y PLA-02 ya están instalados. Los demás instrumentos del catálogo se agregan aquí conforme se van habilitando en la plataforma.</p>' +
+    (filas || '<p class="subtle">No hay instrumentos pendientes de instalar por ahora.</p>');
+
+  Array.prototype.forEach.call(main.querySelectorAll('[data-clave]'), function (b) {
+    b.onclick = async function () {
+      var clave = b.getAttribute('data-clave');
+      var msgBox = document.getElementById('instMsg_' + clave);
+      b.disabled = true; b.innerHTML = '<span class="spinner"></span>Instalando...';
+      var r = await api('instalarInstrumento', { instrumento: clave });
+      b.disabled = false; b.textContent = 'Instalar pestaña de datos';
+      msgBox.innerHTML = r.ok
+        ? '<div class="msg ok">' + r.msg + '</div>'
+        : '<div class="msg error">' + r.error + '</div>';
+    };
+  });
 }
 
 /* ---------------- MI CUENTA ---------------- */
