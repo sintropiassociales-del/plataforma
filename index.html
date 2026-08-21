@@ -147,6 +147,10 @@ var NIVELES_LOGRO_EVA01 = ['No logrado', 'En proceso', 'Logrado', 'Destacado'];
 var MOMENTOS_EVA03 = ['Pre', 'Post'];
 var CATEGORIAS_EVA04 = ['Apropiación', 'Sostenibilidad', 'Barreras encontradas', 'Factores de éxito', 'Efectos no esperados', 'Percepción de pertinencia'];
 var TECNICAS_EVA04 = ['Entrevista semiestructurada', 'Grupo focal', 'Observación directa', 'Estudio de caso'];
+var ESTATUS_OPE01 = ['No iniciada', 'En proceso', 'Completada', 'Retrasada', 'Cancelada'];
+var TIPOS_CONTENIDO_SAL01 = ['Narrativo', 'Tabla', 'Gráfica', 'Anexo'];
+var SINO_SAL01 = ['Sí', 'No'];
+var PRIORIDADES_SAL02 = ['Alta', 'Media', 'Baja'];
 
 /* ============================================================
  * Catálogo de instrumentos disponibles en la plataforma. Para
@@ -426,6 +430,73 @@ var INSTRUMENTOS = {
       { key: 'actor', label: 'Actor a consultar', tipo: 'text' },
       { key: 'hallazgos', label: 'Notas metodológicas / hallazgos', tipo: 'textarea' }
     ]
+  },
+  ope01: {
+    familia: 'OPE',
+    titulo: 'INS-OPE-01 Cronograma / Gantt',
+    listar: 'listarOPE01', guardar: 'guardarFilaOPE01', eliminar: 'eliminarFilaOPE01',
+    validar: 'validarOPE01', descargar: 'generarDescargableOPE01',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'actividad', label: 'Actividad' },
+      { key: 'fase', label: 'Fase' },
+      { key: 'fechaInicio', label: 'Inicio' },
+      { key: 'fechaFin', label: 'Fin' },
+      { key: 'avance', label: 'Avance (%)' },
+      { key: 'estatus', label: 'Estatus' }
+    ],
+    campos: [
+      { key: 'actividad', label: 'Actividad *', tipo: 'text', requerido: true },
+      { key: 'fase', label: 'Fase / etapa', tipo: 'text' },
+      { key: 'fechaInicio', label: 'Fecha de inicio', tipo: 'date' },
+      { key: 'fechaFin', label: 'Fecha de fin', tipo: 'date' },
+      { key: 'dependencia', label: 'Dependencia (código de actividad previa)', tipo: 'text', placeholder: 'ej. ACT-01' },
+      { key: 'responsable', label: 'Responsable', tipo: 'text' },
+      { key: 'avance', label: '% de avance (0-100)', tipo: 'number' },
+      { key: 'estatus', label: 'Estatus', tipo: 'select', opciones: ESTATUS_OPE01 }
+    ]
+  },
+  sal01: {
+    familia: 'SAL',
+    titulo: 'INS-SAL-01 Formato de informe técnico',
+    listar: 'listarSAL01', guardar: 'guardarFilaSAL01', eliminar: 'eliminarFilaSAL01',
+    validar: 'validarSAL01', descargar: 'generarDescargableSAL01',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'noSeccion', label: 'No.' },
+      { key: 'nombreSeccion', label: 'Sección' },
+      { key: 'tipoContenido', label: 'Tipo' },
+      { key: 'obligatoria', label: 'Obligatoria' }
+    ],
+    campos: [
+      { key: 'noSeccion', label: 'No. de sección', tipo: 'number' },
+      { key: 'nombreSeccion', label: 'Nombre de sección *', tipo: 'text', requerido: true },
+      { key: 'tipoContenido', label: 'Tipo de contenido', tipo: 'select', opciones: TIPOS_CONTENIDO_SAL01 },
+      { key: 'obligatoria', label: 'Obligatoria', tipo: 'select', opciones: SINO_SAL01 },
+      { key: 'instrumentoFuente', label: 'Instrumento(s) fuente (código INS-...)', tipo: 'text', placeholder: 'ej. INS-DIA-01' },
+      { key: 'extension', label: 'Extensión estimada (páginas)', tipo: 'number' },
+      { key: 'responsable', label: 'Responsable de redacción', tipo: 'text' }
+    ]
+  },
+  sal02: {
+    familia: 'SAL',
+    titulo: 'INS-SAL-02 Plantilla de informe ejecutivo',
+    listar: 'listarSAL02', guardar: 'guardarFilaSAL02', eliminar: 'eliminarFilaSAL02',
+    validar: 'validarSAL02', descargar: 'generarDescargableSAL02',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'noSeccion', label: 'No.' },
+      { key: 'nombreSeccion', label: 'Sección' },
+      { key: 'prioridad', label: 'Prioridad' }
+    ],
+    campos: [
+      { key: 'noSeccion', label: 'No. de sección', tipo: 'number' },
+      { key: 'nombreSeccion', label: 'Nombre de sección *', tipo: 'text', requerido: true },
+      { key: 'prioridad', label: 'Prioridad', tipo: 'select', opciones: PRIORIDADES_SAL02 },
+      { key: 'instrumentoFuente', label: 'Instrumento(s) fuente (código INS-...)', tipo: 'text', placeholder: 'ej. INS-SAL-04' },
+      { key: 'extension', label: 'Extensión estimada (páginas)', tipo: 'number' },
+      { key: 'mensajeClave', label: 'Mensaje clave a transmitir *', tipo: 'textarea', requerido: true }
+    ]
   }
 };
 
@@ -440,7 +511,10 @@ var INSTRUMENTOS_INSTALABLES = [
   { clave: 'PLA04', nombre: 'INS-PLA-04 — Teoría / Matriz de cambio' },
   { clave: 'EVA01', nombre: 'INS-EVA-01 — Matriz de evaluación' },
   { clave: 'EVA03', nombre: 'INS-EVA-03 — Evaluación pre/post' },
-  { clave: 'EVA04', nombre: 'INS-EVA-04 — Guía de evaluación cualitativa' }
+  { clave: 'EVA04', nombre: 'INS-EVA-04 — Guía de evaluación cualitativa' },
+  { clave: 'OPE01', nombre: 'INS-OPE-01 — Cronograma / Gantt' },
+  { clave: 'SAL01', nombre: 'INS-SAL-01 — Formato de informe técnico' },
+  { clave: 'SAL02', nombre: 'INS-SAL-02 — Plantilla de informe ejecutivo' }
 ];
 
 /* ============================================================
