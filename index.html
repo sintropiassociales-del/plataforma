@@ -128,6 +128,9 @@ var ESTATUS_PROYECTO = ['Activo', 'Pausado', 'Cerrado'];
 var CATS_DIA01 = ['Necesidad percibida', 'Recurso disponible', 'Expectativa del cliente', 'Riesgo inicial', 'Antecedente relevante', 'Restricción / limitante'];
 var URGENCIAS_DIA01 = ['Alta', 'Media', 'Baja'];
 var FORMATOS_DESCARGA = [['pdf', 'PDF'], ['docx', 'Word'], ['gdoc', 'Google Doc'], ['xlsx', 'Excel'], ['gsheet', 'Google Sheet']];
+var TIPOS_REACTIVO_DIA02 = ['Opción múltiple', 'Escala Likert (1-5)', 'Sí/No', 'Numérica', 'Abierta (texto corto)', 'Abierta (texto largo)'];
+var EJES_APLICABLES_DIA02 = ['EJE-INV', 'EJE-EDU', 'EJE-COM', 'EJE-EMP', 'Todos'];
+var SINO_DIA02 = ['Sí', 'No'];
 
 /* ============================================================
  * Catálogo de instrumentos disponibles en la plataforma. Para
@@ -155,6 +158,62 @@ var INSTRUMENTOS = {
       { key: 'urgencia', label: 'Nivel de urgencia / relevancia', tipo: 'select', opciones: URGENCIAS_DIA01 },
       { key: 'fecha', label: 'Fecha de levantamiento', tipo: 'date' },
       { key: 'notas', label: 'Notas', tipo: 'textarea' }
+    ]
+  },
+  dia02_estructura: {
+    titulo: 'INS-DIA-02 (1/3) Estructura',
+    listar: 'listarDIA02Estructura', guardar: 'guardarFilaDIA02Estructura', eliminar: 'eliminarFilaDIA02Estructura',
+    validar: 'validarDIA02Estructura', descargar: 'generarDescargableDIA02Estructura',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'noSeccion', label: 'No.' },
+      { key: 'nombreSeccion', label: 'Sección' },
+      { key: 'noReactivosEstimado', label: 'Reactivos (est.)' }
+    ],
+    campos: [
+      { key: 'noSeccion', label: 'No. de sección', tipo: 'number' },
+      { key: 'nombreSeccion', label: 'Nombre de la sección *', tipo: 'text', requerido: true },
+      { key: 'objetivoSeccion', label: 'Objetivo de la sección', tipo: 'textarea' },
+      { key: 'noReactivosEstimado', label: 'No. de reactivos estimado', tipo: 'number' }
+    ]
+  },
+  dia02_reactivos: {
+    titulo: 'INS-DIA-02 (2/3) Banco de reactivos',
+    listar: 'listarDIA02Reactivos', guardar: 'guardarFilaDIA02Reactivos', eliminar: 'eliminarFilaDIA02Reactivos',
+    validar: 'validarDIA02Reactivos', descargar: 'generarDescargableDIA02Reactivos',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'codigoSeccion', label: 'Sección' },
+      { key: 'reactivo', label: 'Reactivo' },
+      { key: 'tipoReactivo', label: 'Tipo' },
+      { key: 'ejeAplicable', label: 'Eje' }
+    ],
+    campos: [
+      { key: 'codigoSeccion', label: 'Código de sección (INS-DIA-02 1/3) *', tipo: 'text', requerido: true, placeholder: 'ej. SEC-01' },
+      { key: 'reactivo', label: 'Reactivo (pregunta) *', tipo: 'textarea', requerido: true },
+      { key: 'tipoReactivo', label: 'Tipo de reactivo', tipo: 'select', opciones: TIPOS_REACTIVO_DIA02 },
+      { key: 'ejeAplicable', label: 'Eje aplicable', tipo: 'select', opciones: EJES_APLICABLES_DIA02 },
+      { key: 'opciones', label: 'Opciones de respuesta (separadas por /)', tipo: 'text' },
+      { key: 'obligatorio', label: 'Obligatorio', tipo: 'select', opciones: SINO_DIA02 }
+    ]
+  },
+  dia02_respuestas: {
+    titulo: 'INS-DIA-02 (3/3) Respuestas',
+    listar: 'listarDIA02Respuestas', guardar: 'guardarFilaDIA02Respuestas', eliminar: 'eliminarFilaDIA02Respuestas',
+    validar: 'validarDIA02Respuestas', descargar: 'generarDescargableDIA02Respuestas',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'codigoReactivo', label: 'Reactivo' },
+      { key: 'idRespondente', label: 'Respondente' },
+      { key: 'respuesta', label: 'Respuesta' },
+      { key: 'fecha', label: 'Fecha' }
+    ],
+    campos: [
+      { key: 'codigoReactivo', label: 'Código de reactivo (INS-DIA-02 2/3) *', tipo: 'text', requerido: true, placeholder: 'ej. REA-01' },
+      { key: 'idRespondente', label: 'ID de respondente (anónimo) *', tipo: 'text', requerido: true, placeholder: 'ej. R001' },
+      { key: 'respuesta', label: 'Respuesta *', tipo: 'text', requerido: true },
+      { key: 'fecha', label: 'Fecha de aplicación', tipo: 'date' },
+      { key: 'aplicador', label: 'Aplicador', tipo: 'text' }
     ]
   },
   pla01: {
@@ -207,7 +266,8 @@ var INSTRUMENTOS = {
 // vez desde el panel de administración antes de poder usarse (PLA-01 y
 // PLA-02 ya vienen instalados desde el arranque del piloto).
 var INSTRUMENTOS_INSTALABLES = [
-  { clave: 'DIA01', nombre: 'INS-DIA-01 — Ficha de diagnóstico inicial' }
+  { clave: 'DIA01', nombre: 'INS-DIA-01 — Ficha de diagnóstico inicial' },
+  { clave: 'DIA02', nombre: 'INS-DIA-02 — Cuestionario diagnóstico (3 pestañas: Estructura, Reactivos, Respuestas)' }
 ];
 
 /* ============================================================
