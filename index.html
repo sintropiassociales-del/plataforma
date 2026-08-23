@@ -131,6 +131,9 @@ var CATS_PLA01 = ['Problema central', 'Causa raíz', 'Causa intermedia', 'Efecto
 var PRIORIDADES = ['Alta', 'Media', 'Baja'];
 var CATS_PLA02 = ['Objetivo general', 'Objetivo específico', 'Resultado esperado'];
 var PLAZOS = ['Corto plazo (menos de 6 meses)', 'Mediano plazo (6-18 meses)', 'Largo plazo (más de 18 meses)'];
+var TIPOS_VIS_SAL03 = ['KPI simple', 'Gráfica de barras', 'Gráfica de línea', 'Mapa', 'Tabla'];
+var FRECUENCIAS_SAL03 = ['Semanal', 'Mensual', 'Trimestral', 'Al cierre del proyecto'];
+var CATEGORIAS_SAL04 = ['Cuantitativo', 'Cualitativo'];
 var ESTATUS_PROYECTO = ['Activo', 'Pausado', 'Cerrado'];
 var CATS_DIA01 = ['Necesidad percibida', 'Recurso disponible', 'Expectativa del cliente', 'Riesgo inicial', 'Antecedente relevante', 'Restricción / limitante'];
 var URGENCIAS_DIA01 = ['Alta', 'Media', 'Baja'];
@@ -647,6 +650,47 @@ var INSTRUMENTOS = {
       { key: 'mensajeClave', label: 'Mensaje clave a transmitir *', tipo: 'textarea', requerido: true }
     ]
   },
+  sal03: {
+    familia: 'SAL',
+    titulo: 'INS-SAL-03 Dashboard de resultados',
+    listar: 'listarSAL03', guardar: 'guardarFilaSAL03', eliminar: 'eliminarFilaSAL03',
+    validar: 'validarSAL03', descargar: 'generarDescargableSAL03',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'nombre', label: 'Métrica' },
+      { key: 'tipoVisualizacion', label: 'Visualización' },
+      { key: 'instrumentoFuente', label: 'Fuente' },
+      { key: 'prioridad', label: 'Prioridad' }
+    ],
+    campos: [
+      { key: 'nombre', label: 'Nombre del indicador / métrica *', tipo: 'text', requerido: true },
+      { key: 'tipoVisualizacion', label: 'Tipo de visualización', tipo: 'select', opciones: TIPOS_VIS_SAL03 },
+      { key: 'instrumentoFuente', label: 'Instrumento fuente (código INS-...) *', tipo: 'text', requerido: true, placeholder: 'ej. INS-IND-01' },
+      { key: 'frecuencia', label: 'Frecuencia de actualización', tipo: 'select', opciones: FRECUENCIAS_SAL03 },
+      { key: 'publicoObjetivo', label: 'Público objetivo', tipo: 'text' },
+      { key: 'prioridad', label: 'Prioridad de visualización', tipo: 'select', opciones: PRIORIDADES }
+    ]
+  },
+  sal04: {
+    familia: 'SAL',
+    titulo: 'INS-SAL-04 Ficha de resultados / hallazgos',
+    listar: 'listarSAL04', guardar: 'guardarFilaSAL04', eliminar: 'eliminarFilaSAL04',
+    validar: 'validarSAL04', descargar: 'generarDescargableSAL04',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'hallazgo', label: 'Hallazgo' },
+      { key: 'categoria', label: 'Categoría' },
+      { key: 'instrumentoFuente', label: 'Fuente' }
+    ],
+    campos: [
+      { key: 'hallazgo', label: 'Hallazgo / resultado *', tipo: 'textarea', requerido: true },
+      { key: 'categoria', label: 'Categoría', tipo: 'select', opciones: CATEGORIAS_SAL04 },
+      { key: 'instrumentoFuente', label: 'Instrumento fuente (código INS-...) *', tipo: 'text', requerido: true, placeholder: 'ej. INS-EVA-03' },
+      { key: 'evidencia', label: 'Evidencia / dato de soporte *', tipo: 'textarea', requerido: true },
+      { key: 'relevancia', label: 'Relevancia para el cliente', tipo: 'textarea' },
+      { key: 'recomendacion', label: 'Recomendación asociada', tipo: 'textarea' }
+    ]
+  },
   ped01: {
     familia: 'PED',
     titulo: 'INS-PED-01 Guía de diseño instruccional',
@@ -977,6 +1021,8 @@ var INSTRUMENTOS_INSTALABLES = [
   { clave: 'DIA01', nombre: 'INS-DIA-01 — Ficha de diagnóstico inicial' },
   { clave: 'DIA02', nombre: 'INS-DIA-02 — Cuestionario diagnóstico (3 pestañas: Estructura, Reactivos, Respuestas)' },
   { clave: 'DIA03', nombre: 'INS-DIA-03 — Ficha de caracterización territorial' },
+  { clave: 'PLA01', nombre: 'INS-PLA-01 — Árbol de problemas' },
+  { clave: 'PLA02', nombre: 'INS-PLA-02 — Árbol de objetivos' },
   { clave: 'TER01', nombre: 'INS-TER-01 — Mapa de actores y recursos' },
   { clave: 'PLA04', nombre: 'INS-PLA-04 — Teoría / Matriz de cambio' },
   { clave: 'EVA01', nombre: 'INS-EVA-01 — Matriz de evaluación' },
@@ -985,6 +1031,8 @@ var INSTRUMENTOS_INSTALABLES = [
   { clave: 'OPE01', nombre: 'INS-OPE-01 — Cronograma / Gantt' },
   { clave: 'SAL01', nombre: 'INS-SAL-01 — Formato de informe técnico' },
   { clave: 'SAL02', nombre: 'INS-SAL-02 — Plantilla de informe ejecutivo' },
+  { clave: 'SAL03', nombre: 'INS-SAL-03 — Dashboard de resultados (especificación de contenido)' },
+  { clave: 'SAL04', nombre: 'INS-SAL-04 — Ficha de resultados / hallazgos' },
   { clave: 'PED01', nombre: 'INS-PED-01 — Guía de diseño instruccional / de taller' },
   { clave: 'PED02', nombre: 'INS-PED-02 — Malla / matriz curricular por competencias' },
   { clave: 'PED03', nombre: 'INS-PED-03 — Banco de dinámicas / actividades participativas' },
