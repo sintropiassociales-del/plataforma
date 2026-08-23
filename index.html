@@ -89,6 +89,7 @@
     align-items: flex-start; justify-content: center; padding: 30px 14px; overflow-y: auto; z-index: 50;
   }
   .modal { background: #fff; border-radius: 10px; padding: 22px; max-width: 560px; width: 100%; }
+  .modal.wide { max-width: 920px; }
   .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
   .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 6px; }
   .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #fff; border-top-color: transparent;
@@ -151,6 +152,10 @@ var ESTATUS_OPE01 = ['No iniciada', 'En proceso', 'Completada', 'Retrasada', 'Ca
 var TIPOS_CONTENIDO_SAL01 = ['Narrativo', 'Tabla', 'Gráfica', 'Anexo'];
 var SINO_SAL01 = ['Sí', 'No'];
 var PRIORIDADES_SAL02 = ['Alta', 'Media', 'Baja'];
+var METODOLOGIAS_PED01 = ['Exposición / cátedra', 'Dinámica participativa', 'Trabajo en equipo', 'Estudio de caso', 'Práctica guiada', 'Discusión dirigida', 'Otra (especificar en Notas)'];
+var EVALUACIONES_PED01 = ['Ninguna', 'Diagnóstico (no calificado)', 'Cuestionario', 'Rúbrica de desempeño', 'Producto entregable', 'Autoevaluación'];
+var NIVELES_PED02 = ['Básico', 'Intermedio', 'Avanzado'];
+var TIPOS_DINAMICA_PED03 = ['Rompehielo', 'Reflexión', 'Trabajo en equipo', 'Energizante', 'Cierre / evaluación', 'Sensibilización', 'Simulación / juego de roles'];
 
 /* ============================================================
  * Catálogo de instrumentos disponibles en la plataforma. Para
@@ -497,6 +502,76 @@ var INSTRUMENTOS = {
       { key: 'extension', label: 'Extensión estimada (páginas)', tipo: 'number' },
       { key: 'mensajeClave', label: 'Mensaje clave a transmitir *', tipo: 'textarea', requerido: true }
     ]
+  },
+  ped01: {
+    familia: 'PED',
+    titulo: 'INS-PED-01 Guía de diseño instruccional',
+    listar: 'listarPED01', guardar: 'guardarFilaPED01', eliminar: 'eliminarFilaPED01',
+    validar: 'validarPED01', descargar: 'generarDescargablePED01',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'noSesion', label: 'No.' },
+      { key: 'nombreSesion', label: 'Sesión' },
+      { key: 'metodologia', label: 'Metodología' },
+      { key: 'duracion', label: 'Duración (h)' }
+    ],
+    campos: [
+      { key: 'noSesion', label: 'No. de sesión / módulo', tipo: 'number' },
+      { key: 'nombreSesion', label: 'Nombre de la sesión *', tipo: 'text', requerido: true },
+      { key: 'objetivo', label: 'Objetivo de aprendizaje *', tipo: 'textarea', requerido: true, placeholder: 'Redactado como capacidad observable, ej. "Identificar 3 factores de..."' },
+      { key: 'contenido', label: 'Contenido / temas', tipo: 'textarea' },
+      { key: 'metodologia', label: 'Metodología / técnica didáctica', tipo: 'select', opciones: METODOLOGIAS_PED01 },
+      { key: 'duracion', label: 'Duración (horas) *', tipo: 'number', requerido: true },
+      { key: 'materiales', label: 'Materiales necesarios', tipo: 'text' },
+      { key: 'evaluacion', label: 'Forma de evaluación', tipo: 'select', opciones: EVALUACIONES_PED01 },
+      { key: 'responsable', label: 'Responsable / facilitador', tipo: 'text' },
+      { key: 'notas', label: 'Notas (p. ej. código de dinámica INS-PED-03)', tipo: 'text' }
+    ]
+  },
+  ped02: {
+    familia: 'PED',
+    titulo: 'INS-PED-02 Malla curricular',
+    listar: 'listarPED02', guardar: 'guardarFilaPED02', eliminar: 'eliminarFilaPED02',
+    validar: 'validarPED02', descargar: 'generarDescargablePED02',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'unidad', label: 'Unidad' },
+      { key: 'nivel', label: 'Nivel' },
+      { key: 'duracion', label: 'Duración (h)' },
+      { key: 'prerrequisito', label: 'Prerrequisito' }
+    ],
+    campos: [
+      { key: 'unidad', label: 'Unidad / módulo curricular *', tipo: 'text', requerido: true },
+      { key: 'competencia', label: 'Competencia a desarrollar', tipo: 'textarea' },
+      { key: 'nivel', label: 'Nivel de dominio esperado', tipo: 'select', opciones: NIVELES_PED02 },
+      { key: 'contenidos', label: 'Contenidos principales', tipo: 'textarea' },
+      { key: 'duracion', label: 'Duración (horas)', tipo: 'number' },
+      { key: 'prerrequisito', label: 'Prerrequisito (código de unidad)', tipo: 'text', placeholder: 'ej. UNI-01' },
+      { key: 'evidencia', label: 'Producto / evidencia de aprendizaje *', tipo: 'textarea', requerido: true }
+    ]
+  },
+  ped03: {
+    familia: 'PED',
+    titulo: 'INS-PED-03 Banco de dinámicas',
+    listar: 'listarPED03', guardar: 'guardarFilaPED03', eliminar: 'eliminarFilaPED03',
+    validar: 'validarPED03', descargar: 'generarDescargablePED03',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'nombre', label: 'Nombre' },
+      { key: 'tipo', label: 'Tipo' },
+      { key: 'duracion', label: 'Duración (min)' }
+    ],
+    campos: [
+      { key: 'nombre', label: 'Nombre de la dinámica *', tipo: 'text', requerido: true },
+      { key: 'objetivo', label: 'Objetivo', tipo: 'textarea' },
+      { key: 'tipo', label: 'Tipo', tipo: 'select', opciones: TIPOS_DINAMICA_PED03 },
+      { key: 'tamanoGrupo', label: 'Tamaño de grupo recomendado', tipo: 'text', placeholder: 'ej. 8-25 personas' },
+      { key: 'duracion', label: 'Duración (minutos) *', tipo: 'number', requerido: true },
+      { key: 'materiales', label: 'Materiales', tipo: 'text' },
+      { key: 'instrucciones', label: 'Instrucciones paso a paso *', tipo: 'textarea', requerido: true },
+      { key: 'ejes', label: 'Eje(s) donde aplica', tipo: 'text', placeholder: 'ej. EJE-EDU, EJE-COM' },
+      { key: 'servicios', label: 'Servicios donde se ha usado (códigos SRV)', tipo: 'text' }
+    ]
   }
 };
 
@@ -514,7 +589,10 @@ var INSTRUMENTOS_INSTALABLES = [
   { clave: 'EVA04', nombre: 'INS-EVA-04 — Guía de evaluación cualitativa' },
   { clave: 'OPE01', nombre: 'INS-OPE-01 — Cronograma / Gantt' },
   { clave: 'SAL01', nombre: 'INS-SAL-01 — Formato de informe técnico' },
-  { clave: 'SAL02', nombre: 'INS-SAL-02 — Plantilla de informe ejecutivo' }
+  { clave: 'SAL02', nombre: 'INS-SAL-02 — Plantilla de informe ejecutivo' },
+  { clave: 'PED01', nombre: 'INS-PED-01 — Guía de diseño instruccional / de taller' },
+  { clave: 'PED02', nombre: 'INS-PED-02 — Malla / matriz curricular por competencias' },
+  { clave: 'PED03', nombre: 'INS-PED-03 — Banco de dinámicas / actividades participativas' }
 ];
 
 /* ============================================================
@@ -888,7 +966,10 @@ function renderInstrumento(tipo) {
 
   box.innerHTML =
     '<div class="toolbar" style="justify-content:space-between">' +
-      '<button class="secondary" id="btnAgregarFila">+ Agregar fila</button>' +
+      '<div style="display:flex;gap:8px;align-items:center">' +
+        '<button class="secondary" id="btnAgregarFila">+ Agregar fila</button>' +
+        '<button class="secondary" id="btnImportar">Importar archivo</button>' +
+      '</div>' +
       '<div style="display:flex;gap:8px;align-items:center">' +
         '<button class="secondary" id="btnValidar">Validar</button>' +
         '<select id="selFormato" style="width:auto">' + opcionesFormato + '</select>' +
@@ -897,10 +978,11 @@ function renderInstrumento(tipo) {
     '</div>' +
     '<div id="validacionBox"></div>' +
     (filas.length === 0
-      ? '<p class="subtle">Todavía no hay filas capturadas. Si al validar o generar aparece un error de pestaña no encontrada, pide a tu administrador que lo instale en "Instrumentos".</p>'
+      ? '<p class="subtle">Todavía no hay filas capturadas. Puedes agregarlas una por una, o usar "Importar archivo" para cargar varias desde un CSV/Excel. Si al validar o generar aparece un error de pestaña no encontrada, pide a tu administrador que lo instale en "Instrumentos".</p>'
       : '<table><thead>' + thead + '</thead><tbody>' + trs + '</tbody></table>');
 
   document.getElementById('btnAgregarFila').onclick = function () { abrirModalFila(tipo, null); };
+  document.getElementById('btnImportar').onclick = function () { abrirModalImportar(tipo); };
   document.getElementById('btnValidar').onclick = function () { validarInstrumento(tipo); };
   document.getElementById('btnGenerar').onclick = function () { generarDescargable(tipo); };
   Array.prototype.forEach.call(box.querySelectorAll('button.edit'), function (b) {
@@ -1016,6 +1098,242 @@ function abrirModalFila(tipo, fila) {
     if (!r.ok) { msgBox.innerHTML = '<div class="msg error">' + r.error + '</div>'; btn.disabled = false; btn.textContent = 'Guardar'; return; }
     modal.remove();
     await cargarInstrumento(tipo);
+  };
+}
+
+/* ---------------- IMPORTAR ARCHIVO (CSV / Excel) ----------------
+ * Genérico para cualquier instrumento de una sola tabla: reutiliza
+ * cfg.campos (misma configuración del modal "Agregar fila") para
+ * mapear las columnas del archivo, arma lotes pequeños y llama a la
+ * acción de backend "importarFilas" (que a su vez reutiliza la
+ * función guardarFilaXXX de ese instrumento fila por fila).
+ * ------------------------------------------------------------- */
+
+function _normalizarTexto(s) {
+  var base = String(s == null ? '' : s).normalize('NFD');
+  var sinAcentos = '';
+  for (var i = 0; i < base.length; i++) {
+    var code = base.charCodeAt(i);
+    if (code >= 768 && code <= 879) continue; // marcas diacríticas combinadas (tildes, diéresis, etc.)
+    sinAcentos += base.charAt(i);
+  }
+  return sinAcentos.toLowerCase().replace(/\s*\*\s*$/, '').trim().replace(/\s+/g, ' ');
+}
+
+function _parseCSV(texto) {
+  var primeraLinea = (texto.split(/\r\n|\n|\r/)[0] || '');
+  var delim = (primeraLinea.split(';').length > primeraLinea.split(',').length) ? ';' : ',';
+  var filas = [], fila = [], campo = '', enComillas = false;
+  for (var i = 0; i < texto.length; i++) {
+    var c = texto[i];
+    if (enComillas) {
+      if (c === '"') {
+        if (texto[i + 1] === '"') { campo += '"'; i++; } else { enComillas = false; }
+      } else { campo += c; }
+    } else if (c === '"') {
+      enComillas = true;
+    } else if (c === delim) {
+      fila.push(campo); campo = '';
+    } else if (c === '\n' || c === '\r') {
+      if (c === '\r' && texto[i + 1] === '\n') i++;
+      fila.push(campo); campo = '';
+      filas.push(fila); fila = [];
+    } else {
+      campo += c;
+    }
+  }
+  if (campo !== '' || fila.length > 0) { fila.push(campo); filas.push(fila); }
+  return filas.filter(function (f) { return f.some(function (c) { return String(c).trim() !== ''; }); });
+}
+
+var _xlsxCargando = null;
+function _cargarXLSX() {
+  if (window.XLSX) return Promise.resolve();
+  if (_xlsxCargando) return _xlsxCargando;
+  _xlsxCargando = new Promise(function (resolve, reject) {
+    var script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';
+    script.onload = function () { resolve(); };
+    script.onerror = function () { _xlsxCargando = null; reject(new Error('No se pudo cargar el lector de Excel (revisa tu conexión a internet). Puedes exportar tu archivo como CSV e intentar de nuevo.')); };
+    document.body.appendChild(script);
+  });
+  return _xlsxCargando;
+}
+
+function _leerArchivoComoTabla(file) {
+  var nombre = file.name.toLowerCase();
+  if (nombre.endsWith('.csv')) {
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function () { resolve(_parseCSV(String(reader.result))); };
+      reader.onerror = function () { reject(new Error('No se pudo leer el archivo.')); };
+      reader.readAsText(file, 'UTF-8');
+    });
+  }
+  return _cargarXLSX().then(function () {
+    return new Promise(function (resolve, reject) {
+      var reader = new FileReader();
+      reader.onload = function () {
+        try {
+          var datos = new Uint8Array(reader.result);
+          var wb = XLSX.read(datos, { type: 'array' });
+          var hoja = wb.Sheets[wb.SheetNames[0]];
+          var tabla = XLSX.utils.sheet_to_json(hoja, { header: 1, raw: false, defval: '' });
+          resolve(tabla.filter(function (f) { return f.some(function (c) { return String(c).trim() !== ''; }); }));
+        } catch (e) { reject(new Error('No se pudo leer el archivo Excel: ' + e.message)); }
+      };
+      reader.onerror = function () { reject(new Error('No se pudo leer el archivo.')); };
+      reader.readAsArrayBuffer(file);
+    });
+  });
+}
+
+function _mapearColumnas(headerRow, campos) {
+  return headerRow.map(function (h) {
+    var hn = _normalizarTexto(h);
+    if (!hn) return null;
+    var match = campos.filter(function (c) {
+      return _normalizarTexto(c.label) === hn || _normalizarTexto(c.key) === hn;
+    })[0];
+    return match ? match.key : null;
+  });
+}
+
+function _filasDesdeTabla(tabla, campos) {
+  if (!tabla.length) return { filas: [], noReconocidas: [], faltantes: [] };
+  var headerRow = tabla[0];
+  var mapa = _mapearColumnas(headerRow, campos);
+  var noReconocidas = headerRow.filter(function (h, i) { return h && String(h).trim() && !mapa[i]; });
+  var reconocidas = {};
+  mapa.forEach(function (k) { if (k) reconocidas[k] = true; });
+  var faltantes = campos.filter(function (c) { return c.requerido && !reconocidas[c.key]; })
+    .map(function (c) { return c.label.replace(/\s*\*\s*$/, ''); });
+
+  var filas = [];
+  for (var r = 1; r < tabla.length; r++) {
+    var fila = {}, vacia = true;
+    mapa.forEach(function (k, i) {
+      if (!k) return;
+      var v = tabla[r][i] != null ? String(tabla[r][i]).trim() : '';
+      if (v !== '') vacia = false;
+      fila[k] = v;
+    });
+    if (!vacia) filas.push(fila);
+  }
+  return { filas: filas, noReconocidas: noReconocidas, faltantes: faltantes };
+}
+
+function _csvEscape(v) {
+  v = String(v == null ? '' : v);
+  if (/["\n,;]/.test(v)) return '"' + v.replace(/"/g, '""') + '"';
+  return v;
+}
+
+function descargarPlantilla(tipo) {
+  var cfg = INSTRUMENTOS[tipo];
+  var headers = cfg.campos.map(function (c) { return c.label.replace(/\s*\*\s*$/, ''); });
+  var csv = headers.map(_csvEscape).join(',') + '\r\n';
+  var blob = new Blob([String.fromCharCode(65279) + csv], { type: 'text/csv;charset=utf-8;' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = 'plantilla_' + tipo + '.csv';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+}
+
+function abrirModalImportar(tipo) {
+  var cfg = INSTRUMENTOS[tipo];
+  var estado = { filas: [] };
+
+  var modal = el(
+    '<div class="modal-bg"><div class="modal wide">' +
+      '<h2>Importar filas — ' + cfg.titulo + '</h2>' +
+      '<p class="subtle">Sube un archivo CSV o Excel (.xlsx) con una fila por registro. La primera fila del archivo debe traer los nombres de columna — pueden coincidir con la etiqueta del campo tal como aparece en el formulario de "Agregar fila".</p>' +
+      '<p><button class="secondary" type="button" id="btnPlantilla">Descargar plantilla (CSV)</button></p>' +
+      '<label>Archivo</label><input type="file" id="impArchivo" accept=".csv,.xlsx,.xls">' +
+      '<div id="impPreview"></div>' +
+      '<div id="impMsg"></div>' +
+      '<div class="modal-actions">' +
+        '<button class="secondary" id="impCancelar">Cancelar</button>' +
+        '<button class="primary" id="impConfirmar" disabled>Confirmar e importar</button>' +
+      '</div>' +
+    '</div></div>'
+  );
+  document.body.appendChild(modal);
+  modal.querySelector('#impCancelar').onclick = function () { modal.remove(); };
+  modal.querySelector('#btnPlantilla').onclick = function () { descargarPlantilla(tipo); };
+
+  modal.querySelector('#impArchivo').onchange = async function (ev) {
+    var file = ev.target.files[0];
+    var previewBox = modal.querySelector('#impPreview');
+    var msgBox = modal.querySelector('#impMsg');
+    var confirmarBtn = modal.querySelector('#impConfirmar');
+    confirmarBtn.disabled = true;
+    msgBox.innerHTML = '';
+    estado.filas = [];
+    if (!file) { previewBox.innerHTML = ''; return; }
+    previewBox.innerHTML = '<p class="subtle">Leyendo archivo...</p>';
+    try {
+      var tabla = await _leerArchivoComoTabla(file);
+      var res = _filasDesdeTabla(tabla, cfg.campos);
+      estado.filas = res.filas;
+
+      var previewFilas = res.filas.slice(0, 15);
+      var thead = '<tr>' + cfg.campos.map(function (c) { return '<th>' + c.label.replace(/\s*\*\s*$/, '') + '</th>'; }).join('') + '</tr>';
+      var trs = previewFilas.map(function (f) {
+        return '<tr>' + cfg.campos.map(function (c) { return '<td>' + escapeHtml(f[c.key] || '') + '</td>'; }).join('') + '</tr>';
+      }).join('');
+
+      var avisos = '';
+      if (res.faltantes.length) {
+        avisos += '<div class="msg error">No se encontró una columna para estos campos obligatorios: ' + res.faltantes.join(', ') + '. Corrige los nombres de columna en el archivo antes de importar.</div>';
+      }
+      if (res.noReconocidas.length) {
+        avisos += '<div class="msg info">Estas columnas del archivo no coinciden con ningún campo del formulario y se ignorarán: ' + res.noReconocidas.join(', ') + '.</div>';
+      }
+
+      previewBox.innerHTML =
+        '<p class="subtle">' + res.filas.length + ' fila(s) detectada(s)' + (res.filas.length > 15 ? ' (mostrando las primeras 15)' : '') + '.</p>' +
+        avisos +
+        (res.filas.length ? '<div style="overflow-x:auto"><table><thead>' + thead + '</thead><tbody>' + trs + '</tbody></table></div>' : '');
+
+      confirmarBtn.disabled = !(res.filas.length > 0 && res.faltantes.length === 0);
+    } catch (e) {
+      previewBox.innerHTML = '';
+      msgBox.innerHTML = '<div class="msg error">' + e.message + '</div>';
+    }
+  };
+
+  modal.querySelector('#impConfirmar').onclick = async function () {
+    var btn = modal.querySelector('#impConfirmar');
+    var msgBox = modal.querySelector('#impMsg');
+    btn.disabled = true;
+
+    var lotes = [], loteActual = [], tamanoActual = 0;
+    estado.filas.forEach(function (f) {
+      var tam = JSON.stringify(f).length;
+      if (loteActual.length && tamanoActual + tam > 3000) { lotes.push(loteActual); loteActual = []; tamanoActual = 0; }
+      loteActual.push(f); tamanoActual += tam;
+    });
+    if (loteActual.length) lotes.push(loteActual);
+
+    var creadas = 0, procesadas = 0, errores = [];
+    for (var i = 0; i < lotes.length; i++) {
+      msgBox.innerHTML = '<div class="msg info">Importando... lote ' + (i + 1) + ' de ' + lotes.length + ' (' + procesadas + '/' + estado.filas.length + ' procesadas)</div>';
+      var r = await api('importarFilas', { tipo: tipo, proyecto: state.proyectoActivo.codigo, filas: JSON.stringify(lotes[i]) });
+      procesadas += lotes[i].length;
+      if (!r.ok) { errores.push(r.error || 'Error desconocido en un lote.'); continue; }
+      creadas += r.creadas || 0;
+      if (r.errores && r.errores.length) errores = errores.concat(r.errores);
+    }
+
+    msgBox.innerHTML = '<div class="msg ' + (errores.length ? 'info' : 'ok') + '">Se importaron ' + creadas + ' de ' + estado.filas.length + ' fila(s).' +
+      (errores.length ? ' ' + errores.length + ' con problemas:<ul style="margin:6px 0 0;padding-left:18px">' +
+        errores.slice(0, 20).map(function (e) { return '<li>' + escapeHtml(e) + '</li>'; }).join('') + '</ul>' : '') +
+      ' Recuerda usar "Validar" para revisar filas incompletas.</div>';
+    btn.textContent = 'Cerrar';
+    btn.disabled = false;
+    btn.onclick = async function () { modal.remove(); await cargarInstrumento(tipo); };
   };
 }
 
