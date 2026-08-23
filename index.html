@@ -1239,7 +1239,7 @@ function renderApp() {
     '<header class="topbar">' +
       '<div class="brand">Plataforma <span>Sintropía</span></div>' +
       '<div class="userbox">' +
-        '<span>' + session.nombre + ' &middot; <span class="badge ' + (esAdmin() ? 'admin' : 'operativo') + '">' + session.rol + '</span></span>' +
+        '<span>' + escapeHtml(session.nombre) + ' &middot; <span class="badge ' + (esAdmin() ? 'admin' : 'operativo') + '">' + escapeHtml(session.rol) + '</span></span>' +
         '<button class="logout" id="btnLogout">Cerrar sesión</button>' +
       '</div>' +
     '</header>' +
@@ -1278,13 +1278,13 @@ function renderProyectos() {
   var main = document.getElementById('main');
   var filas = state.proyectos.map(function (p) {
     return '<tr>' +
-      '<td>' + p.codigo + '</td>' +
-      '<td>' + p.cliente + '</td>' +
-      '<td>' + (p.ejeNombre || '—') + '</td>' +
-      '<td>' + (p.responsable || '—') + '</td>' +
-      '<td>' + (p.fechaInicio || '—') + '</td>' +
-      '<td>' + (p.estatus || '—') + '</td>' +
-      '<td><button class="small secondary" data-codigo="' + p.codigo + '">Abrir</button></td>' +
+      '<td>' + escapeHtml(p.codigo) + '</td>' +
+      '<td>' + escapeHtml(p.cliente) + '</td>' +
+      '<td>' + escapeHtml(p.ejeNombre || '—') + '</td>' +
+      '<td>' + escapeHtml(p.responsable || '—') + '</td>' +
+      '<td>' + escapeHtml(p.fechaInicio || '—') + '</td>' +
+      '<td>' + escapeHtml(p.estatus || '—') + '</td>' +
+      '<td><button class="small secondary" data-codigo="' + escapeHtml(p.codigo) + '">Abrir</button></td>' +
     '</tr>';
   }).join('');
 
@@ -1376,8 +1376,8 @@ function renderProyectoDetalle() {
   main.innerHTML =
     '<div class="breadcrumb" id="bcVolver">&larr; Volver a <span>Proyectos</span></div>' +
     '<div class="card">' +
-      '<h2 style="margin-bottom:2px">' + p.codigo + ' — ' + p.cliente + '</h2>' +
-      '<p class="subtle">Eje: ' + (p.ejeNombre || '—') + (p.servicioNombre ? ' &middot; Servicio: ' + p.servicioNombre : '') + '</p>' +
+      '<h2 style="margin-bottom:2px">' + escapeHtml(p.codigo) + ' — ' + escapeHtml(p.cliente) + '</h2>' +
+      '<p class="subtle">Eje: ' + escapeHtml(p.ejeNombre || '—') + (p.servicioNombre ? ' &middot; Servicio: ' + escapeHtml(p.servicioNombre) : '') + '</p>' +
       '<div class="familias">' + familiasHtml + '</div>' +
       '<div class="subtabs">' + subtabsHtml + '</div>' +
       '<div id="subContent"></div>' +
@@ -1464,7 +1464,13 @@ function renderInstrumento(tipo) {
 }
 
 function escapeHtml(s) {
-  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  // Escapa también comillas dobles/simples: este mismo resultado se usa tanto
+  // dentro de texto (<td>...</td>) como dentro de atributos (value="...").
+  // Sin escapar comillas, un valor guardado por el usuario que contuviera un
+  // " podía "romper" el atributo value="" e inyectar atributos/eventos propios
+  // (ej. onfocus=...) — esto ya quedó corregido con este cambio.
+  return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
 async function validarInstrumento(tipo) {
@@ -2143,13 +2149,13 @@ async function renderUsuarios() {
   var filas = state.usuarios.map(function (u) {
     return '<tr>' +
       '<td>' + escapeHtml(u.nombre) + '</td>' +
-      '<td>' + u.email + '</td>' +
+      '<td>' + escapeHtml(u.email) + '</td>' +
       '<td><span class="badge ' + (u.rol === 'Administrador' ? 'admin' : 'operativo') + '">' + u.rol + '</span></td>' +
       '<td><span class="badge ' + (u.estado === 'Activo' ? 'activo' : 'inactivo') + '">' + u.estado + '</span></td>' +
       '<td>' +
-        '<button class="small secondary" data-accion="toggle" data-email="' + u.email + '" data-estado="' + u.estado + '">' +
+        '<button class="small secondary" data-accion="toggle" data-email="' + escapeHtml(u.email) + '" data-estado="' + u.estado + '">' +
           (u.estado === 'Activo' ? 'Desactivar' : 'Activar') + '</button> ' +
-        '<button class="small secondary" data-accion="reset" data-email="' + u.email + '">Restablecer contraseña</button>' +
+        '<button class="small secondary" data-accion="reset" data-email="' + escapeHtml(u.email) + '">Restablecer contraseña</button>' +
       '</td>' +
     '</tr>';
   }).join('');
@@ -2231,7 +2237,7 @@ function renderInstrumentos() {
 
   main.innerHTML =
     '<h2 style="color:var(--purple);margin:0 0 6px">Instrumentos</h2>' +
-    '<p class="subtle">PLA-01 y PLA-02 ya están instalados. Los demás instrumentos del catálogo se agregan aquí conforme se van habilitando en la plataforma.</p>' +
+    '<p class="subtle">Instala cada instrumento una sola vez por proyecto — después queda disponible en su pestaña correspondiente dentro de "Proyectos".</p>' +
     (filas || '<p class="subtle">No hay instrumentos pendientes de instalar por ahora.</p>');
 
   Array.prototype.forEach.call(main.querySelectorAll('[data-clave]'), function (b) {
@@ -2254,7 +2260,7 @@ function renderCuenta() {
   main.innerHTML =
     '<div class="card">' +
       '<h2>Mi cuenta</h2>' +
-      '<p class="subtle">' + session.nombre + ' &middot; ' + session.email + '</p>' +
+      '<p class="subtle">' + escapeHtml(session.nombre) + ' &middot; ' + escapeHtml(session.email) + '</p>' +
       '<h3>Cambiar mi contraseña</h3>' +
       '<label>Contraseña actual</label><input type="password" id="cActual">' +
       '<label>Contraseña nueva</label><input type="password" id="cNueva">' +
