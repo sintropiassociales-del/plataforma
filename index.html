@@ -171,6 +171,97 @@ var TIPOS_PREGUNTA_CUA = ['Introductoria', 'Central', 'Profundización', 'Cierre
 var NIVELES_CONSENSO_CUA02 = ['Consenso amplio', 'Opiniones divididas', 'Opinión aislada'];
 
 /* ============================================================
+ * CRM — Clientes / prospectos / interesados. No está ligado a
+ * ningún proyecto (es la base comercial de Sintropía), así que no
+ * vive dentro de INSTRUMENTOS/FAMILIAS: es su propia sección del
+ * menú superior, visible solo para Administrador.
+ * ============================================================ */
+var CATEGORIAS_CRM = ['Gobierno y Sector Público', 'ONG y Fundaciones', 'Educación', 'Salud y Bienestar',
+  'Universidad', 'Cámara empresarial', 'Empresa privada', 'Retail y Consumo', 'Fintech y Servicios',
+  'Tecnología y Telecom', 'Turismo y Hospitalidad', 'Organismo internacional', 'Otro'];
+var EJES_INTERES_CRM = ['Investigación Social', 'Educación', 'Comunidad', 'Empleo, empleabilidad y trabajo',
+  'Renta de contenido mensual', 'Suscripción Dashboard', 'Sin definir'];
+var FUENTES_CRM = ['LinkedIn', 'Directorio OSC / CLUNI', 'Directorio público / sitio institucional',
+  'Convocatoria / Fondo', 'Evento / Feria', 'Alianza / Referido', 'Formulario web (lead magnet)', 'Otro'];
+var SINO_CRM = ['Sí', 'No'];
+var ESTATUS_CRM = ['Nuevo', 'Contactado', 'En conversación', 'Propuesta enviada', 'En pausa', 'Venta', 'Finalizado', 'Descartado'];
+var TIPOS_CONTACTO_CRM = ['Llamada', 'Correo', 'Reunión presencial', 'Videollamada', 'WhatsApp', 'Otro'];
+
+var COLORES_ESTATUS_CRM = {
+  'Nuevo': { bg: '#EFEAFB', fg: '#5B3DBB' },
+  'Contactado': { bg: '#E4EEFB', fg: '#1B5FAD' },
+  'En conversación': { bg: '#E4EEFB', fg: '#1B5FAD' },
+  'Propuesta enviada': { bg: '#FFF1E4', fg: '#B5591A' },
+  'En pausa': { bg: '#F1F1F1', fg: '#666666' },
+  'Venta': { bg: '#E4F7EA', fg: '#1E8E4C' },
+  'Finalizado': { bg: '#E4F7EA', fg: '#1E8E4C' },
+  'Descartado': { bg: '#FBEAEA', fg: '#C0392B' }
+};
+function _badgeEstatusCRM(estatus) {
+  var c = COLORES_ESTATUS_CRM[estatus] || { bg: '#F1F1F1', fg: '#666666' };
+  return '<span class="badge" style="background:' + c.bg + ';color:' + c.fg + '">' + escapeHtml(estatus || '—') + '</span>';
+}
+
+var CRM_TIPOS = {
+  crm_clientes: {
+    titulo: 'Cliente / prospecto',
+    listar: 'listarCRMClientes', guardar: 'guardarFilaCRMClientes', eliminar: 'eliminarFilaCRMClientes',
+    campos: [
+      { key: 'organizacion', label: 'Organización *', tipo: 'text', requerido: true },
+      { key: 'categoria', label: 'Categoría / sector', tipo: 'select', opciones: CATEGORIAS_CRM },
+      { key: 'ejeInteres', label: 'Eje de interés', tipo: 'select', opciones: EJES_INTERES_CRM },
+      { key: 'nombreContacto', label: 'Nombre de contacto', tipo: 'text' },
+      { key: 'cargo', label: 'Cargo', tipo: 'text' },
+      { key: 'correo', label: 'Correo', tipo: 'text' },
+      { key: 'telefono', label: 'Teléfono', tipo: 'text' },
+      { key: 'estado', label: 'Estado / región', tipo: 'text' },
+      { key: 'sitioWeb', label: 'Sitio web', tipo: 'text' },
+      { key: 'fuente', label: 'Fuente', tipo: 'select', opciones: FUENTES_CRM },
+      { key: 'leadMagnet', label: 'Lead magnet descargado', tipo: 'text' },
+      { key: 'consentimiento', label: 'Consentimiento (opt-in)', tipo: 'select', opciones: SINO_CRM },
+      { key: 'estatus', label: 'Estatus', tipo: 'select', opciones: ESTATUS_CRM },
+      { key: 'servicioVendido', label: '¿Qué se le vendió? (si Estatus = Venta)', tipo: 'text' },
+      { key: 'montoVenta', label: 'Monto de venta (MXN)', tipo: 'number' },
+      { key: 'fechaVenta', label: 'Fecha de venta', tipo: 'date' },
+      { key: 'fechaPrimerContacto', label: 'Fecha de primer contacto', tipo: 'date' },
+      { key: 'notas', label: 'Notas', tipo: 'textarea' }
+    ]
+  },
+  crm_seguimientos: {
+    titulo: 'Seguimiento',
+    listar: 'listarCRMSeguimientos', guardar: 'guardarFilaCRMSeguimientos', eliminar: 'eliminarFilaCRMSeguimientos',
+    campos: [
+      { key: 'fecha', label: 'Fecha de seguimiento *', tipo: 'date', requerido: true },
+      { key: 'tipoContacto', label: 'Tipo de contacto', tipo: 'select', opciones: TIPOS_CONTACTO_CRM },
+      { key: 'notas', label: 'Notas / acuerdos *', tipo: 'textarea', requerido: true },
+      { key: 'proximaAccion', label: 'Próxima acción', tipo: 'text' },
+      { key: 'fechaProximo', label: 'Fecha de próximo seguimiento', tipo: 'date' },
+      { key: 'responsable', label: 'Responsable', tipo: 'text' }
+    ]
+  },
+  crm_interesados: {
+    titulo: 'Interesado',
+    listar: 'listarCRMInteresados', guardar: 'guardarFilaCRMInteresados', eliminar: 'eliminarFilaCRMInteresados',
+    campos: [
+      { key: 'nombre', label: 'Nombre *', tipo: 'text', requerido: true },
+      { key: 'apellido', label: 'Apellido', tipo: 'text' },
+      { key: 'estado', label: 'Estado', tipo: 'text' },
+      { key: 'municipio', label: 'Municipio', tipo: 'text' },
+      { key: 'edad', label: 'Edad', tipo: 'number' },
+      { key: 'email', label: 'Email', tipo: 'text' },
+      { key: 'telefono', label: 'Teléfono', tipo: 'text' },
+      { key: 'interes', label: 'En qué está interesado', tipo: 'select', opciones: EJES_INTERES_CRM },
+      { key: 'fuente', label: 'Fuente / cómo se enteró', tipo: 'select', opciones: FUENTES_CRM },
+      { key: 'fechaRegistro', label: 'Fecha de registro', tipo: 'date' },
+      { key: 'consentimiento', label: 'Consentimiento (opt-in)', tipo: 'select', opciones: SINO_CRM },
+      { key: 'notas', label: 'Notas', tipo: 'textarea' }
+    ]
+  }
+};
+
+function _cfgTipo(tipo) { return INSTRUMENTOS[tipo] || CRM_TIPOS[tipo]; }
+
+/* ============================================================
  * Catálogo de instrumentos disponibles en la plataforma. Para
  * agregar un instrumento nuevo: define su entrada aquí (tabla +
  * formulario) y las funciones apiListarXXX/apiGuardarFilaXXX/... del
@@ -904,7 +995,8 @@ var INSTRUMENTOS_INSTALABLES = [
   { clave: 'IND0304', nombre: 'INS-IND-03 + INS-IND-04 — Matriz de Seguimiento Integral (2 pestañas: Actividades, Indicadores)' },
   { clave: 'EVA02', nombre: 'INS-EVA-02 — Encuesta de satisfacción (2 pestañas: Preguntas, Respuestas)' },
   { clave: 'CUA01', nombre: 'INS-CUA-01 — Guía de entrevista semiestructurada (2 pestañas: Guía, Respuestas)' },
-  { clave: 'CUA02', nombre: 'INS-CUA-02 — Guía de grupo focal (2 pestañas: Guía, Aportaciones)' }
+  { clave: 'CUA02', nombre: 'INS-CUA-02 — Guía de grupo focal (2 pestañas: Guía, Aportaciones)' },
+  { clave: 'CRM', nombre: 'CRM — Clientes / prospectos, seguimientos e interesados (3 pestañas, no ligadas a un proyecto)' }
 ];
 
 /* ============================================================
@@ -923,7 +1015,12 @@ var state = {
   familiaActiva: 'DIA',   // clave dentro de FAMILIAS
   subtab: 'dia01',        // clave dentro de INSTRUMENTOS
   filas: {},              // { dia01: [...], pla01: [...], pla02: [...] }
-  usuarios: []
+  usuarios: [],
+  crmSubview: 'clientes', // clientes | interesados
+  crmClientes: [],
+  crmInteresados: [],
+  crmFiltroEstatus: 'Todos',
+  crmBusqueda: ''
 };
 
 // Claves de INSTRUMENTOS que pertenecen a una familia, en el mismo orden
@@ -1084,6 +1181,7 @@ async function doLogin() {
 function renderApp() {
   var tabs = '<button data-tab="proyectos" class="' + (state.view === 'proyectos' ? 'active' : '') + '">Proyectos</button>';
   if (esAdmin()) {
+    tabs += '<button data-tab="crm" class="' + (state.view === 'crm' ? 'active' : '') + '">Clientes</button>';
     tabs += '<button data-tab="usuarios" class="' + (state.view === 'usuarios' ? 'active' : '') + '">Usuarios</button>';
     tabs += '<button data-tab="instrumentos" class="' + (state.view === 'instrumentos' ? 'active' : '') + '">Instrumentos</button>';
   }
@@ -1111,6 +1209,8 @@ function renderApp() {
 function renderMain() {
   if (state.view === 'proyectos') {
     if (state.proyectoActivo) renderProyectoDetalle(); else renderProyectos();
+  } else if (state.view === 'crm' && esAdmin()) {
+    renderCRM();
   } else if (state.view === 'usuarios' && esAdmin()) {
     renderUsuarios();
   } else if (state.view === 'instrumentos' && esAdmin()) {
@@ -1356,18 +1456,21 @@ async function generarDescargable(tipo) {
   manejarDescargable(r);
 }
 
-function abrirModalFila(tipo, fila) {
-  var cfg = INSTRUMENTOS[tipo];
+// opts (todos opcionales): { proyecto: '...', extra: {...}, alGuardar: async fn, titulo: '...' }
+// Sin opts, se comporta igual que antes (instrumento dentro de un proyecto).
+function abrirModalFila(tipo, fila, opts) {
+  opts = opts || {};
+  var cfg = _cfgTipo(tipo);
   var editando = !!fila;
 
   var camposHtml = cfg.campos.map(function (c) {
     var id = 'f_' + c.key;
     var val = fila ? (fila[c.key] != null ? fila[c.key] : '') : '';
     if (c.tipo === 'select') {
-      var opts = c.opciones.map(function (o) {
+      var opts2 = c.opciones.map(function (o) {
         return '<option ' + (fila && fila[c.key] === o ? 'selected' : '') + '>' + o + '</option>';
       }).join('');
-      return '<label>' + c.label + '</label><select id="' + id + '">' + opts + '</select>';
+      return '<label>' + c.label + '</label><select id="' + id + '">' + opts2 + '</select>';
     }
     if (c.tipo === 'textarea') {
       return '<label>' + c.label + '</label><textarea id="' + id + '">' + escapeHtml(val) + '</textarea>';
@@ -1378,7 +1481,7 @@ function abrirModalFila(tipo, fila) {
 
   var modal = el(
     '<div class="modal-bg"><div class="modal">' +
-      '<h2>' + (editando ? 'Editar fila ' + fila.codigo : 'Agregar fila') + '</h2>' +
+      '<h2>' + (editando ? 'Editar ' + (opts.titulo || 'fila') + ' ' + fila.codigo : 'Agregar ' + (opts.titulo || 'fila')) + '</h2>' +
       camposHtml +
       '<div id="filaMsg"></div>' +
       '<div class="modal-actions">' +
@@ -1392,7 +1495,10 @@ function abrirModalFila(tipo, fila) {
   modal.querySelector('#filaGuardar').onclick = async function () {
     var btn = modal.querySelector('#filaGuardar');
     var msgBox = modal.querySelector('#filaMsg');
-    var params = { proyecto: state.proyectoActivo.codigo };
+    var params = {};
+    var proyectoCodigo = ('proyecto' in opts) ? opts.proyecto : (state.proyectoActivo ? state.proyectoActivo.codigo : '');
+    if (proyectoCodigo) params.proyecto = proyectoCodigo;
+    if (opts.extra) Object.keys(opts.extra).forEach(function (k) { params[k] = opts.extra[k]; });
     if (editando) params.codigo = fila.codigo;
 
     var faltante = null;
@@ -1409,7 +1515,7 @@ function abrirModalFila(tipo, fila) {
     var r = await api(cfg.guardar, params);
     if (!r.ok) { msgBox.innerHTML = '<div class="msg error">' + r.error + '</div>'; btn.disabled = false; btn.textContent = 'Guardar'; return; }
     modal.remove();
-    await cargarInstrumento(tipo);
+    if (opts.alGuardar) { await opts.alGuardar(); } else { await cargarInstrumento(tipo); }
   };
 }
 
@@ -1542,7 +1648,7 @@ function _csvEscape(v) {
 }
 
 function descargarPlantilla(tipo) {
-  var cfg = INSTRUMENTOS[tipo];
+  var cfg = _cfgTipo(tipo);
   var headers = cfg.campos.map(function (c) { return c.label.replace(/\s*\*\s*$/, ''); });
   var csv = headers.map(_csvEscape).join(',') + '\r\n';
   var blob = new Blob([String.fromCharCode(65279) + csv], { type: 'text/csv;charset=utf-8;' });
@@ -1553,8 +1659,11 @@ function descargarPlantilla(tipo) {
   setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
 }
 
-function abrirModalImportar(tipo) {
-  var cfg = INSTRUMENTOS[tipo];
+// opts (opcional): { proyecto: '...', alTerminar: async fn }. Sin opts,
+// se comporta igual que antes (instrumento dentro de un proyecto).
+function abrirModalImportar(tipo, opts) {
+  opts = opts || {};
+  var cfg = _cfgTipo(tipo);
   var estado = { filas: [] };
 
   var modal = el(
@@ -1629,10 +1738,13 @@ function abrirModalImportar(tipo) {
     });
     if (loteActual.length) lotes.push(loteActual);
 
+    var proyectoCodigo = ('proyecto' in opts) ? opts.proyecto : (state.proyectoActivo ? state.proyectoActivo.codigo : '');
     var creadas = 0, procesadas = 0, errores = [];
     for (var i = 0; i < lotes.length; i++) {
       msgBox.innerHTML = '<div class="msg info">Importando... lote ' + (i + 1) + ' de ' + lotes.length + ' (' + procesadas + '/' + estado.filas.length + ' procesadas)</div>';
-      var r = await api('importarFilas', { tipo: tipo, proyecto: state.proyectoActivo.codigo, filas: JSON.stringify(lotes[i]) });
+      var paramsImp = { tipo: tipo, filas: JSON.stringify(lotes[i]) };
+      if (proyectoCodigo) paramsImp.proyecto = proyectoCodigo;
+      var r = await api('importarFilas', paramsImp);
       procesadas += lotes[i].length;
       if (!r.ok) { errores.push(r.error || 'Error desconocido en un lote.'); continue; }
       creadas += r.creadas || 0;
@@ -1645,8 +1757,330 @@ function abrirModalImportar(tipo) {
       ' Recuerda usar "Validar" para revisar filas incompletas.</div>';
     btn.textContent = 'Cerrar';
     btn.disabled = false;
-    btn.onclick = async function () { modal.remove(); await cargarInstrumento(tipo); };
+    btn.onclick = async function () { modal.remove(); if (opts.alTerminar) { await opts.alTerminar(); } else { await cargarInstrumento(tipo); } };
   };
+}
+
+/* ---------------- CRM: Clientes / prospectos / interesados (solo Administrador) ----------------
+ * No está ligado a ningún proyecto. Dos sub-vistas dentro de la misma
+ * pestaña "Clientes" del menú: Clientes/prospectos (con su historial de
+ * Seguimientos, consultado desde el detalle de cada uno para no
+ * amontonar columnas) e Interesados (registro genérico de leads).
+ * ------------------------------------------------------------------ */
+
+async function cargarCRMClientes() {
+  var r = await api('listarCRMClientes', {});
+  if (r.ok) state.crmClientes = r.data;
+}
+
+async function cargarCRMInteresados() {
+  var r = await api('listarCRMInteresados', {});
+  if (r.ok) state.crmInteresados = r.data;
+}
+
+async function renderCRM() {
+  var main = document.getElementById('main');
+  main.innerHTML =
+    '<div class="subtabs">' +
+      '<button data-crmsub="clientes" class="' + (state.crmSubview === 'clientes' ? 'active' : '') + '">Clientes / prospectos</button>' +
+      '<button data-crmsub="interesados" class="' + (state.crmSubview === 'interesados' ? 'active' : '') + '">Interesados</button>' +
+    '</div>' +
+    '<div id="crmContent"><p class="subtle">Cargando...</p></div>';
+  Array.prototype.forEach.call(main.querySelectorAll('[data-crmsub]'), function (b) {
+    b.onclick = function () { state.crmSubview = b.getAttribute('data-crmsub'); renderCRM(); };
+  });
+  if (state.crmSubview === 'clientes') { await renderCRMClientes(); } else { await renderCRMInteresados(); }
+}
+
+/* ---- Clientes / prospectos ---- */
+
+async function renderCRMClientes() {
+  await cargarCRMClientes();
+  renderCRMClientesTabla();
+}
+
+// El "shell" (barra de herramientas, buscador, chips de estatus) solo se
+// construye una vez: así escribir en el buscador no reconstruye el <input>
+// en cada tecla (lo que le haría perder el foco). Solo se vuelve a dibujar
+// #crmClientesResultados al filtrar/buscar.
+function renderCRMClientesTabla() {
+  var box = document.getElementById('crmContent');
+  if (!box) return;
+
+  if (!box.querySelector('#crmClientesShell')) {
+    var chips = ['Todos'].concat(ESTATUS_CRM).map(function (e) {
+      return '<button data-filtro="' + escapeHtml(e) + '">' + escapeHtml(e) + '</button>';
+    }).join('');
+    box.innerHTML =
+      '<div id="crmClientesShell">' +
+        '<div class="toolbar" style="justify-content:space-between;flex-wrap:wrap;gap:8px">' +
+          '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
+            '<button class="secondary" id="btnNuevoCliente">+ Agregar cliente</button>' +
+            '<button class="secondary" id="btnImportarClientes">Importar archivo</button>' +
+            '<button class="secondary" id="btnExportarClientes">Exportar a Excel</button>' +
+          '</div>' +
+          '<input type="text" id="buscarCliente" placeholder="Buscar por organización, contacto o correo..." style="max-width:280px">' +
+        '</div>' +
+        '<div class="familias" id="crmChips" style="margin-top:10px">' + chips + '</div>' +
+        '<div id="crmClientesResultados"></div>' +
+      '</div>';
+
+    document.getElementById('btnNuevoCliente').onclick = function () { abrirModalCliente(null); };
+    document.getElementById('btnImportarClientes').onclick = function () {
+      abrirModalImportar('crm_clientes', { proyecto: '', alTerminar: async function () { await renderCRMClientes(); } });
+    };
+    document.getElementById('btnExportarClientes').onclick = async function () {
+      var r = await api('exportarCRMClientes', { formato: 'xlsx' });
+      manejarDescargable(r);
+    };
+    var buscarInput = document.getElementById('buscarCliente');
+    buscarInput.value = state.crmBusqueda;
+    buscarInput.oninput = function () { state.crmBusqueda = buscarInput.value; _renderCRMClientesResultados(); };
+    Array.prototype.forEach.call(box.querySelectorAll('[data-filtro]'), function (b) {
+      b.onclick = function () { state.crmFiltroEstatus = b.getAttribute('data-filtro'); _marcarChipCRMActivo(); _renderCRMClientesResultados(); };
+    });
+  }
+  _marcarChipCRMActivo();
+  _renderCRMClientesResultados();
+}
+
+function _marcarChipCRMActivo() {
+  var box = document.getElementById('crmChips');
+  if (!box) return;
+  Array.prototype.forEach.call(box.querySelectorAll('button'), function (b) {
+    b.classList.toggle('active', b.getAttribute('data-filtro') === state.crmFiltroEstatus);
+  });
+}
+
+function _renderCRMClientesResultados() {
+  var resBox = document.getElementById('crmClientesResultados');
+  if (!resBox) return;
+  var filtro = state.crmFiltroEstatus;
+  var busqueda = _normalizarTexto(state.crmBusqueda);
+  var lista = state.crmClientes.filter(function (c) {
+    if (filtro !== 'Todos' && c.estatus !== filtro) return false;
+    if (!busqueda) return true;
+    var campo = _normalizarTexto((c.organizacion || '') + ' ' + (c.nombreContacto || '') + ' ' + (c.correo || ''));
+    return campo.indexOf(busqueda) !== -1;
+  });
+
+  var thead = '<tr><th>Organización</th><th>Categoría</th><th>Contacto</th><th>Estatus</th><th></th></tr>';
+  var trs = lista.map(function (c) {
+    return '<tr>' +
+      '<td>' + escapeHtml(c.organizacion) + '</td>' +
+      '<td>' + escapeHtml(c.categoria || '—') + '</td>' +
+      '<td>' + escapeHtml(c.nombreContacto || '—') + '</td>' +
+      '<td>' + _badgeEstatusCRM(c.estatus) + '</td>' +
+      '<td><button class="small" data-ver="' + c.codigo + '">Ver / seguimientos</button> ' +
+        '<button class="small del" data-del="' + c.codigo + '">Eliminar</button></td>' +
+    '</tr>';
+  }).join('');
+
+  resBox.innerHTML =
+    '<p class="subtle">' + lista.length + ' de ' + state.crmClientes.length + ' cliente(s)/prospecto(s).</p>' +
+    (lista.length === 0
+      ? '<p class="subtle">No hay clientes que coincidan. Puedes agregarlos uno por uno, o usar "Importar archivo" para cargar varios desde un CSV/Excel.</p>'
+      : '<div style="overflow-x:auto"><table><thead>' + thead + '</thead><tbody>' + trs + '</tbody></table></div>');
+
+  Array.prototype.forEach.call(resBox.querySelectorAll('[data-ver]'), function (b) {
+    b.onclick = function () {
+      var cliente = state.crmClientes.filter(function (c) { return c.codigo === b.getAttribute('data-ver'); })[0];
+      abrirModalCliente(cliente);
+    };
+  });
+  Array.prototype.forEach.call(resBox.querySelectorAll('[data-del]'), function (b) {
+    b.onclick = async function () {
+      if (!confirm('¿Eliminar este cliente/prospecto? Su historial de seguimientos quedará huérfano en el Sheet (ya no se podrá consultar desde aquí). No se puede deshacer.')) return;
+      var r = await api('eliminarFilaCRMClientes', { codigo: b.getAttribute('data-del') });
+      if (!r.ok) { alert(r.error); return; }
+      await renderCRMClientes();
+    };
+  });
+}
+
+function abrirModalCliente(cliente) {
+  var editando = !!cliente;
+  var cfg = CRM_TIPOS.crm_clientes;
+
+  var camposHtml = cfg.campos.map(function (c) {
+    var id = 'cf_' + c.key;
+    var val = cliente ? (cliente[c.key] != null ? cliente[c.key] : '') : '';
+    if (c.tipo === 'select') {
+      var opts = c.opciones.map(function (o) {
+        return '<option ' + (cliente && cliente[c.key] === o ? 'selected' : '') + '>' + o + '</option>';
+      }).join('');
+      return '<label>' + c.label + '</label><select id="' + id + '">' + opts + '</select>';
+    }
+    if (c.tipo === 'textarea') {
+      return '<label>' + c.label + '</label><textarea id="' + id + '">' + escapeHtml(val) + '</textarea>';
+    }
+    return '<label>' + c.label + '</label><input type="' + c.tipo + '" id="' + id + '" value="' + escapeHtml(val) + '">';
+  }).join('');
+
+  var modal = el(
+    '<div class="modal-bg"><div class="modal wide">' +
+      '<h2>' + (editando ? 'Editar cliente — ' + escapeHtml(cliente.organizacion) : 'Agregar cliente / prospecto') + '</h2>' +
+      camposHtml +
+      '<div id="clienteMsg"></div>' +
+      '<div class="modal-actions">' +
+        '<button class="secondary" id="clienteCancelar">Cerrar</button>' +
+        '<button class="primary" id="clienteGuardar">Guardar</button>' +
+      '</div>' +
+      (editando ?
+        '<hr style="margin:20px 0;border:none;border-top:1px solid #eee">' +
+        '<div style="display:flex;justify-content:space-between;align-items:center">' +
+          '<h3 style="margin:0">Seguimientos</h3>' +
+          '<button class="secondary small" id="btnNuevoSeguimiento">+ Agregar seguimiento</button>' +
+        '</div>' +
+        '<p class="subtle">Cada seguimiento queda como su propio registro con fecha y acuerdos — así puedes llevar 30+ sin que esto se haga eterno.</p>' +
+        '<div id="seguimientosBox"><p class="subtle">Cargando...</p></div>'
+        : '') +
+    '</div></div>'
+  );
+  document.body.appendChild(modal);
+  modal.querySelector('#clienteCancelar').onclick = function () { modal.remove(); renderCRMClientesTabla(); };
+  modal.querySelector('#clienteGuardar').onclick = async function () {
+    var btn = modal.querySelector('#clienteGuardar');
+    var msgBox = modal.querySelector('#clienteMsg');
+    var params = {};
+    if (editando) params.codigo = cliente.codigo;
+    var faltante = null;
+    cfg.campos.forEach(function (c) {
+      var elx = modal.querySelector('#cf_' + c.key);
+      var v = elx.value;
+      if (c.tipo !== 'select' && c.tipo !== 'date') v = v.trim();
+      if (c.requerido && !v && !faltante) faltante = c.label;
+      params[c.key] = v;
+    });
+    if (faltante) { msgBox.innerHTML = '<div class="msg error">El campo "' + faltante.replace(' *', '') + '" no puede estar vacío.</div>'; return; }
+
+    btn.disabled = true; btn.textContent = 'Guardando...';
+    var r = await api('guardarFilaCRMClientes', params);
+    btn.disabled = false; btn.textContent = 'Guardar';
+    if (!r.ok) { msgBox.innerHTML = '<div class="msg error">' + r.error + '</div>'; return; }
+    msgBox.innerHTML = '<div class="msg ok">Guardado.</div>';
+    await cargarCRMClientes();
+    if (!editando) { modal.remove(); renderCRMClientesTabla(); }
+  };
+
+  if (editando) {
+    modal.querySelector('#btnNuevoSeguimiento').onclick = function () {
+      abrirModalSeguimiento(cliente.codigo, null, function () { return _cargarYRenderSeguimientos(cliente.codigo, modal); });
+    };
+    _cargarYRenderSeguimientos(cliente.codigo, modal);
+  }
+}
+
+async function _cargarYRenderSeguimientos(clienteCodigo, modal) {
+  var box = modal.querySelector('#seguimientosBox');
+  if (!box) return;
+  var r = await api('listarCRMSeguimientos', { cliente: clienteCodigo });
+  if (!r.ok) { box.innerHTML = '<div class="msg error">' + r.error + '</div>'; return; }
+  var filas = r.data.slice().sort(function (a, b) { return String(b.fecha || '').localeCompare(String(a.fecha || '')); });
+  if (filas.length === 0) {
+    box.innerHTML = '<p class="subtle">Todavía no hay seguimientos registrados para este cliente.</p>';
+    return;
+  }
+  box.innerHTML = '<div style="max-height:280px;overflow-y:auto;border:1px solid #eee;border-radius:8px;padding:2px 12px">' +
+    filas.map(function (s) {
+      return '<div style="padding:10px 0;border-bottom:1px solid #f0f0f0">' +
+        '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">' +
+          '<strong>' + escapeHtml(s.fecha || '—') + (s.tipoContacto ? '  ·  ' + escapeHtml(s.tipoContacto) : '') + '</strong>' +
+          '<span style="white-space:nowrap"><button class="small secondary" data-editseg="' + s.codigo + '">Editar</button> ' +
+            '<button class="small del" data-delseg="' + s.codigo + '">Eliminar</button></span>' +
+        '</div>' +
+        '<div>' + escapeHtml(s.notas) + '</div>' +
+        (s.proximaAccion ? '<div class="subtle">Próxima acción: ' + escapeHtml(s.proximaAccion) + (s.fechaProximo ? ' (' + escapeHtml(s.fechaProximo) + ')' : '') + '</div>' : '') +
+        (s.responsable ? '<div class="subtle">Responsable: ' + escapeHtml(s.responsable) + '</div>' : '') +
+      '</div>';
+    }).join('') +
+  '</div>';
+
+  Array.prototype.forEach.call(box.querySelectorAll('[data-editseg]'), function (b) {
+    b.onclick = function () {
+      var seg = filas.filter(function (s) { return s.codigo === b.getAttribute('data-editseg'); })[0];
+      abrirModalSeguimiento(clienteCodigo, seg, function () { return _cargarYRenderSeguimientos(clienteCodigo, modal); });
+    };
+  });
+  Array.prototype.forEach.call(box.querySelectorAll('[data-delseg]'), function (b) {
+    b.onclick = async function () {
+      if (!confirm('¿Eliminar este seguimiento? No se puede deshacer.')) return;
+      var r2 = await api('eliminarFilaCRMSeguimientos', { codigo: b.getAttribute('data-delseg') });
+      if (!r2.ok) { alert(r2.error); return; }
+      await _cargarYRenderSeguimientos(clienteCodigo, modal);
+    };
+  });
+}
+
+function abrirModalSeguimiento(clienteCodigo, seguimiento, alGuardar) {
+  abrirModalFila('crm_seguimientos', seguimiento, {
+    proyecto: '',
+    extra: { clienteCodigo: clienteCodigo },
+    titulo: 'seguimiento',
+    alGuardar: alGuardar
+  });
+}
+
+/* ---- Interesados ---- */
+
+async function renderCRMInteresados() {
+  await cargarCRMInteresados();
+  renderCRMInteresadosTabla();
+}
+
+function renderCRMInteresadosTabla() {
+  var box = document.getElementById('crmContent');
+  if (!box) return;
+  var filas = state.crmInteresados;
+  var thead = '<tr><th>Nombre</th><th>Estado</th><th>Municipio</th><th>Interesado en</th><th>Email</th><th></th></tr>';
+  var trs = filas.map(function (i) {
+    return '<tr>' +
+      '<td>' + escapeHtml(((i.nombre || '') + ' ' + (i.apellido || '')).trim()) + '</td>' +
+      '<td>' + escapeHtml(i.estado || '—') + '</td>' +
+      '<td>' + escapeHtml(i.municipio || '—') + '</td>' +
+      '<td>' + escapeHtml(i.interes || '—') + '</td>' +
+      '<td>' + escapeHtml(i.email || '—') + '</td>' +
+      '<td><button class="small edit" data-codigo="' + i.codigo + '">Editar</button> ' +
+        '<button class="small del" data-codigo="' + i.codigo + '">Eliminar</button></td>' +
+    '</tr>';
+  }).join('');
+
+  box.innerHTML =
+    '<div class="toolbar" style="justify-content:flex-start;gap:8px">' +
+      '<button class="secondary" id="btnNuevoInteresado">+ Agregar interesado</button>' +
+      '<button class="secondary" id="btnImportarInteresados">Importar archivo</button>' +
+      '<button class="secondary" id="btnExportarInteresados">Exportar a Excel</button>' +
+    '</div>' +
+    '<p class="subtle">' + filas.length + ' interesado(s) registrado(s).</p>' +
+    (filas.length === 0
+      ? '<p class="subtle">Todavía no hay interesados registrados. Puedes agregarlos uno por uno, o usar "Importar archivo".</p>'
+      : '<div style="overflow-x:auto"><table><thead>' + thead + '</thead><tbody>' + trs + '</tbody></table></div>');
+
+  document.getElementById('btnNuevoInteresado').onclick = function () {
+    abrirModalFila('crm_interesados', null, { proyecto: '', titulo: 'interesado', alGuardar: async function () { await renderCRMInteresados(); } });
+  };
+  document.getElementById('btnImportarInteresados').onclick = function () {
+    abrirModalImportar('crm_interesados', { proyecto: '', alTerminar: async function () { await renderCRMInteresados(); } });
+  };
+  document.getElementById('btnExportarInteresados').onclick = async function () {
+    var r = await api('exportarCRMInteresados', { formato: 'xlsx' });
+    manejarDescargable(r);
+  };
+  Array.prototype.forEach.call(box.querySelectorAll('button.edit'), function (b) {
+    b.onclick = function () {
+      var codigo = b.getAttribute('data-codigo');
+      var fila = filas.filter(function (f) { return f.codigo === codigo; })[0];
+      abrirModalFila('crm_interesados', fila, { proyecto: '', titulo: 'interesado', alGuardar: async function () { await renderCRMInteresados(); } });
+    };
+  });
+  Array.prototype.forEach.call(box.querySelectorAll('button.del'), function (b) {
+    b.onclick = async function () {
+      if (!confirm('¿Eliminar este interesado? No se puede deshacer.')) return;
+      var r = await api('eliminarFilaCRMInteresados', { codigo: b.getAttribute('data-codigo') });
+      if (!r.ok) { alert(r.error); return; }
+      await renderCRMInteresados();
+    };
+  });
 }
 
 /* ---------------- USUARIOS (solo Administrador) ---------------- */
