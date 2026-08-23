@@ -1011,40 +1011,163 @@ var INSTRUMENTOS = {
       { key: 'nivelConsenso', label: 'Nivel de consenso en el grupo', tipo: 'select', opciones: NIVELES_CONSENSO_CUA02 },
       { key: 'facilitador', label: 'Facilitador', tipo: 'text' }
     ]
+  },
+  imes: {
+    familia: 'EVA',
+    titulo: 'INS-IMES Empleabilidad Social',
+    listar: 'listarIMES', validar: 'validarIMES', descargar: 'generarDescargableIMES',
+    // INS-IMES tiene una captura y una vista propias (renderInstrumentoIMES /
+    // abrirModalIMESParticipante) por tratarse de una autoevaluación de 36
+    // ítems Likert + 15 preguntas abiertas por participante, en lugar del
+    // patrón genérico de fila-por-fila que usan los demás instrumentos.
+    columnas: [
+      { key: 'idParticipante', label: 'Participante' },
+      { key: 'fecha', label: 'Fecha' },
+      { key: 'total', label: 'Puntaje total' },
+      { key: 'bandaTotal', label: 'Perfil' }
+    ]
   }
 };
+
+// Dimensiones e ítems fijos de INS-IMES — misma fuente que WebApp.gs
+// (IMES_Instrumento.docx / IMES_Guia_Aplicacion.docx, Sintropía Social / ENAH
+// v1.0 — 2025). Se duplica aquí (frontend) porque no hay un módulo compartido
+// entre el Web App de Apps Script y esta página estática.
+var IMES_ITEM_INVERSO = 18;
+var ESCALA_IMES = [
+  { v: '1', t: '1 — Nunca' }, { v: '2', t: '2 — Casi nunca' }, { v: '3', t: '3 — A veces' },
+  { v: '4', t: '4 — Casi siempre' }, { v: '5', t: '5 — Siempre' }
+];
+var IMES_DIMENSIONES = [
+  {
+    clave: 'I', nombre: 'Comunicación efectiva y escucha activa',
+    items: [
+      { n: 1, texto: 'Expreso mis ideas con claridad cuando hablo con otras personas.' },
+      { n: 2, texto: 'Escucho a los demás sin interrumpirlos, aunque no esté de acuerdo.' },
+      { n: 3, texto: 'Sé adaptar mi forma de hablar según con quién estoy (maestra/o, empleador/a, compañero/a).' },
+      { n: 4, texto: 'Cuando no entiendo algo, pregunto o busco la manera de aclararlo.' },
+      { n: 5, texto: 'En situaciones de conflicto, busco explicar mi punto de vista sin agresividad.' },
+      { n: 6, texto: 'Puedo redactar un correo electrónico o mensaje formal de manera adecuada.' }
+    ],
+    abiertas: [
+      { clave: 'Q1', texto: 'Describe una situación en la que tuviste que comunicar algo difícil (una queja, un error, un desacuerdo) a alguien con más autoridad que tú. ¿Qué hiciste? ¿Cómo resultó?' },
+      { clave: 'Q2', texto: '¿Hay situaciones en las que sientes que no puedes expresarte bien? ¿Cuándo y por qué crees que pasa eso?' }
+    ]
+  },
+  {
+    clave: 'II', nombre: 'Trabajo en equipo y colaboración',
+    items: [
+      { n: 7, texto: 'Cuando trabajo en equipo, cumplo con las tareas que me corresponden.' },
+      { n: 8, texto: 'Ayudo a mis compañeros/as cuando tienen dificultades, aunque no sea mi responsabilidad.' },
+      { n: 9, texto: 'Puedo reconocer mis errores sin culpar a los demás cuando algo sale mal.' },
+      { n: 10, texto: 'Escucho y tomo en cuenta las ideas de todos los integrantes del equipo, incluso las que son diferentes a las mías.' },
+      { n: 11, texto: 'Cuando hay conflictos en el equipo, trato de buscar soluciones, no de ganar la discusión.' },
+      { n: 12, texto: 'Puedo trabajar con personas que tienen formas de pensar o vivir muy distintas a las mías.' }
+    ],
+    abiertas: [
+      { clave: 'Q3', texto: 'Piensa en el mejor equipo en el que has trabajado (en la escuela, en tu colonia, en cualquier lugar). ¿Qué lo hacía funcionar bien? ¿Qué papel jugabas tú?' },
+      { clave: 'Q4', texto: '¿Qué es lo más difícil para ti cuando tienes que trabajar con personas con quienes no te llevas bien o que tienen ideas muy distintas a las tuyas?' }
+    ]
+  },
+  {
+    clave: 'III', nombre: 'Resolución de problemas y pensamiento crítico',
+    items: [
+      { n: 13, texto: 'Cuando tengo un problema, pienso varias opciones antes de tomar una decisión.' },
+      { n: 14, texto: 'Puedo distinguir entre lo urgente y lo importante cuando tengo varias cosas que resolver.' },
+      { n: 15, texto: 'Busco información de diferentes fuentes antes de sacar conclusiones.' },
+      { n: 16, texto: 'Si mi primera solución no funciona, busco otra en lugar de rendirme.' },
+      { n: 17, texto: 'Puedo identificar cuándo una situación necesita la ayuda de otra persona o de un especialista.' },
+      { n: 18, texto: 'Me resulta difícil tomar decisiones cuando no tengo toda la información.', inverso: true }
+    ],
+    abiertas: [
+      { clave: 'Q5', texto: 'Describe un problema concreto que hayas resuelto recientemente (puede ser de la escuela, de tu casa o de tu vida personal). ¿Cómo lo identificaste? ¿Qué hiciste para resolverlo?' },
+      { clave: 'Q6', texto: '¿Alguna vez has cuestionado una regla, una tarea o una instrucción que te parecía injusta o equivocada? ¿Qué hiciste con esa duda?' }
+    ]
+  },
+  {
+    clave: 'IV', nombre: 'Adaptabilidad y gestión del cambio',
+    items: [
+      { n: 19, texto: 'Cuando los planes cambian de repente, soy capaz de ajustarme sin que me afecte demasiado.' },
+      { n: 20, texto: 'Puedo aprender cosas nuevas aunque al principio no las entienda bien.' },
+      { n: 21, texto: 'Cuando algo no me sale, intento entender por qué antes de intentarlo de nuevo.' },
+      { n: 22, texto: 'Me siento cómodo/a en situaciones donde no sé exactamente qué va a pasar.' },
+      { n: 23, texto: 'Puedo mantener la calma cuando estoy bajo presión o con mucho estrés.' },
+      { n: 24, texto: 'Ante los cambios, generalmente pienso en las oportunidades que traen, no solo en los problemas.' }
+    ],
+    abiertas: [
+      { clave: 'Q7', texto: '¿Ha habido algún cambio importante en tu vida (de escuela, de casa, de ciudad, económico) que haya sido difícil de enfrentar? ¿Cómo lo viviste? ¿Qué aprendiste de esa experiencia?' },
+      { clave: 'Q8', texto: '¿Qué es lo que más te cuesta trabajo aceptar cuando las cosas no salen como esperabas? ¿Por qué crees que es así?' }
+    ]
+  },
+  {
+    clave: 'V', nombre: 'Autogestión, responsabilidad y aprendizaje continuo',
+    items: [
+      { n: 25, texto: 'Organizo mi tiempo para cumplir con mis responsabilidades sin que nadie me lo recuerde.' },
+      { n: 26, texto: 'Cuando me comprometo a hacer algo, lo cumplo aunque surjan contratiempos.' },
+      { n: 27, texto: 'Identifico mis propias fortalezas y áreas de mejora sin necesitar que otros me lo digan.' },
+      { n: 28, texto: 'Busco aprender algo nuevo por cuenta propia, aunque no sea obligatorio.' },
+      { n: 29, texto: 'Cuando recibo una crítica, la tomo como una oportunidad de mejorar, no como un ataque personal.' },
+      { n: 30, texto: 'Me fijo metas concretas y reviso si las estoy cumpliendo.' }
+    ],
+    abiertas: [
+      { clave: 'Q9', texto: '¿En qué área de tu vida (escuela, trabajo, relaciones, habilidades) sientes que has crecido más en el último año? ¿Qué hiciste para lograrlo?' },
+      { clave: 'Q10', texto: '¿Qué quisieras aprender o desarrollar en los próximos dos años? ¿Qué te lo ha impedido hasta ahora?' }
+    ]
+  },
+  {
+    clave: 'VI', nombre: 'Identidad laboral y conciencia del entorno',
+    items: [
+      { n: 31, texto: 'Tengo claridad sobre lo que quiero hacer cuando termine la escuela.' },
+      { n: 32, texto: 'Conozco cuáles son mis derechos como trabajador/a (salario justo, prestaciones, contrato).' },
+      { n: 33, texto: 'Sé cómo es el mercado de trabajo en mi ciudad o región.' },
+      { n: 34, texto: 'Creo que mis habilidades y conocimientos actuales son suficientes para conseguir un trabajo digno.' },
+      { n: 35, texto: 'Considero que el trabajo que haré en el futuro podrá tener un impacto positivo en mi comunidad.' },
+      { n: 36, texto: 'Me siento preparado/a para enfrentar los retos del mundo laboral actual.' }
+    ],
+    abiertas: [
+      { clave: 'Q11', texto: '¿Qué significa para ti tener un trabajo digno? ¿Es lo mismo que tener un buen trabajo? ¿Por qué?' },
+      { clave: 'Q12', texto: '¿Has vivido o conoces de cerca situaciones de trabajo injusto, mal pagado o sin condiciones adecuadas? ¿Cómo te hace sentir eso? ¿Qué piensas al respecto?' }
+    ]
+  }
+];
+var IMES_CIERRE = [
+  { clave: 'CF1', texto: 'De todo lo que respondiste hoy, ¿qué fue lo que más te hizo pensar? ¿Por qué?' },
+  { clave: 'CF2', texto: 'Si pudieras cambiar una sola cosa de tu formación escolar para prepararte mejor para el trabajo, ¿qué sería?' },
+  { clave: 'CF3', texto: '¿Hay algo importante sobre tu vida, tu contexto o tus aspiraciones que este instrumento no haya preguntado y que quisieras compartir?' }
+];
 
 // Instrumentos cuya pestaña de datos en el Sheet debe instalarse una sola
 // vez desde el panel de administración antes de poder usarse (PLA-01 y
 // PLA-02 ya vienen instalados desde el arranque del piloto).
 var INSTRUMENTOS_INSTALABLES = [
-  { clave: 'DIA01', nombre: 'INS-DIA-01 — Ficha de diagnóstico inicial' },
-  { clave: 'DIA02', nombre: 'INS-DIA-02 — Cuestionario diagnóstico (3 pestañas: Estructura, Reactivos, Respuestas)' },
-  { clave: 'DIA03', nombre: 'INS-DIA-03 — Ficha de caracterización territorial' },
-  { clave: 'PLA01', nombre: 'INS-PLA-01 — Árbol de problemas' },
-  { clave: 'PLA02', nombre: 'INS-PLA-02 — Árbol de objetivos' },
-  { clave: 'TER01', nombre: 'INS-TER-01 — Mapa de actores y recursos' },
-  { clave: 'PLA04', nombre: 'INS-PLA-04 — Teoría / Matriz de cambio' },
-  { clave: 'EVA01', nombre: 'INS-EVA-01 — Matriz de evaluación' },
-  { clave: 'EVA03', nombre: 'INS-EVA-03 — Evaluación pre/post' },
-  { clave: 'EVA04', nombre: 'INS-EVA-04 — Guía de evaluación cualitativa' },
-  { clave: 'OPE01', nombre: 'INS-OPE-01 — Cronograma / Gantt' },
-  { clave: 'SAL01', nombre: 'INS-SAL-01 — Formato de informe técnico' },
-  { clave: 'SAL02', nombre: 'INS-SAL-02 — Plantilla de informe ejecutivo' },
-  { clave: 'SAL03', nombre: 'INS-SAL-03 — Dashboard de resultados (especificación de contenido)' },
-  { clave: 'SAL04', nombre: 'INS-SAL-04 — Ficha de resultados / hallazgos' },
-  { clave: 'PED01', nombre: 'INS-PED-01 — Guía de diseño instruccional / de taller' },
-  { clave: 'PED02', nombre: 'INS-PED-02 — Malla / matriz curricular por competencias' },
-  { clave: 'PED03', nombre: 'INS-PED-03 — Banco de dinámicas / actividades participativas' },
-  { clave: 'EST01', nombre: 'INS-EST-01 — Matriz FODA (y lecciones aprendidas)' },
-  { clave: 'EST02', nombre: 'INS-EST-02 — Matriz / documento de escenarios prospectivos' },
-  { clave: 'PLA03', nombre: 'INS-PLA-03 + INS-PLA-05 — Marco Lógico Integral (2 pestañas: Objetivos, Marco Lógico)' },
-  { clave: 'IND01', nombre: 'INS-IND-01 + INS-IND-02 — Matriz de Indicadores SMART (2 pestañas: Indicadores, Ficha Técnica)' },
-  { clave: 'IND0304', nombre: 'INS-IND-03 + INS-IND-04 — Matriz de Seguimiento Integral (2 pestañas: Actividades, Indicadores)' },
-  { clave: 'EVA02', nombre: 'INS-EVA-02 — Encuesta de satisfacción (2 pestañas: Preguntas, Respuestas)' },
-  { clave: 'CUA01', nombre: 'INS-CUA-01 — Guía de entrevista semiestructurada (2 pestañas: Guía, Respuestas)' },
-  { clave: 'CUA02', nombre: 'INS-CUA-02 — Guía de grupo focal (2 pestañas: Guía, Aportaciones)' },
-  { clave: 'CRM', nombre: 'CRM — Clientes / prospectos, seguimientos e interesados (3 pestañas, no ligadas a un proyecto)' }
+  { clave: 'DIA01', nombre: 'INS-DIA-01 — Ficha de diagnóstico inicial', tipos: ['dia01'] },
+  { clave: 'DIA02', nombre: 'INS-DIA-02 — Cuestionario diagnóstico (3 pestañas: Estructura, Reactivos, Respuestas)', tipos: ['dia02_estructura', 'dia02_reactivos', 'dia02_respuestas'] },
+  { clave: 'DIA03', nombre: 'INS-DIA-03 — Ficha de caracterización territorial', tipos: ['dia03'] },
+  { clave: 'PLA01', nombre: 'INS-PLA-01 — Árbol de problemas', tipos: ['pla01'] },
+  { clave: 'PLA02', nombre: 'INS-PLA-02 — Árbol de objetivos', tipos: ['pla02'] },
+  { clave: 'TER01', nombre: 'INS-TER-01 — Mapa de actores y recursos', tipos: ['ter01'] },
+  { clave: 'PLA04', nombre: 'INS-PLA-04 — Teoría / Matriz de cambio', tipos: ['pla04'] },
+  { clave: 'EVA01', nombre: 'INS-EVA-01 — Matriz de evaluación', tipos: ['eva01'] },
+  { clave: 'EVA03', nombre: 'INS-EVA-03 — Evaluación pre/post', tipos: ['eva03'] },
+  { clave: 'EVA04', nombre: 'INS-EVA-04 — Guía de evaluación cualitativa', tipos: ['eva04'] },
+  { clave: 'OPE01', nombre: 'INS-OPE-01 — Cronograma / Gantt', tipos: ['ope01'] },
+  { clave: 'SAL01', nombre: 'INS-SAL-01 — Formato de informe técnico', tipos: ['sal01'] },
+  { clave: 'SAL02', nombre: 'INS-SAL-02 — Plantilla de informe ejecutivo', tipos: ['sal02'] },
+  { clave: 'SAL03', nombre: 'INS-SAL-03 — Dashboard de resultados (especificación de contenido)', tipos: ['sal03'] },
+  { clave: 'SAL04', nombre: 'INS-SAL-04 — Ficha de resultados / hallazgos', tipos: ['sal04'] },
+  { clave: 'PED01', nombre: 'INS-PED-01 — Guía de diseño instruccional / de taller', tipos: ['ped01'] },
+  { clave: 'PED02', nombre: 'INS-PED-02 — Malla / matriz curricular por competencias', tipos: ['ped02'] },
+  { clave: 'PED03', nombre: 'INS-PED-03 — Banco de dinámicas / actividades participativas', tipos: ['ped03'] },
+  { clave: 'EST01', nombre: 'INS-EST-01 — Matriz FODA (y lecciones aprendidas)', tipos: ['est01'] },
+  { clave: 'EST02', nombre: 'INS-EST-02 — Matriz / documento de escenarios prospectivos', tipos: ['est02'] },
+  { clave: 'PLA03', nombre: 'INS-PLA-03 + INS-PLA-05 — Marco Lógico Integral (2 pestañas: Objetivos, Marco Lógico)', tipos: ['pla03_objetivos', 'pla03_marcologico'] },
+  { clave: 'IND01', nombre: 'INS-IND-01 + INS-IND-02 — Matriz de Indicadores SMART (2 pestañas: Indicadores, Ficha Técnica)', tipos: ['ind01_indicadores', 'ind01_fichatecnica'] },
+  { clave: 'IND0304', nombre: 'INS-IND-03 + INS-IND-04 — Matriz de Seguimiento Integral (2 pestañas: Actividades, Indicadores)', tipos: ['ind0304_actividades', 'ind0304_indicadores'] },
+  { clave: 'EVA02', nombre: 'INS-EVA-02 — Encuesta de satisfacción (2 pestañas: Preguntas, Respuestas)', tipos: ['eva02_preguntas', 'eva02_respuestas'] },
+  { clave: 'CUA01', nombre: 'INS-CUA-01 — Guía de entrevista semiestructurada (2 pestañas: Guía, Respuestas)', tipos: ['cua01_guia', 'cua01_respuestas'] },
+  { clave: 'CUA02', nombre: 'INS-CUA-02 — Guía de grupo focal (2 pestañas: Guía, Aportaciones)', tipos: ['cua02_guia', 'cua02_aportaciones'] },
+  { clave: 'CRM', nombre: 'CRM — Clientes / prospectos, seguimientos e interesados (3 pestañas, no ligadas a un proyecto)' },
+  { clave: 'IMES', nombre: 'INS-IMES — Instrumento de Medición de Empleabilidad Social (autoevaluación aplicada en papel)', especial: true }
 ];
 
 /* ============================================================
@@ -1292,7 +1415,10 @@ function renderProyectos() {
     '<div class="card">' +
       '<div class="toolbar" style="justify-content:space-between">' +
         '<h2 style="margin:0">Proyectos</h2>' +
-        '<button class="secondary" id="btnNuevoProyecto">+ Nuevo proyecto</button>' +
+        '<div style="display:flex;gap:8px">' +
+          '<a href="guia-uso.pdf" target="_blank" style="background:#fff;color:var(--purple);border:1px solid var(--purple);padding:8px 14px;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center">Guía de uso</a>' +
+          '<button class="secondary" id="btnNuevoProyecto">+ Nuevo proyecto</button>' +
+        '</div>' +
       '</div>' +
       (state.proyectos.length === 0
         ? '<p class="subtle">Todavía no hay proyectos. Crea el primero con "+ Nuevo proyecto".</p>'
@@ -1408,6 +1534,7 @@ async function cargarInstrumento(tipo) {
 function renderInstrumento(tipo) {
   var box = document.getElementById('subContent');
   if (!box) return;
+  if (tipo === 'imes') { renderInstrumentoIMES(); return; }
   var cfg = INSTRUMENTOS[tipo];
   var filas = state.filas[tipo] || [];
 
@@ -1461,6 +1588,156 @@ function renderInstrumento(tipo) {
       await cargarInstrumento(tipo);
     };
   });
+}
+
+/* ---------------- INS-IMES: captura y vista propias ---------------- */
+// INS-IMES no sigue el patrón genérico de fila-por-fila: cada "fila" real es
+// un participante con 36 respuestas Likert + 15 preguntas abiertas, así que
+// tiene su propia tabla-resumen (con puntajes ya calculados por el backend)
+// y su propio modal de captura de una sola pantalla.
+function renderInstrumentoIMES() {
+  var box = document.getElementById('subContent');
+  var filas = state.filas.imes || [];
+  var thead = '<tr><th>Participante</th><th>Fecha</th><th>Aplicador</th><th>Puntaje total</th><th>Perfil</th><th></th></tr>';
+  var trs = filas.map(function (f) {
+    return '<tr>' +
+      '<td>' + escapeHtml(f.idParticipante) + '</td>' +
+      '<td>' + escapeHtml(f.fecha || '—') + '</td>' +
+      '<td>' + escapeHtml(f.aplicador || '—') + '</td>' +
+      '<td>' + f.total + '/180</td>' +
+      '<td>' + escapeHtml(f.bandaTotal) + '</td>' +
+      '<td><button class="small edit" data-id="' + escapeHtml(f.idParticipante) + '">Editar</button> ' +
+      '<button class="small del" data-id="' + escapeHtml(f.idParticipante) + '">Eliminar</button></td></tr>';
+  }).join('');
+
+  var opcionesFormato = FORMATOS_DESCARGA.map(function (f) { return '<option value="' + f[0] + '">' + f[1] + '</option>'; }).join('');
+
+  box.innerHTML =
+    '<p class="subtle">Autoevaluación de 36 ítems (escala 1-5) + 15 preguntas abiertas, aplicada de forma individual en papel. Agrega un participante por cada folio ya aplicado para transcribir sus respuestas — la plataforma calcula el puntaje por dimensión y el puntaje total automáticamente.</p>' +
+    '<div class="toolbar" style="justify-content:space-between">' +
+      '<div style="display:flex;gap:8px;align-items:center">' +
+        '<button class="secondary" id="btnAgregarFila">+ Agregar participante</button>' +
+      '</div>' +
+      '<div style="display:flex;gap:8px;align-items:center">' +
+        '<button class="secondary" id="btnValidar">Validar</button>' +
+        '<select id="selFormato" style="width:auto">' + opcionesFormato + '</select>' +
+        '<button class="primary" id="btnGenerar" style="margin-top:0">Generar descargable</button>' +
+      '</div>' +
+    '</div>' +
+    '<div id="validacionBox"></div>' +
+    (filas.length === 0
+      ? '<p class="subtle">Todavía no hay participantes capturados. Usa "+ Agregar participante" para transcribir un folio ya aplicado en papel.</p>'
+      : '<table><thead>' + thead + '</thead><tbody>' + trs + '</tbody></table>');
+
+  document.getElementById('btnAgregarFila').onclick = function () { abrirModalIMESParticipante(null); };
+  document.getElementById('btnValidar').onclick = function () { validarInstrumento('imes'); };
+  document.getElementById('btnGenerar').onclick = function () { generarDescargable('imes'); };
+  Array.prototype.forEach.call(box.querySelectorAll('button.edit'), function (b) {
+    b.onclick = function () {
+      var id = b.getAttribute('data-id');
+      var fila = filas.filter(function (f) { return f.idParticipante === id; })[0];
+      abrirModalIMESParticipante(fila);
+    };
+  });
+  Array.prototype.forEach.call(box.querySelectorAll('button.del'), function (b) {
+    b.onclick = async function () {
+      if (!confirm('¿Eliminar todas las respuestas de este participante? No se puede deshacer.')) return;
+      var id = b.getAttribute('data-id');
+      var r = await api('eliminarParticipanteIMES', { proyecto: state.proyectoActivo.codigo, idParticipante: id });
+      if (!r.ok) { alert(r.error); return; }
+      await cargarInstrumento('imes');
+    };
+  });
+}
+
+function abrirModalIMESParticipante(fila) {
+  var editando = !!fila;
+  var respuestasPrevias = fila ? fila.respuestas : {};
+
+  var opcionesEscala = function (valorActual) {
+    return '<option value="">Selecciona…</option>' + ESCALA_IMES.map(function (o) {
+      return '<option value="' + o.v + '"' + (String(valorActual) === o.v ? ' selected' : '') + '>' + o.t + '</option>';
+    }).join('');
+  };
+
+  var seccionesHtml = IMES_DIMENSIONES.map(function (d) {
+    var itemsHtml = d.items.map(function (it) {
+      return '<label>' + it.n + '. ' + it.texto + (it.inverso ? ' <span class="subtle">(puntaje inverso)</span>' : '') + '</label>' +
+        '<select id="imes_' + it.n + '">' + opcionesEscala(respuestasPrevias[String(it.n)]) + '</select>';
+    }).join('');
+    var abiertasHtml = d.abiertas.map(function (a) {
+      var val = respuestasPrevias[a.clave] || '';
+      return '<label>' + a.clave + '. ' + a.texto + '</label><textarea id="imes_' + a.clave + '">' + escapeHtml(val) + '</textarea>';
+    }).join('');
+    return '<h3 style="color:var(--purple);margin:16px 0 4px">Sección ' + d.clave + ' — ' + d.nombre + '</h3>' + itemsHtml + abiertasHtml;
+  }).join('');
+
+  var cierreHtml = IMES_CIERRE.map(function (c) {
+    var val = respuestasPrevias[c.clave] || '';
+    return '<label>' + c.clave + '. ' + c.texto + '</label><textarea id="imes_' + c.clave + '">' + escapeHtml(val) + '</textarea>';
+  }).join('');
+
+  var modal = el(
+    '<div class="modal-bg"><div class="modal wide">' +
+      '<h2>' + (editando ? 'Editar participante ' + escapeHtml(fila.idParticipante) : 'Agregar participante') + '</h2>' +
+      '<p class="subtle">Transcribe aquí las respuestas de un formulario ya aplicado en papel (ver "Exportar instrumento" en el área de Instrumentos para obtener el formulario en blanco).</p>' +
+      '<div class="row">' +
+        '<div><label>ID de participante (folio) *</label><input type="text" id="imes_idParticipante" value="' + (fila ? escapeHtml(fila.idParticipante) : '') + '"' + (editando ? ' disabled' : '') + '></div>' +
+        '<div><label>Fecha de aplicación</label><input type="date" id="imes_fecha" value="' + (fila && fila.fecha ? escapeHtml(fila.fecha) : '') + '"></div>' +
+      '</div>' +
+      '<label>Aplicador</label><input type="text" id="imes_aplicador" value="' + (fila ? escapeHtml(fila.aplicador || '') : '') + '">' +
+      seccionesHtml +
+      '<h3 style="color:var(--purple);margin:16px 0 4px">Cierre y reflexión final</h3>' +
+      cierreHtml +
+      '<div id="imesMsg"></div>' +
+      '<div class="modal-actions">' +
+        '<button class="secondary" id="imesCancelar">Cancelar</button>' +
+        '<button class="primary" id="imesGuardar">Guardar</button>' +
+      '</div>' +
+    '</div></div>'
+  );
+  document.body.appendChild(modal);
+  modal.querySelector('#imesCancelar').onclick = function () { modal.remove(); };
+
+  modal.querySelector('#imesGuardar').onclick = async function () {
+    var idParticipante = document.getElementById('imes_idParticipante').value.trim();
+    var msgBox = document.getElementById('imesMsg');
+    if (!idParticipante) { msgBox.innerHTML = '<div class="msg error">El ID de participante (folio) es obligatorio.</div>'; return; }
+
+    var respuestas = {};
+    var faltantes = [];
+    IMES_DIMENSIONES.forEach(function (d) {
+      d.items.forEach(function (it) {
+        var v = document.getElementById('imes_' + it.n).value;
+        respuestas[String(it.n)] = v;
+        if (!v) faltantes.push(it.n);
+      });
+      d.abiertas.forEach(function (a) {
+        respuestas[a.clave] = document.getElementById('imes_' + a.clave).value;
+      });
+    });
+    IMES_CIERRE.forEach(function (c) {
+      respuestas[c.clave] = document.getElementById('imes_' + c.clave).value;
+    });
+    if (faltantes.length > 0) {
+      msgBox.innerHTML = '<div class="msg error">Faltan por responder ' + faltantes.length + ' ítem(s) de la escala cuantitativa (1-5).</div>';
+      return;
+    }
+
+    var btn = document.getElementById('imesGuardar');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Guardando...';
+    var r = await api('guardarParticipanteIMES', {
+      proyecto: state.proyectoActivo.codigo,
+      idParticipante: idParticipante,
+      fecha: document.getElementById('imes_fecha').value,
+      aplicador: document.getElementById('imes_aplicador').value,
+      respuestas: JSON.stringify(respuestas)
+    });
+    btn.disabled = false; btn.textContent = 'Guardar';
+    if (!r.ok) { msgBox.innerHTML = '<div class="msg error">' + escapeHtml(r.error) + '</div>'; return; }
+    modal.remove();
+    await cargarInstrumento('imes');
+  };
 }
 
 function escapeHtml(s) {
@@ -2225,11 +2502,15 @@ function abrirModalNuevoUsuario() {
 function renderInstrumentos() {
   var main = document.getElementById('main');
   var filas = INSTRUMENTOS_INSTALABLES.map(function (i) {
+    var puedeExportar = i.especial || (i.tipos && i.tipos.length);
     return '<div class="card" style="margin-bottom:10px">' +
       '<div class="toolbar" style="justify-content:space-between">' +
         '<div><strong>' + i.nombre + '</strong>' +
           '<p class="subtle" style="margin:4px 0 0">Crea la pestaña de datos en el Sheet — solo hace falta una vez, ya nunca hay que volver a Apps Script para esto.</p></div>' +
-        '<button class="secondary" data-clave="' + i.clave + '">Instalar pestaña de datos</button>' +
+        '<div style="display:flex;gap:8px;flex-shrink:0">' +
+          (puedeExportar ? '<button class="secondary" data-exportar="' + i.clave + '">Exportar instrumento</button>' : '') +
+          '<button class="secondary" data-clave="' + i.clave + '">Instalar pestaña de datos</button>' +
+        '</div>' +
       '</div>' +
       '<div id="instMsg_' + i.clave + '"></div>' +
     '</div>';
@@ -2237,7 +2518,7 @@ function renderInstrumentos() {
 
   main.innerHTML =
     '<h2 style="color:var(--purple);margin:0 0 6px">Instrumentos</h2>' +
-    '<p class="subtle">Instala cada instrumento una sola vez por proyecto — después queda disponible en su pestaña correspondiente dentro de "Proyectos".</p>' +
+    '<p class="subtle">Instala cada instrumento una sola vez por proyecto — después queda disponible en su pestaña correspondiente dentro de "Proyectos". "Exportar instrumento" descarga un PDF en blanco listo para llenarse en campo o a mano, sin necesidad de tener un proyecto abierto.</p>' +
     (filas || '<p class="subtle">No hay instrumentos pendientes de instalar por ahora.</p>');
 
   Array.prototype.forEach.call(main.querySelectorAll('[data-clave]'), function (b) {
@@ -2252,6 +2533,48 @@ function renderInstrumentos() {
         : '<div class="msg error">' + r.error + '</div>';
     };
   });
+
+  Array.prototype.forEach.call(main.querySelectorAll('[data-exportar]'), function (b) {
+    b.onclick = function () { exportarInstrumentoLlenado(b.getAttribute('data-exportar'), b); };
+  });
+}
+
+// Descarga un PDF en blanco ("instrumento de llenado") de un instrumento del
+// catálogo, sin depender de que la pestaña ya esté instalada ni de un
+// proyecto activo — se arma a partir de los campos ya declarados en
+// INSTRUMENTOS/CRM_TIPOS (frontend), o del formulario especial (IMES).
+async function exportarInstrumentoLlenado(clave, btn) {
+  var item = INSTRUMENTOS_INSTALABLES.filter(function (i) { return i.clave === clave; })[0];
+  if (!item) return;
+  var msgBox = document.getElementById('instMsg_' + clave);
+  var textoOriginal = btn.textContent;
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Generando...';
+
+  var r;
+  if (item.especial && clave === 'IMES') {
+    r = await api('exportarIMESLlenado', {});
+  } else {
+    var secciones = item.tipos.map(function (tipo) {
+      var cfg = INSTRUMENTOS[tipo];
+      return {
+        titulo: cfg.titulo,
+        campos: cfg.campos.map(function (c) {
+          return { label: c.label.replace(/\s*\*$/, ''), tipo: c.tipo, opciones: c.opciones || null };
+        })
+      };
+    });
+    r = await api('exportarInstrumentoLlenado', {
+      nombreInstrumento: item.nombre.replace(/\s*\([^)]*\)\s*$/, ''),
+      secciones: JSON.stringify(secciones)
+    });
+  }
+
+  btn.disabled = false; btn.textContent = textoOriginal;
+  if (!r.ok) {
+    if (msgBox) msgBox.innerHTML = '<div class="msg error">' + escapeHtml(r.error || 'No se pudo generar el PDF.') + '</div>';
+    return;
+  }
+  manejarDescargable(r);
 }
 
 /* ---------------- MI CUENTA ---------------- */
