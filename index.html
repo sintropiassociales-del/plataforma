@@ -164,6 +164,9 @@ var NIVELES_ML_PLA03 = ['Fin', 'Propósito', 'Componente', 'Actividad'];
 var TIPOS_IND01 = ['Insumo', 'Proceso', 'Resultado', 'Impacto'];
 var FRECUENCIAS_IND01 = ['Única vez', 'Mensual', 'Trimestral', 'Semestral', 'Anual'];
 var SEMAFOROS_IND0304 = ['Verde (en meta o mejor)', 'Amarillo (avance parcial, en riesgo)', 'Rojo (sin avance / muy por debajo de meta)'];
+var DIMENSIONES_EVA02 = ['Contenido', 'Facilitador', 'Logística', 'Utilidad percibida', 'Satisfacción general'];
+var TIPOS_REACTIVO_EVA02 = ['Escala Likert (1-5)', 'Opción múltiple', 'Sí/No', 'Abierta (texto corto)'];
+var SINO_EVA02 = ['Sí', 'No'];
 
 /* ============================================================
  * Catálogo de instrumentos disponibles en la plataforma. Para
@@ -752,6 +755,44 @@ var INSTRUMENTOS = {
       { key: 'semaforo', label: 'Semáforo *', tipo: 'select', requerido: true, opciones: SEMAFOROS_IND0304 },
       { key: 'notas', label: 'Notas', tipo: 'textarea' }
     ]
+  },
+  eva02_preguntas: {
+    familia: 'EVA',
+    titulo: 'INS-EVA-02 (1/2) Banco de preguntas de satisfacción',
+    listar: 'listarEVA02Preguntas', guardar: 'guardarFilaEVA02Preguntas', eliminar: 'eliminarFilaEVA02Preguntas',
+    validar: 'validarEVA02Preguntas', descargar: 'generarDescargableEVA02Preguntas',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'pregunta', label: 'Pregunta' },
+      { key: 'dimension', label: 'Dimensión' },
+      { key: 'tipoReactivo', label: 'Tipo' },
+      { key: 'obligatoria', label: 'Obligatoria' }
+    ],
+    campos: [
+      { key: 'pregunta', label: 'Pregunta *', tipo: 'textarea', requerido: true },
+      { key: 'dimension', label: 'Dimensión evaluada', tipo: 'select', opciones: DIMENSIONES_EVA02 },
+      { key: 'tipoReactivo', label: 'Tipo de reactivo', tipo: 'select', opciones: TIPOS_REACTIVO_EVA02 },
+      { key: 'obligatoria', label: 'Obligatoria', tipo: 'select', opciones: SINO_EVA02 }
+    ]
+  },
+  eva02_respuestas: {
+    familia: 'EVA',
+    titulo: 'INS-EVA-02 (2/2) Respuestas de satisfacción',
+    listar: 'listarEVA02Respuestas', guardar: 'guardarFilaEVA02Respuestas', eliminar: 'eliminarFilaEVA02Respuestas',
+    validar: 'validarEVA02Respuestas', descargar: 'generarDescargableEVA02Respuestas',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'codigoPregunta', label: 'Pregunta' },
+      { key: 'idRespondente', label: 'Respondente' },
+      { key: 'respuesta', label: 'Respuesta' },
+      { key: 'fecha', label: 'Fecha' }
+    ],
+    campos: [
+      { key: 'codigoPregunta', label: 'Código de pregunta (INS-EVA-02 1/2) *', tipo: 'text', requerido: true, placeholder: 'ej. PSA-01' },
+      { key: 'idRespondente', label: 'ID de respondente (anónimo) *', tipo: 'text', requerido: true, placeholder: 'ej. P001' },
+      { key: 'respuesta', label: 'Respuesta / puntaje', tipo: 'text' },
+      { key: 'fecha', label: 'Fecha de aplicación', tipo: 'date' }
+    ]
   }
 };
 
@@ -777,7 +818,8 @@ var INSTRUMENTOS_INSTALABLES = [
   { clave: 'EST02', nombre: 'INS-EST-02 — Matriz / documento de escenarios prospectivos' },
   { clave: 'PLA03', nombre: 'INS-PLA-03 + INS-PLA-05 — Marco Lógico Integral (2 pestañas: Objetivos, Marco Lógico)' },
   { clave: 'IND01', nombre: 'INS-IND-01 + INS-IND-02 — Matriz de Indicadores SMART (2 pestañas: Indicadores, Ficha Técnica)' },
-  { clave: 'IND0304', nombre: 'INS-IND-03 + INS-IND-04 — Matriz de Seguimiento Integral (2 pestañas: Actividades, Indicadores)' }
+  { clave: 'IND0304', nombre: 'INS-IND-03 + INS-IND-04 — Matriz de Seguimiento Integral (2 pestañas: Actividades, Indicadores)' },
+  { clave: 'EVA02', nombre: 'INS-EVA-02 — Encuesta de satisfacción (2 pestañas: Preguntas, Respuestas)' }
 ];
 
 /* ============================================================
