@@ -1317,7 +1317,10 @@ function renderLogin() {
       '<label>Correo</label>' +
       '<input type="email" id="loginEmail" placeholder="tu@correo.com" autocomplete="username">' +
       '<label>Contraseña</label>' +
-      '<input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password">' +
+      '<div style="position:relative">' +
+        '<input type="password" id="loginPass" placeholder="••••••••" autocomplete="current-password" style="padding-right:66px">' +
+        '<button type="button" id="btnTogglePass" style="position:absolute;right:4px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--purple);font-size:12px;font-weight:700;cursor:pointer;padding:6px 8px">Mostrar</button>' +
+      '</div>' +
       '<button class="primary" id="btnLogin" style="width:100%">Entrar</button>' +
       '<div id="loginMsg"></div>' +
     '</div></div>';
@@ -1325,6 +1328,12 @@ function renderLogin() {
   document.getElementById('btnLogin').onclick = doLogin;
   document.getElementById('loginPass').addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); });
   document.getElementById('loginEmail').addEventListener('keydown', function (e) { if (e.key === 'Enter') doLogin(); });
+  document.getElementById('btnTogglePass').onclick = function () {
+    var input = document.getElementById('loginPass');
+    var mostrando = input.type === 'text';
+    input.type = mostrando ? 'password' : 'text';
+    this.textContent = mostrando ? 'Mostrar' : 'Ocultar';
+  };
 }
 
 async function doLogin() {
@@ -1680,7 +1689,7 @@ function abrirModalIMESParticipante(fila) {
   var modal = el(
     '<div class="modal-bg"><div class="modal wide">' +
       '<h2>' + (editando ? 'Editar participante ' + escapeHtml(fila.idParticipante) : 'Agregar participante') + '</h2>' +
-      '<p class="subtle">Transcribe aquí las respuestas de un formulario ya aplicado en papel (ver "Exportar instrumento" en el área de Instrumentos para obtener el formulario en blanco).</p>' +
+      '<p class="subtle">Transcribe aquí las respuestas de un formulario ya aplicado en papel (ver "Descargar instrumento vacío" en el área de Instrumentos para obtener el formulario en blanco).</p>' +
       '<div class="row">' +
         '<div><label>ID de participante (folio) *</label><input type="text" id="imes_idParticipante" value="' + (fila ? escapeHtml(fila.idParticipante) : '') + '"' + (editando ? ' disabled' : '') + '></div>' +
         '<div><label>Fecha de aplicación</label><input type="date" id="imes_fecha" value="' + (fila && fila.fecha ? escapeHtml(fila.fecha) : '') + '"></div>' +
@@ -2503,12 +2512,15 @@ function renderInstrumentos() {
   var main = document.getElementById('main');
   var filas = INSTRUMENTOS_INSTALABLES.map(function (i) {
     var puedeExportar = i.especial || (i.tipos && i.tipos.length);
+    var notaExtra = (i.clave === 'CRM')
+      ? ' Una vez instalada, no se administra desde aquí ni desde "Proyectos": aparece en su propia pestaña "Clientes" en el menú superior (solo visible para Administrador).'
+      : '';
     return '<div class="card" style="margin-bottom:10px">' +
       '<div class="toolbar" style="justify-content:space-between">' +
         '<div><strong>' + i.nombre + '</strong>' +
-          '<p class="subtle" style="margin:4px 0 0">Crea la pestaña de datos en el Sheet — solo hace falta una vez, ya nunca hay que volver a Apps Script para esto.</p></div>' +
+          '<p class="subtle" style="margin:4px 0 0">Crea la pestaña de datos en el Sheet — solo hace falta una vez, ya nunca hay que volver a Apps Script para esto.' + notaExtra + '</p></div>' +
         '<div style="display:flex;gap:8px;flex-shrink:0">' +
-          (puedeExportar ? '<button class="secondary" data-exportar="' + i.clave + '">Exportar instrumento</button>' : '') +
+          (puedeExportar ? '<button class="secondary" data-exportar="' + i.clave + '">Descargar instrumento vacío</button>' : '') +
           '<button class="secondary" data-clave="' + i.clave + '">Instalar pestaña de datos</button>' +
         '</div>' +
       '</div>' +
@@ -2518,7 +2530,7 @@ function renderInstrumentos() {
 
   main.innerHTML =
     '<h2 style="color:var(--purple);margin:0 0 6px">Instrumentos</h2>' +
-    '<p class="subtle">Instala cada instrumento una sola vez por proyecto — después queda disponible en su pestaña correspondiente dentro de "Proyectos". "Exportar instrumento" descarga un PDF en blanco listo para llenarse en campo o a mano, sin necesidad de tener un proyecto abierto.</p>' +
+    '<p class="subtle">"Instalar pestaña de datos" es un paso técnico único (lo hace un Administrador, crea la pestaña en el Sheet). "Descargar instrumento vacío" es distinto: en cualquier momento descarga un PDF en blanco con las preguntas del instrumento, listo para llenarse en campo o a mano — no requiere tener un proyecto abierto ni haber instalado nada antes.</p>' +
     (filas || '<p class="subtle">No hay instrumentos pendientes de instalar por ahora.</p>');
 
   Array.prototype.forEach.call(main.querySelectorAll('[data-clave]'), function (b) {
