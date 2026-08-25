@@ -1192,7 +1192,9 @@ var state = {
   crmSeguimientosTodos: [], // todos los seguimientos de todos los clientes, para la columna "Último seguimiento"
   crmInteresados: [],
   crmFiltroEstatus: 'Todos',
-  crmBusqueda: ''
+  crmBusqueda: '',
+  crmClientesSeleccion: [],    // códigos de clientes marcados para el mailing
+  crmInteresadosSeleccion: []  // códigos de interesados marcados para el mailing
 };
 
 // Claves de INSTRUMENTOS que pertenecen a una familia, en el mismo orden
@@ -2174,6 +2176,7 @@ function renderCRMClientesTabla() {
             '<button class="secondary" id="btnNuevoCliente">+ Agregar cliente</button>' +
             '<button class="secondary" id="btnImportarClientes">Importar archivo</button>' +
             '<button class="secondary" id="btnExportarClientes">Exportar a Excel</button>' +
+            '<button class="primary" id="btnEnviarCorreoClientes">Enviar correo</button>' +
           '</div>' +
           '<input type="text" id="buscarCliente" placeholder="Buscar por organización, contacto o correo..." style="max-width:280px">' +
         '</div>' +
@@ -2188,6 +2191,10 @@ function renderCRMClientesTabla() {
     document.getElementById('btnExportarClientes').onclick = async function () {
       var r = await api('exportarCRMClientes', { formato: 'xlsx' });
       manejarDescargable(r);
+    };
+    document.getElementById('btnEnviarCorreoClientes').onclick = function () {
+      if (!state.crmClientesSeleccion.length) { alert('Marca la casilla de al menos un cliente para enviarle un correo.'); return; }
+      abrirModalEnviarCorreo('clientes', state.crmClientesSeleccion.slice());
     };
     var buscarInput = document.getElementById('buscarCliente');
     buscarInput.value = state.crmBusqueda;
@@ -2220,7 +2227,9 @@ function _renderCRMClientesResultados() {
     return campo.indexOf(busqueda) !== -1;
   });
 
-  var thead = '<tr><th>Organización</th><th>Categoría</th><th>Contacto</th><th>Estatus</th><th>Último seguimiento</th><th></th></tr>';
+  var todosMarcados = lista.length > 0 && lista.every(function (c) { return state.crmClientesSeleccion.indexOf(c.codigo) !== -1; });
+  var thead = '<tr><th style="width:28px"><input type="checkbox" id="crmSelAllClientes"' + (todosMarcados ? ' checked' : '') + '></th>' +
+    '<th>Organización</th><th>Categoría</th><th>Contacto</th><th>Estatus</th><th>Último seguimiento</th><th></th></tr>';
   var trs = lista.map(function (c) {
     var ultimo = _ultimoSeguimientoDe(c.codigo);
     var celdaUltimo;
@@ -2231,7 +2240,9 @@ function _renderCRMClientesResultados() {
       celdaUltimo = '<strong>' + escapeHtml(ultimo.fecha) + '</strong>' +
         (notasCorta ? '<br><span class="subtle">' + escapeHtml(notasCorta) + '</span>' : '');
     }
+    var marcado = state.crmClientesSeleccion.indexOf(c.codigo) !== -1;
     return '<tr>' +
+      '<td><input type="checkbox" class="crm-sel-cliente" data-codigo="' + c.codigo + '"' + (marcado ? ' checked' : '') + '></td>' +
       '<td>' + escapeHtml(c.organizacion) + '</td>' +
       '<td>' + escapeHtml(c.categoria || '—') + '</td>' +
       '<td>' + escapeHtml(c.nombreContacto || '—') + '</td>' +
@@ -2243,11 +2254,33 @@ function _renderCRMClientesResultados() {
   }).join('');
 
   resBox.innerHTML =
-    '<p class="subtle">' + lista.length + ' de ' + state.crmClientes.length + ' cliente(s)/prospecto(s).</p>' +
+    '<p class="subtle">' + lista.length + ' de ' + state.crmClientes.length + ' cliente(s)/prospecto(s).' +
+      (state.crmClientesSeleccion.length ? ' · ' + state.crmClientesSeleccion.length + ' seleccionado(s) para correo.' : '') + '</p>' +
     (lista.length === 0
       ? '<p class="subtle">No hay clientes que coincidan. Puedes agregarlos uno por uno, o usar "Importar archivo" para cargar varios desde un CSV/Excel.</p>'
       : '<div style="overflow-x:auto"><table><thead>' + thead + '</thead><tbody>' + trs + '</tbody></table></div>');
 
+  var elSelAll = resBox.querySelector('#crmSelAllClientes');
+  if (elSelAll) {
+    elSelAll.onchange = function () {
+      var marcar = elSelAll.checked;
+      lista.forEach(function (c) {
+        var idx = state.crmClientesSeleccion.indexOf(c.codigo);
+        if (marcar && idx === -1) state.crmClientesSeleccion.push(c.codigo);
+        if (!marcar && idx !== -1) state.crmClientesSeleccion.splice(idx, 1);
+      });
+      _renderCRMClientesResultados();
+    };
+  }
+  Array.prototype.forEach.call(resBox.querySelectorAll('.crm-sel-cliente'), function (chk) {
+    chk.onchange = function () {
+      var codigo = chk.getAttribute('data-codigo');
+      var idx = state.crmClientesSeleccion.indexOf(codigo);
+      if (chk.checked && idx === -1) state.crmClientesSeleccion.push(codigo);
+      if (!chk.checked && idx !== -1) state.crmClientesSeleccion.splice(idx, 1);
+      _renderCRMClientesResultados();
+    };
+  });
   Array.prototype.forEach.call(resBox.querySelectorAll('[data-ver]'), function (b) {
     b.onclick = function () {
       var cliente = state.crmClientes.filter(function (c) { return c.codigo === b.getAttribute('data-ver'); })[0];
@@ -2405,9 +2438,13 @@ function renderCRMInteresadosTabla() {
   var box = document.getElementById('crmContent');
   if (!box) return;
   var filas = state.crmInteresados;
-  var thead = '<tr><th>Nombre</th><th>Estado</th><th>Municipio</th><th>Interesado en</th><th>Email</th><th></th></tr>';
+  var todosMarcados = filas.length > 0 && filas.every(function (i) { return state.crmInteresadosSeleccion.indexOf(i.codigo) !== -1; });
+  var thead = '<tr><th style="width:28px"><input type="checkbox" id="crmSelAllInteresados"' + (todosMarcados ? ' checked' : '') + '></th>' +
+    '<th>Nombre</th><th>Estado</th><th>Municipio</th><th>Interesado en</th><th>Email</th><th></th></tr>';
   var trs = filas.map(function (i) {
+    var marcado = state.crmInteresadosSeleccion.indexOf(i.codigo) !== -1;
     return '<tr>' +
+      '<td><input type="checkbox" class="crm-sel-interesado" data-codigo="' + i.codigo + '"' + (marcado ? ' checked' : '') + '></td>' +
       '<td>' + escapeHtml(((i.nombre || '') + ' ' + (i.apellido || '')).trim()) + '</td>' +
       '<td>' + escapeHtml(i.estado || '—') + '</td>' +
       '<td>' + escapeHtml(i.municipio || '—') + '</td>' +
@@ -2423,8 +2460,10 @@ function renderCRMInteresadosTabla() {
       '<button class="secondary" id="btnNuevoInteresado">+ Agregar interesado</button>' +
       '<button class="secondary" id="btnImportarInteresados">Importar archivo</button>' +
       '<button class="secondary" id="btnExportarInteresados">Exportar a Excel</button>' +
+      '<button class="primary" id="btnEnviarCorreoInteresados">Enviar correo</button>' +
     '</div>' +
-    '<p class="subtle">' + filas.length + ' interesado(s) registrado(s).</p>' +
+    '<p class="subtle">' + filas.length + ' interesado(s) registrado(s).' +
+      (state.crmInteresadosSeleccion.length ? ' · ' + state.crmInteresadosSeleccion.length + ' seleccionado(s) para correo.' : '') + '</p>' +
     (filas.length === 0
       ? '<p class="subtle">Todavía no hay interesados registrados. Puedes agregarlos uno por uno, o usar "Importar archivo".</p>'
       : '<div style="overflow-x:auto"><table><thead>' + thead + '</thead><tbody>' + trs + '</tbody></table></div>');
@@ -2439,6 +2478,31 @@ function renderCRMInteresadosTabla() {
     var r = await api('exportarCRMInteresados', { formato: 'xlsx' });
     manejarDescargable(r);
   };
+  document.getElementById('btnEnviarCorreoInteresados').onclick = function () {
+    if (!state.crmInteresadosSeleccion.length) { alert('Marca la casilla de al menos un interesado para enviarle un correo.'); return; }
+    abrirModalEnviarCorreo('interesados', state.crmInteresadosSeleccion.slice());
+  };
+  var elSelAllInt = document.getElementById('crmSelAllInteresados');
+  if (elSelAllInt) {
+    elSelAllInt.onchange = function () {
+      var marcar = elSelAllInt.checked;
+      filas.forEach(function (i) {
+        var idx = state.crmInteresadosSeleccion.indexOf(i.codigo);
+        if (marcar && idx === -1) state.crmInteresadosSeleccion.push(i.codigo);
+        if (!marcar && idx !== -1) state.crmInteresadosSeleccion.splice(idx, 1);
+      });
+      renderCRMInteresadosTabla();
+    };
+  }
+  Array.prototype.forEach.call(box.querySelectorAll('.crm-sel-interesado'), function (chk) {
+    chk.onchange = function () {
+      var codigo = chk.getAttribute('data-codigo');
+      var idx = state.crmInteresadosSeleccion.indexOf(codigo);
+      if (chk.checked && idx === -1) state.crmInteresadosSeleccion.push(codigo);
+      if (!chk.checked && idx !== -1) state.crmInteresadosSeleccion.splice(idx, 1);
+      renderCRMInteresadosTabla();
+    };
+  });
   Array.prototype.forEach.call(box.querySelectorAll('button.edit'), function (b) {
     b.onclick = function () {
       var codigo = b.getAttribute('data-codigo');
@@ -2454,6 +2518,146 @@ function renderCRMInteresadosTabla() {
       await renderCRMInteresados();
     };
   });
+}
+
+/* ---------------- Mailing (Clientes e Interesados) ---------------- */
+
+// Sustituye <<Etiqueta>> por el valor real del registro. Se usa solo para la
+// vista previa en el navegador; el backend hace su propia sustitución sobre
+// datos frescos del Sheet al momento de enviar (nunca confía en lo que ya
+// tenía cacheado el frontend).
+function _reemplazarTagsPreview(texto, registro, campos) {
+  var resultado = String(texto || '');
+  campos.forEach(function (c) {
+    var tag = '<<' + c.tag + '>>';
+    var valor = registro[c.key] != null ? String(registro[c.key]) : '';
+    resultado = resultado.split(tag).join(valor);
+  });
+  return resultado;
+}
+
+function abrirModalEnviarCorreo(tipo, codigos) {
+  var esClientes = tipo === 'clientes';
+  var cfg = esClientes ? CRM_TIPOS.crm_clientes : CRM_TIPOS.crm_interesados;
+  var todos = esClientes ? state.crmClientes : state.crmInteresados;
+  var campoEmail = esClientes ? 'correo' : 'email';
+  var campoNombre = esClientes ? 'organizacion' : 'nombre';
+
+  var campos = cfg.campos.map(function (c) {
+    return { key: c.key, tag: c.label.replace(/\s*\*$/, '').trim() };
+  });
+
+  var registros = todos.filter(function (r) { return codigos.indexOf(r.codigo) !== -1; });
+  var conCorreo = registros.filter(function (r) { return String(r[campoEmail] || '').indexOf('@') !== -1; });
+  var sinCorreoCount = registros.length - conCorreo.length;
+
+  var listaNombres = registros.map(function (r) {
+    var nombre = esClientes ? r.organizacion : ((r.nombre || '') + ' ' + (r.apellido || '')).trim();
+    var tieneCorreo = String(r[campoEmail] || '').indexOf('@') !== -1;
+    return escapeHtml(nombre) + (tieneCorreo ? '' : ' <span class="subtle">(sin correo)</span>');
+  }).join(', ');
+
+  var chipsHtml = campos.map(function (c) {
+    return '<button type="button" class="small secondary tagchip" data-tag="' + escapeHtml('<<' + c.tag + '>>') + '" style="margin:2px">' +
+      escapeHtml(c.tag) + '</button>';
+  }).join('');
+
+  var modal = el(
+    '<div class="modal-bg"><div class="modal wide">' +
+      '<h2>Enviar correo — ' + registros.length + ' destinatario(s)</h2>' +
+      '<p class="subtle">' + listaNombres + '</p>' +
+      (sinCorreoCount ? '<div class="msg error">' + sinCorreoCount + ' destinatario(s) no tienen correo registrado y no recibirán el mensaje.</div>' : '') +
+      '<label>Asunto</label><input type="text" id="correoAsunto" placeholder="Ej: Novedades de <<Organización>>">' +
+      '<label>Cuerpo del correo</label><textarea id="correoCuerpo" rows="8" placeholder="Hola <<Nombre de contacto>>, te escribimos de Sintropía Social..."></textarea>' +
+      '<p class="subtle" style="margin:8px 0 4px">Clic para insertar una etiqueta en el campo donde tengas el cursor — se reemplaza por el dato real de cada destinatario:</p>' +
+      '<div>' + chipsHtml + '</div>' +
+      '<div id="correoVistaPrevia" style="margin-top:14px"></div>' +
+      '<div id="correoMsg"></div>' +
+      '<div class="modal-actions">' +
+        '<button class="secondary" id="correoCancelar">Cerrar</button>' +
+        '<button class="primary" id="correoEnviar">Enviar correo</button>' +
+      '</div>' +
+    '</div></div>'
+  );
+  document.body.appendChild(modal);
+
+  var asuntoInput = modal.querySelector('#correoAsunto');
+  var cuerpoTextarea = modal.querySelector('#correoCuerpo');
+  var campoActivo = cuerpoTextarea;
+  asuntoInput.addEventListener('focus', function () { campoActivo = asuntoInput; });
+  cuerpoTextarea.addEventListener('focus', function () { campoActivo = cuerpoTextarea; });
+
+  function actualizarVistaPrevia() {
+    var caja = modal.querySelector('#correoVistaPrevia');
+    var muestra = conCorreo[0];
+    if (!muestra) { caja.innerHTML = ''; return; }
+    var nombreMuestra = esClientes ? muestra.organizacion : ((muestra.nombre || '') + ' ' + (muestra.apellido || '')).trim();
+    var asuntoPrev = _reemplazarTagsPreview(asuntoInput.value, muestra, campos);
+    var cuerpoPrev = _reemplazarTagsPreview(cuerpoTextarea.value, muestra, campos).replace(/\n/g, '<br>');
+    caja.innerHTML =
+      '<p class="subtle" style="margin-bottom:4px">Vista previa para: ' + escapeHtml(nombreMuestra) + '</p>' +
+      '<div style="border:1px solid #eee;border-radius:8px;padding:12px 14px;background:#fafafa">' +
+        '<div style="font-weight:600;margin-bottom:6px">' + (escapeHtml(asuntoPrev) || '<span class="subtle">(sin asunto)</span>') + '</div>' +
+        '<div style="font-size:13px;line-height:1.5">' + (cuerpoPrev || '<span class="subtle">(sin cuerpo)</span>') + '</div>' +
+      '</div>';
+  }
+  asuntoInput.oninput = actualizarVistaPrevia;
+  cuerpoTextarea.oninput = actualizarVistaPrevia;
+  actualizarVistaPrevia();
+
+  Array.prototype.forEach.call(modal.querySelectorAll('.tagchip'), function (chip) {
+    chip.onclick = function () {
+      var campoDestino = campoActivo || cuerpoTextarea;
+      var tag = chip.getAttribute('data-tag');
+      var inicio = campoDestino.selectionStart != null ? campoDestino.selectionStart : campoDestino.value.length;
+      var fin = campoDestino.selectionEnd != null ? campoDestino.selectionEnd : campoDestino.value.length;
+      var val = campoDestino.value;
+      campoDestino.value = val.slice(0, inicio) + tag + val.slice(fin);
+      var nuevaPos = inicio + tag.length;
+      campoDestino.focus();
+      if (campoDestino.setSelectionRange) campoDestino.setSelectionRange(nuevaPos, nuevaPos);
+      actualizarVistaPrevia();
+    };
+  });
+
+  modal.querySelector('#correoCancelar').onclick = function () {
+    modal.remove();
+    // Si ya se envió un correo, el estado (selección limpia, seguimientos nuevos
+    // para Clientes) ya se recargó arriba — aquí solo falta volver a pintar la
+    // tabla para que se vea de inmediato, igual que al cerrar el modal de cliente.
+    if (esClientes) { renderCRMClientesTabla(); } else { renderCRMInteresadosTabla(); }
+  };
+
+  modal.querySelector('#correoEnviar').onclick = async function () {
+    var msgBox = modal.querySelector('#correoMsg');
+    var asunto = asuntoInput.value.trim();
+    var cuerpo = cuerpoTextarea.value.trim();
+    if (!asunto) { msgBox.innerHTML = '<div class="msg error">Falta el asunto del correo.</div>'; return; }
+    if (!cuerpo) { msgBox.innerHTML = '<div class="msg error">Falta el cuerpo del correo.</div>'; return; }
+    if (!conCorreo.length) { msgBox.innerHTML = '<div class="msg error">Ninguno de los destinatarios seleccionados tiene correo registrado.</div>'; return; }
+    if (!confirm('¿Enviar este correo a ' + conCorreo.length + ' destinatario(s)? No se puede deshacer.')) return;
+
+    var btn = modal.querySelector('#correoEnviar');
+    btn.disabled = true; btn.textContent = 'Enviando...';
+    var r = await api('enviarCorreoCRM', { tipo: tipo, codigos: codigos, asunto: asunto, cuerpo: cuerpo });
+    btn.disabled = false; btn.textContent = 'Enviar correo';
+
+    if (!r.ok) { msgBox.innerHTML = '<div class="msg error">' + escapeHtml(r.error || 'No se pudo enviar.') + '</div>'; return; }
+
+    var partes = ['Enviados: ' + r.enviados + '.'];
+    if (r.sinCorreo && r.sinCorreo.length) partes.push('Sin correo registrado: ' + r.sinCorreo.length + '.');
+    if (r.noEncontrados && r.noEncontrados.length) partes.push('No encontrados: ' + r.noEncontrados.length + '.');
+    if (r.fallidos && r.fallidos.length) partes.push('Fallidos: ' + r.fallidos.length + ' (revisa la cuota diaria de correo si son muchos).');
+    msgBox.innerHTML = '<div class="msg ok">' + escapeHtml(partes.join(' ')) + '</div>';
+
+    if (esClientes) {
+      state.crmClientesSeleccion = [];
+      await cargarCRMClientes();
+    } else {
+      state.crmInteresadosSeleccion = [];
+      await cargarCRMInteresados();
+    }
+  };
 }
 
 /* ---------------- USUARIOS (solo Administrador) ---------------- */
