@@ -1189,6 +1189,7 @@ var state = {
   usuarios: [],
   crmSubview: 'clientes', // clientes | interesados
   crmClientes: [],
+  crmSeguimientosTodos: [], // todos los seguimientos de todos los clientes, para la columna "Último seguimiento"
   crmInteresados: [],
   crmFiltroEstatus: 'Todos',
   crmBusqueda: ''
@@ -1425,7 +1426,7 @@ function renderProyectos() {
       '<div class="toolbar" style="justify-content:space-between">' +
         '<h2 style="margin:0">Proyectos</h2>' +
         '<div style="display:flex;gap:8px">' +
-          '<a href="guia-uso.pdf" target="_blank" style="background:#fff;color:var(--purple);border:1px solid var(--purple);padding:8px 14px;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center">Guía de uso</a>' +
+          '<a href="Guia_de_uso_Plataforma_Sintropia.pdf" target="_blank" style="background:#fff;color:var(--purple);border:1px solid var(--purple);padding:8px 14px;border-radius:6px;font-size:13px;font-weight:600;text-decoration:none;display:inline-flex;align-items:center">Guía de uso</a>' +
           '<button class="secondary" id="btnNuevoProyecto">+ Nuevo proyecto</button>' +
         '</div>' +
       '</div>' +
@@ -2109,8 +2110,23 @@ function abrirModalImportar(tipo, opts) {
  * ------------------------------------------------------------------ */
 
 async function cargarCRMClientes() {
-  var r = await api('listarCRMClientes', {});
+  var resultados = await Promise.all([
+    api('listarCRMClientes', {}),
+    api('listarTodosCRMSeguimientos', {})
+  ]);
+  var r = resultados[0], rSeg = resultados[1];
   if (r.ok) state.crmClientes = r.data;
+  if (rSeg.ok) state.crmSeguimientosTodos = rSeg.data;
+}
+
+// Devuelve el seguimiento más reciente de un cliente (o null si no tiene
+// ninguno todavía), comparando por fechaOrden (ISO) para que el orden
+// cronológico sea correcto sin importar el formato de "fecha" en pantalla.
+function _ultimoSeguimientoDe(clienteCodigo) {
+  var deEsteCliente = state.crmSeguimientosTodos.filter(function (s) { return s.clienteCodigo === clienteCodigo; });
+  if (!deEsteCliente.length) return null;
+  deEsteCliente.sort(function (a, b) { return (b.fechaOrden || '').localeCompare(a.fechaOrden || ''); });
+  return deEsteCliente[0];
 }
 
 async function cargarCRMInteresados() {
@@ -2204,13 +2220,23 @@ function _renderCRMClientesResultados() {
     return campo.indexOf(busqueda) !== -1;
   });
 
-  var thead = '<tr><th>Organización</th><th>Categoría</th><th>Contacto</th><th>Estatus</th><th></th></tr>';
+  var thead = '<tr><th>Organización</th><th>Categoría</th><th>Contacto</th><th>Estatus</th><th>Último seguimiento</th><th></th></tr>';
   var trs = lista.map(function (c) {
+    var ultimo = _ultimoSeguimientoDe(c.codigo);
+    var celdaUltimo;
+    if (!ultimo) {
+      celdaUltimo = '<span class="subtle">Sin información</span>';
+    } else {
+      var notasCorta = String(ultimo.notas || '').slice(0, 60) + (String(ultimo.notas || '').length > 60 ? '…' : '');
+      celdaUltimo = '<strong>' + escapeHtml(ultimo.fecha) + '</strong>' +
+        (notasCorta ? '<br><span class="subtle">' + escapeHtml(notasCorta) + '</span>' : '');
+    }
     return '<tr>' +
       '<td>' + escapeHtml(c.organizacion) + '</td>' +
       '<td>' + escapeHtml(c.categoria || '—') + '</td>' +
       '<td>' + escapeHtml(c.nombreContacto || '—') + '</td>' +
       '<td>' + _badgeEstatusCRM(c.estatus) + '</td>' +
+      '<td>' + celdaUltimo + '</td>' +
       '<td><button class="small" data-ver="' + c.codigo + '">Ver / seguimientos</button> ' +
         '<button class="small del" data-del="' + c.codigo + '">Eliminar</button></td>' +
     '</tr>';
@@ -2278,7 +2304,14 @@ function abrirModalCliente(cliente) {
     '</div></div>'
   );
   document.body.appendChild(modal);
-  modal.querySelector('#clienteCancelar').onclick = function () { modal.remove(); renderCRMClientesTabla(); };
+  modal.querySelector('#clienteCancelar').onclick = async function () {
+    modal.remove();
+    // Recarga antes de re-pintar la tabla: si dentro del modal se agregó, editó
+    // o borró un seguimiento, la columna "Último seguimiento" debe reflejarlo
+    // de inmediato, no hasta que se recargue la pestaña completa.
+    await cargarCRMClientes();
+    renderCRMClientesTabla();
+  };
   modal.querySelector('#clienteGuardar').onclick = async function () {
     var btn = modal.querySelector('#clienteGuardar');
     var msgBox = modal.querySelector('#clienteMsg');
