@@ -174,7 +174,7 @@ var TIPOS_PREGUNTA_CUA = ['Introductoria', 'Central', 'Profundización', 'Cierre
 var NIVELES_CONSENSO_CUA02 = ['Consenso amplio', 'Opiniones divididas', 'Opinión aislada'];
 
 /* ============================================================
- * EJE 01 — RECLUTAMIENTO Y SELECCIÓN DE PERSONAL (INS-RS-04, INS-RS-06)
+ * EJE 01 — RECLUTAMIENTO Y SELECCIÓN DE PERSONAL (INS-RS-01 a INS-RS-12)
  * ============================================================ */
 var CAT_ESTATUS_VACANTE = ['Abierta', 'En proceso', 'Con finalistas', 'Cubierta', 'Cancelada', 'Pausada'];
 var CAT_PRIORIDAD_RS = ['Alta', 'Media', 'Baja'];
@@ -184,6 +184,39 @@ var CAT_FUENTE_RECLUTAMIENTO_RS = ['Bolsa digital', 'Referido interno', 'Referid
   'Redes sociales', 'Sitio propio de la empresa', 'Feria de empleo', 'Agencia / headhunter', 'Banco de talento interno',
   'Reclutamiento en campo', 'Otro'];
 var SINO_RS = ['Sí', 'No'];
+
+var CAT_TIPO_CONTRATACION_RS = ['Planta / Indeterminado', 'Temporal / Por obra o tiempo determinado', 'Honorarios / Prestación de servicios', 'Prácticas / Becario', 'Por proyecto'];
+var CAT_JORNADA_RS = ['Tiempo completo', 'Medio tiempo', 'Por horas', 'Turnos rotativos'];
+var CAT_MODALIDAD_RS = ['Presencial', 'Remoto', 'Híbrido'];
+var CAT_MOTIVO_REQUISICION_RS = ['Nueva creación', 'Reemplazo por baja', 'Reemplazo por promoción', 'Incremento de plantilla', 'Proyecto temporal'];
+var CAT_ESTATUS_APROBACION_RS = ['Pendiente', 'Aprobada', 'Rechazada', 'En revisión'];
+var CAT_AREA_PROFESIONAL_RS = ['Administrativa', 'Comercial / Ventas', 'Operaciones', 'Tecnología', 'Recursos Humanos',
+  'Finanzas', 'Legal', 'Marketing', 'Producción / Manufactura', 'Servicio al cliente', 'Dirección / Gerencial', 'Otra'];
+var CAT_NIVEL_ESCOLARIDAD_RS = ['Primaria', 'Secundaria', 'Bachillerato / Preparatoria', 'Técnico / Carrera técnica',
+  'Licenciatura', 'Ingeniería', 'Maestría', 'Doctorado', 'Sin requisito formal'];
+var CAT_ESTATUS_ESTUDIOS_RS = ['Trunco', 'Pasante', 'Titulado', 'En curso', 'No aplica'];
+var CAT_COMPETENCIA_RS = ['Comunicación efectiva', 'Trabajo en equipo', 'Orientación a resultados', 'Liderazgo',
+  'Resolución de problemas', 'Adaptabilidad al cambio', 'Pensamiento analítico', 'Negociación', 'Atención al detalle',
+  'Manejo de conflictos', 'Planeación y organización', 'Servicio al cliente', 'Innovación y creatividad',
+  'Ética e integridad', 'Conocimiento técnico especializado'];
+var CAT_TIPO_COMPETENCIA_RS = ['Técnica', 'Conductual (genérica)', 'Gerencial-Directiva'];
+var CAT_NIVEL_COMPETENCIA_RS = ['1-Básico', '2-Intermedio', '3-Avanzado', '4-Experto'];
+var CAT_SEXO_RS = ['Femenino', 'Masculino', 'Prefiere no decir'];
+var CAT_MODALIDAD_PREF_RS = ['Presencial', 'Remoto', 'Híbrido', 'Indistinto'];
+var CAT_TIPO_REQUISITO_RS = ['Escolaridad', 'Experiencia', 'Conocimiento técnico', 'Idioma', 'Ubicación', 'Otro'];
+var CAT_NIVEL_CUMPLIMIENTO_RS = ['Cumple totalmente', 'Cumple parcialmente', 'No cumple'];
+var CAT_MEDIO_CONTACTO_RS = ['Llamada telefónica', 'Videollamada', 'WhatsApp', 'Presencial'];
+var CAT_NIVEL_INTERES_RS = ['Alto', 'Medio', 'Bajo'];
+var CAT_MOTIVO_BUSQUEDA_RS = ['Mejora salarial', 'Crecimiento profesional', 'Desempleo', 'Cambio de ciudad', 'Ambiente laboral', 'Fin de contrato', 'Otro'];
+var CAT_MOTIVO_DESCARTE_RS = ['No localizable', 'Pretensión salarial fuera de rango', 'Disponibilidad incompatible', 'Ubicación/traslado incompatible', 'Pérdida de interés', 'Experiencia insuficiente', 'Otro'];
+var CAT_RESULTADO_SCREENING_RS = ['Avanza a entrevista', 'No avanza', 'Pendiente segundo intento de contacto'];
+var CAT_RESULTADO_CUALITATIVO_RS = ['Favorable', 'Con observaciones', 'Desfavorable', 'No aplicado'];
+var CAT_RECOMENDACION_RS10 = ['Contratar', 'Contratar con reservas', 'No contratar', 'Banco de talento'];
+var CAT_RESULTADO_ENTREVISTA_RS = ['Favorable', 'Con observaciones', 'Desfavorable', 'No aplicado'];
+var CAT_RESULTADO_ISL_RS = ['Consistente', 'Con observaciones', 'Inconsistente', 'No aplicado'];
+var CAT_RECOMENDACION_FINAL_RS11 = ['Se recomienda contratar', 'Se recomienda con reservas', 'No se recomienda'];
+var CAT_MOTIVO_CIERRE_RS12 = ['Vacante cubierta', 'Cancelada por el área', 'Congelada por presupuesto', 'Puesto eliminado', 'Otro'];
+var CAT_SATISFACCION_RS12 = ['1 - Muy insatisfecho', '2 - Insatisfecho', '3 - Neutral', '4 - Satisfecho', '5 - Muy satisfecho'];
 
 /* ============================================================
  * CRM — Clientes / prospectos / interesados. No está ligado a
@@ -418,8 +451,8 @@ var INSTRUMENTOS = {
       { key: 'fechaCierreProgramada', label: 'Cierre programado' }
     ],
     campos: [
-      { key: 'idRequisicion', label: 'ID_REQUISICION (RS-01, si existe)', tipo: 'text', placeholder: 'ej. REQ-01' },
-      { key: 'idPuesto', label: 'ID_PUESTO (RS-02, si existe)', tipo: 'text', placeholder: 'ej. PUE-01' },
+      { key: 'idRequisicion', label: 'ID_REQUISICION (RS-01) *', tipo: 'text', requerido: true, placeholder: 'ej. REQ-01' },
+      { key: 'idPuesto', label: 'ID_PUESTO (RS-02) *', tipo: 'text', requerido: true, placeholder: 'ej. PUE-01' },
       { key: 'puesto', label: 'Puesto *', tipo: 'text', requerido: true },
       { key: 'area', label: 'Área', tipo: 'text' },
       { key: 'fechaApertura', label: 'Fecha de apertura *', tipo: 'date', requerido: true },
@@ -428,9 +461,6 @@ var INSTRUMENTOS = {
       { key: 'fechaCierreReal', label: 'Fecha de cierre real', tipo: 'date' },
       { key: 'estatus', label: 'Estatus de la vacante *', tipo: 'select', opciones: CAT_ESTATUS_VACANTE, requerido: true },
       { key: 'responsable', label: 'Responsable del proceso (reclutador/a) *', tipo: 'text', requerido: true },
-      { key: 'candidatosRecibidos', label: 'Candidatos recibidos', tipo: 'number' },
-      { key: 'candidatosPreseleccionados', label: 'Candidatos preseleccionados', tipo: 'number' },
-      { key: 'finalistas', label: 'Finalistas', tipo: 'number' },
       { key: 'candidatoContratado', label: 'ID_CANDIDATO contratado', tipo: 'text', placeholder: 'ej. CAND-01' },
       { key: 'fechaContratacion', label: 'Fecha de contratación', tipo: 'date' },
       { key: 'prioridad', label: 'Prioridad', tipo: 'select', opciones: CAT_PRIORIDAD_RS },
@@ -446,7 +476,7 @@ var INSTRUMENTOS = {
       { key: 'codigo', label: 'Código' },
       { key: 'nombre', label: 'Nombre' },
       { key: 'idVacante', label: 'Vacante' },
-      { key: 'fuente', label: 'Fuente' },
+      { key: 'idFuente', label: 'Fuente' },
       { key: 'estatus', label: 'Estatus' },
       { key: 'consentimiento', label: 'Consentimiento' }
     ],
@@ -455,7 +485,7 @@ var INSTRUMENTOS = {
       { key: 'telefono', label: 'Teléfono de contacto (10 dígitos) *', tipo: 'text', requerido: true },
       { key: 'correo', label: 'Correo electrónico *', tipo: 'text', requerido: true },
       { key: 'idVacante', label: 'ID_VACANTE a la que postula (RS-04) *', tipo: 'text', requerido: true, placeholder: 'ej. VAC-01' },
-      { key: 'fuente', label: 'Fuente de reclutamiento', tipo: 'select', opciones: CAT_FUENTE_RECLUTAMIENTO_RS },
+      { key: 'idFuente', label: 'ID_FUENTE (RS-05) *', tipo: 'text', requerido: true, placeholder: 'ej. FTE-01' },
       { key: 'fechaPostulacion', label: 'Fecha de postulación *', tipo: 'date', requerido: true },
       { key: 'estatus', label: 'Estatus del candidato *', tipo: 'select', opciones: CAT_ESTATUS_CANDIDATO_RS, requerido: true },
       { key: 'disponibilidad', label: 'Disponibilidad para iniciar *', tipo: 'select', opciones: CAT_DISPONIBILIDAD_RS, requerido: true },
@@ -465,6 +495,301 @@ var INSTRUMENTOS = {
       { key: 'consentimiento', label: 'Consentimiento de tratamiento de datos', tipo: 'select', opciones: SINO_RS },
       { key: 'fechaConsentimiento', label: 'Fecha de consentimiento', tipo: 'date' },
       { key: 'cv', label: 'CV (enlace de Drive)', tipo: 'text' }
+    ]
+  },
+  rs01: {
+    familia: 'RS',
+    titulo: 'INS-RS-01 Requisición de personal',
+    listar: 'listarRS01', guardar: 'guardarFilaRS01', eliminar: 'eliminarFilaRS01',
+    validar: 'validarRS01', descargar: 'generarDescargableRS01',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'puestoSolicitado', label: 'Puesto solicitado' },
+      { key: 'areaSolicitante', label: 'Área solicitante' },
+      { key: 'numVacantes', label: 'Vacantes' },
+      { key: 'estatusAprobacion', label: 'Estatus de aprobación' },
+      { key: 'prioridad', label: 'Prioridad' }
+    ],
+    campos: [
+      { key: 'fechaSolicitud', label: 'Fecha de solicitud *', tipo: 'date', requerido: true },
+      { key: 'areaSolicitante', label: 'Área solicitante *', tipo: 'text', requerido: true },
+      { key: 'puestoSolicitado', label: 'Puesto solicitado *', tipo: 'text', requerido: true },
+      { key: 'idPuesto', label: 'ID_PUESTO (RS-02, si ya existe)', tipo: 'text', placeholder: 'ej. PUE-01' },
+      { key: 'numVacantes', label: 'No. de vacantes solicitadas *', tipo: 'number', requerido: true },
+      { key: 'tipoContratacion', label: 'Tipo de contratación *', tipo: 'select', opciones: CAT_TIPO_CONTRATACION_RS, requerido: true },
+      { key: 'jornada', label: 'Jornada *', tipo: 'select', opciones: CAT_JORNADA_RS, requerido: true },
+      { key: 'modalidad', label: 'Modalidad *', tipo: 'select', opciones: CAT_MODALIDAD_RS, requerido: true },
+      { key: 'ubicacion', label: 'Ubicación', tipo: 'text' },
+      { key: 'fechaRequeridaIncorporacion', label: 'Fecha requerida de incorporación *', tipo: 'date', requerido: true },
+      { key: 'motivoRequisicion', label: 'Motivo de la requisición *', tipo: 'select', opciones: CAT_MOTIVO_REQUISICION_RS, requerido: true },
+      { key: 'salarioMin', label: 'Rango salarial (mínimo)', tipo: 'number' },
+      { key: 'salarioMax', label: 'Rango salarial (máximo)', tipo: 'number' },
+      { key: 'responsable', label: 'Responsable de la requisición *', tipo: 'text', requerido: true },
+      { key: 'prioridad', label: 'Prioridad *', tipo: 'select', opciones: CAT_PRIORIDAD_RS, requerido: true },
+      { key: 'estatusAprobacion', label: 'Estatus de aprobación *', tipo: 'select', opciones: CAT_ESTATUS_APROBACION_RS, requerido: true },
+      { key: 'aprobadoPor', label: 'Aprobó (nombre/cargo)', tipo: 'text' },
+      { key: 'fechaAprobacion', label: 'Fecha de aprobación', tipo: 'date' },
+      { key: 'observaciones', label: 'Observaciones', tipo: 'textarea' }
+    ]
+  },
+  rs02: {
+    familia: 'RS',
+    titulo: 'INS-RS-02 Perfil y descripción del puesto',
+    listar: 'listarRS02', guardar: 'guardarFilaRS02', eliminar: 'eliminarFilaRS02',
+    validar: 'validarRS02', descargar: 'generarDescargableRS02',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'nombrePuesto', label: 'Puesto' },
+      { key: 'areaDepartamento', label: 'Área/departamento' },
+      { key: 'areaProfesional', label: 'Área profesional' },
+      { key: 'escolaridadMinima', label: 'Escolaridad mínima' },
+      { key: 'version', label: 'Versión' }
+    ],
+    campos: [
+      { key: 'nombrePuesto', label: 'Nombre del puesto *', tipo: 'text', requerido: true },
+      { key: 'areaDepartamento', label: 'Área/departamento', tipo: 'text' },
+      { key: 'areaProfesional', label: 'Área profesional', tipo: 'select', opciones: CAT_AREA_PROFESIONAL_RS },
+      { key: 'objetivoPuesto', label: 'Objetivo del puesto *', tipo: 'textarea', requerido: true },
+      { key: 'funcionesPrincipales', label: 'Funciones principales', tipo: 'textarea' },
+      { key: 'escolaridadMinima', label: 'Escolaridad mínima requerida *', tipo: 'select', opciones: CAT_NIVEL_ESCOLARIDAD_RS, requerido: true },
+      { key: 'areaFormacion', label: 'Área de formación/carrera', tipo: 'text' },
+      { key: 'estatusEstudiosRequerido', label: 'Estatus de estudios requerido', tipo: 'select', opciones: CAT_ESTATUS_ESTUDIOS_RS },
+      { key: 'experienciaMinimaAnios', label: 'Experiencia mínima requerida (años) *', tipo: 'number', requerido: true },
+      { key: 'experienciaEspecifica', label: 'Experiencia específica requerida *', tipo: 'textarea', requerido: true },
+      { key: 'conocimientosTecnicos', label: 'Conocimientos técnicos requeridos *', tipo: 'textarea', requerido: true },
+      { key: 'idiomas', label: 'Idiomas requeridos', tipo: 'text' },
+      { key: 'jornada', label: 'Jornada *', tipo: 'select', opciones: CAT_JORNADA_RS, requerido: true },
+      { key: 'modalidad', label: 'Modalidad *', tipo: 'select', opciones: CAT_MODALIDAD_RS, requerido: true },
+      { key: 'ubicacion', label: 'Ubicación *', tipo: 'text', requerido: true },
+      { key: 'salarioMin', label: 'Rango salarial (mínimo)', tipo: 'number' },
+      { key: 'salarioMax', label: 'Rango salarial (máximo)', tipo: 'number' },
+      { key: 'prestaciones', label: 'Prestaciones/beneficios', tipo: 'textarea' },
+      { key: 'jefeInmediato', label: 'Jefe inmediato (puesto)', tipo: 'text' },
+      { key: 'puestosSupervisa', label: 'Puestos que supervisa', tipo: 'text' },
+      { key: 'fechaCreacionActualizacion', label: 'Fecha de creación/actualización *', tipo: 'date', requerido: true },
+      { key: 'version', label: 'Versión del perfil', tipo: 'number' }
+    ]
+  },
+  rs03: {
+    familia: 'RS',
+    titulo: 'INS-RS-03 Matriz de competencias del puesto',
+    listar: 'listarRS03', guardar: 'guardarFilaRS03', eliminar: 'eliminarFilaRS03',
+    validar: 'validarRS03', descargar: 'generarDescargableRS03',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'idPuesto', label: 'ID_PUESTO' },
+      { key: 'competencia', label: 'Competencia' },
+      { key: 'tipoCompetencia', label: 'Tipo' },
+      { key: 'nivelRequerido', label: 'Nivel requerido' },
+      { key: 'pesoRelativo', label: 'Peso (%)' }
+    ],
+    campos: [
+      { key: 'idPuesto', label: 'ID_PUESTO (RS-02) *', tipo: 'text', requerido: true, placeholder: 'ej. PUE-01' },
+      { key: 'competencia', label: 'Competencia *', tipo: 'select', opciones: CAT_COMPETENCIA_RS, requerido: true },
+      { key: 'tipoCompetencia', label: 'Tipo de competencia *', tipo: 'select', opciones: CAT_TIPO_COMPETENCIA_RS, requerido: true },
+      { key: 'nivelRequerido', label: 'Nivel requerido *', tipo: 'select', opciones: CAT_NIVEL_COMPETENCIA_RS, requerido: true },
+      { key: 'descripcionConductual', label: 'Descripción conductual del nivel *', tipo: 'textarea', requerido: true },
+      { key: 'evidenciaEsperada', label: 'Evidencia esperada *', tipo: 'textarea', requerido: true },
+      { key: 'pesoRelativo', label: 'Peso relativo (%) *', tipo: 'number', requerido: true },
+      { key: 'criterioEvaluacion', label: 'Criterio de evaluación *', tipo: 'textarea', requerido: true },
+      { key: 'instrumentoEvaluacion', label: 'Instrumento donde se evalúa', tipo: 'text', placeholder: 'ej. Entrevista / Prueba técnica' },
+      { key: 'fechaElaboracion', label: 'Fecha de elaboración *', tipo: 'date', requerido: true }
+    ]
+  },
+  rs05: {
+    familia: 'RS',
+    titulo: 'INS-RS-05 Registro de fuentes de reclutamiento',
+    listar: 'listarRS05', guardar: 'guardarFilaRS05', eliminar: 'eliminarFilaRS05',
+    validar: 'validarRS05', descargar: 'generarDescargableRS05',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'idVacante', label: 'Vacante' },
+      { key: 'fuenteReclutamiento', label: 'Fuente' },
+      { key: 'canalEspecifico', label: 'Canal específico' },
+      { key: 'candidatosRecibidos', label: 'Recibidos' },
+      { key: 'candidatosPreseleccionados', label: 'Preseleccionados' },
+      { key: 'candidatosContratados', label: 'Contratados' }
+    ],
+    campos: [
+      { key: 'idVacante', label: 'ID_VACANTE (RS-04) *', tipo: 'text', requerido: true, placeholder: 'ej. VAC-01' },
+      { key: 'fuenteReclutamiento', label: 'Fuente de reclutamiento *', tipo: 'select', opciones: CAT_FUENTE_RECLUTAMIENTO_RS, requerido: true },
+      { key: 'canalEspecifico', label: 'Canal específico *', tipo: 'text', requerido: true, placeholder: 'ej. LinkedIn' },
+      { key: 'fechaActivacion', label: 'Fecha de activación *', tipo: 'date', requerido: true },
+      { key: 'fechaCierreCanal', label: 'Fecha de cierre del canal', tipo: 'date' },
+      { key: 'costo', label: 'Costo de la fuente', tipo: 'number' },
+      { key: 'observaciones', label: 'Observaciones', tipo: 'textarea' }
+    ]
+  },
+  rs07: {
+    familia: 'RS',
+    titulo: 'INS-RS-07 Ficha individual del candidato',
+    listar: 'listarRS07', guardar: 'guardarFilaRS07', eliminar: 'eliminarFilaRS07',
+    validar: 'validarRS07', descargar: 'generarDescargableRS07',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'idCandidato', label: 'ID_CANDIDATO' },
+      { key: 'escolaridadMaxima', label: 'Escolaridad' },
+      { key: 'experienciaTotalAnios', label: 'Experiencia (años)' },
+      { key: 'pretensionSalarial', label: 'Pretensión salarial' },
+      { key: 'disponibilidad', label: 'Disponibilidad' }
+    ],
+    campos: [
+      { key: 'idCandidato', label: 'ID_CANDIDATO (RS-06) *', tipo: 'text', requerido: true, placeholder: 'ej. CAND-01' },
+      { key: 'fechaNacimiento', label: 'Fecha de nacimiento *', tipo: 'date', requerido: true },
+      { key: 'sexo', label: 'Sexo (solo estadística, nunca criterio de descarte)', tipo: 'select', opciones: CAT_SEXO_RS },
+      { key: 'escolaridadMaxima', label: 'Escolaridad máxima *', tipo: 'select', opciones: CAT_NIVEL_ESCOLARIDAD_RS, requerido: true },
+      { key: 'estatusEstudios', label: 'Estatus de estudios *', tipo: 'select', opciones: CAT_ESTATUS_ESTUDIOS_RS, requerido: true },
+      { key: 'carreraEspecialidad', label: 'Carrera/especialidad *', tipo: 'text', requerido: true },
+      { key: 'institucionEducativa', label: 'Institución educativa', tipo: 'text' },
+      { key: 'experienciaTotalAnios', label: 'Años de experiencia total *', tipo: 'number', requerido: true },
+      { key: 'experienciaAreaAnios', label: 'Años de experiencia en el área', tipo: 'number' },
+      { key: 'puestoActual', label: 'Puesto actual/último puesto *', tipo: 'text', requerido: true },
+      { key: 'empresaActual', label: 'Empresa actual/última empresa *', tipo: 'text', requerido: true },
+      { key: 'motivoBusqueda', label: 'Motivo de búsqueda de empleo *', tipo: 'select', opciones: CAT_MOTIVO_BUSQUEDA_RS, requerido: true },
+      { key: 'disponibilidad', label: 'Disponibilidad para iniciar *', tipo: 'select', opciones: CAT_DISPONIBILIDAD_RS, requerido: true },
+      { key: 'pretensionSalarial', label: 'Pretensión salarial *', tipo: 'number', requerido: true },
+      { key: 'modalidadPreferida', label: 'Modalidad preferida *', tipo: 'select', opciones: CAT_MODALIDAD_PREF_RS, requerido: true },
+      { key: 'disponibilidadCambioResidencia', label: 'Disponibilidad de cambio de residencia', tipo: 'select', opciones: SINO_RS },
+      { key: 'idiomas', label: 'Idiomas y nivel', tipo: 'text' },
+      { key: 'observacionesReclutador', label: 'Observaciones del reclutador', tipo: 'textarea' }
+    ]
+  },
+  rs08: {
+    familia: 'RS',
+    titulo: 'INS-RS-08 Matriz de filtro curricular',
+    listar: 'listarRS08', guardar: 'guardarFilaRS08', eliminar: 'eliminarFilaRS08',
+    validar: 'validarRS08', descargar: 'generarDescargableRS08',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'idVacante', label: 'Vacante' },
+      { key: 'idCandidato', label: 'Candidato' },
+      { key: 'requisitoEvaluado', label: 'Requisito' },
+      { key: 'nivelCumplimiento', label: 'Cumplimiento' },
+      { key: 'puntajeParTotal', label: 'Puntaje del par (calc.)' },
+      { key: 'resultadoPar', label: 'Resultado del par (calc.)' }
+    ],
+    campos: [
+      { key: 'idVacante', label: 'ID_VACANTE (RS-04) *', tipo: 'text', requerido: true, placeholder: 'ej. VAC-01' },
+      { key: 'idCandidato', label: 'ID_CANDIDATO (RS-06) *', tipo: 'text', requerido: true, placeholder: 'ej. CAND-01' },
+      { key: 'requisitoEvaluado', label: 'Requisito evaluado *', tipo: 'select', opciones: CAT_TIPO_REQUISITO_RS, requerido: true },
+      { key: 'nivelCumplimiento', label: 'Nivel de cumplimiento *', tipo: 'select', opciones: CAT_NIVEL_CUMPLIMIENTO_RS, requerido: true },
+      { key: 'evidenciaEnCV', label: 'Evidencia en el CV *', tipo: 'textarea', requerido: true },
+      { key: 'pesoRequisito', label: 'Peso del requisito (%) *', tipo: 'number', requerido: true },
+      { key: 'observaciones', label: 'Observaciones', tipo: 'textarea' },
+      { key: 'evaluadoPor', label: 'Evaluado por *', tipo: 'text', requerido: true },
+      { key: 'fechaEvaluacion', label: 'Fecha de evaluación *', tipo: 'date', requerido: true }
+    ]
+  },
+  rs09: {
+    familia: 'RS',
+    titulo: 'INS-RS-09 Screening inicial',
+    listar: 'listarRS09', guardar: 'guardarFilaRS09', eliminar: 'eliminarFilaRS09',
+    validar: 'validarRS09', descargar: 'generarDescargableRS09',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'idVacante', label: 'Vacante' },
+      { key: 'idCandidato', label: 'Candidato' },
+      { key: 'fechaContacto', label: 'Fecha de contacto' },
+      { key: 'resultadoScreening', label: 'Resultado' }
+    ],
+    campos: [
+      { key: 'idVacante', label: 'ID_VACANTE (RS-04) *', tipo: 'text', requerido: true, placeholder: 'ej. VAC-01' },
+      { key: 'idCandidato', label: 'ID_CANDIDATO (RS-06) *', tipo: 'text', requerido: true, placeholder: 'ej. CAND-01' },
+      { key: 'fechaContacto', label: 'Fecha de contacto *', tipo: 'date', requerido: true },
+      { key: 'medioContacto', label: 'Medio de contacto *', tipo: 'select', opciones: CAT_MEDIO_CONTACTO_RS, requerido: true },
+      { key: 'contactoLogrado', label: '¿Se logró el contacto? *', tipo: 'select', opciones: SINO_RS, requerido: true },
+      { key: 'disponibilidadConfirmada', label: 'Disponibilidad confirmada', tipo: 'select', opciones: CAT_DISPONIBILIDAD_RS },
+      { key: 'pretensionSalarialConfirmada', label: 'Pretensión salarial confirmada', tipo: 'number' },
+      { key: 'nivelInteres', label: 'Nivel de interés', tipo: 'select', opciones: CAT_NIVEL_INTERES_RS },
+      { key: 'experienciaRelevanteConfirmada', label: 'Experiencia relevante confirmada', tipo: 'select', opciones: SINO_RS },
+      { key: 'motivoCambio', label: 'Motivo de cambio de empleo', tipo: 'select', opciones: CAT_MOTIVO_BUSQUEDA_RS },
+      { key: 'ubicacionConfirmada', label: 'Ubicación/traslado confirmado', tipo: 'select', opciones: SINO_RS },
+      { key: 'resultadoScreening', label: 'Resultado del screening *', tipo: 'select', opciones: CAT_RESULTADO_SCREENING_RS, requerido: true },
+      { key: 'motivoNoAvance', label: 'Motivo de no avance', tipo: 'select', opciones: CAT_MOTIVO_DESCARTE_RS },
+      { key: 'observaciones', label: 'Observaciones', tipo: 'textarea' },
+      { key: 'realizadoPor', label: 'Realizado por *', tipo: 'text', requerido: true }
+    ]
+  },
+  rs10: {
+    familia: 'RS',
+    titulo: 'INS-RS-10 Matriz de candidatos finalistas',
+    listar: 'listarRS10', guardar: 'guardarFilaRS10', eliminar: 'eliminarFilaRS10',
+    validar: 'validarRS10', descargar: 'generarDescargableRS10',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'idVacante', label: 'Vacante' },
+      { key: 'idCandidato', label: 'Candidato' },
+      { key: 'puntajeTotalPonderado', label: 'Puntaje total (calc.)' },
+      { key: 'ranking', label: 'Ranking (calc.)' },
+      { key: 'recomendacion', label: 'Recomendación' }
+    ],
+    campos: [
+      { key: 'idVacante', label: 'ID_VACANTE (RS-04) *', tipo: 'text', requerido: true, placeholder: 'ej. VAC-01' },
+      { key: 'idCandidato', label: 'ID_CANDIDATO (RS-06) *', tipo: 'text', requerido: true, placeholder: 'ej. CAND-01' },
+      { key: 'pesoCurricular', label: 'Peso curricular (%) *', tipo: 'number', requerido: true },
+      { key: 'pesoEntrevista', label: 'Peso entrevista (%) *', tipo: 'number', requerido: true },
+      { key: 'pesoSE', label: 'Peso estudio socioeconómico (%) *', tipo: 'number', requerido: true },
+      { key: 'pesoISL', label: 'Peso investigación sociolaboral (%) *', tipo: 'number', requerido: true },
+      { key: 'puntajeEntrevistaManual', label: 'Puntaje de entrevista (0-100) *', tipo: 'number', requerido: true },
+      { key: 'resultadoReferencias', label: 'Resultado de referencias laborales', tipo: 'select', opciones: CAT_RESULTADO_CUALITATIVO_RS },
+      { key: 'resultadoSE', label: 'Resultado de estudio socioeconómico', tipo: 'select', opciones: CAT_RESULTADO_CUALITATIVO_RS },
+      { key: 'recomendacion', label: 'Recomendación *', tipo: 'select', opciones: CAT_RECOMENDACION_RS10, requerido: true },
+      { key: 'observaciones', label: 'Observaciones', tipo: 'textarea' },
+      { key: 'elaboradoPor', label: 'Elaborado por *', tipo: 'text', requerido: true },
+      { key: 'fechaElaboracion', label: 'Fecha de elaboración *', tipo: 'date', requerido: true }
+    ]
+  },
+  rs11: {
+    familia: 'RS',
+    titulo: 'INS-RS-11 Informe de recomendación',
+    listar: 'listarRS11', guardar: 'guardarFilaRS11', eliminar: 'eliminarFilaRS11',
+    validar: 'validarRS11', descargar: 'generarDescargableRS11',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'idVacante', label: 'Vacante' },
+      { key: 'idCandidato', label: 'Candidato' },
+      { key: 'cumplimientoRequisitos', label: 'Cumplimiento (calc.)' },
+      { key: 'recomendacionFinal', label: 'Recomendación final' }
+    ],
+    campos: [
+      { key: 'idVacante', label: 'ID_VACANTE (RS-04) *', tipo: 'text', requerido: true, placeholder: 'ej. VAC-01' },
+      { key: 'idCandidato', label: 'ID_CANDIDATO (RS-06) *', tipo: 'text', requerido: true, placeholder: 'ej. CAND-01' },
+      { key: 'fortalezasPrincipales', label: 'Fortalezas principales *', tipo: 'textarea', requerido: true },
+      { key: 'riesgosAreasAtencion', label: 'Riesgos/áreas de atención', tipo: 'textarea' },
+      { key: 'resultadoEntrevista', label: 'Resultado de entrevista', tipo: 'select', opciones: CAT_RESULTADO_ENTREVISTA_RS },
+      { key: 'resultadoSE', label: 'Resultado de estudio socioeconómico', tipo: 'select', opciones: CAT_RESULTADO_CUALITATIVO_RS },
+      { key: 'resultadoISL', label: 'Resultado de investigación sociolaboral', tipo: 'select', opciones: CAT_RESULTADO_ISL_RS },
+      { key: 'recomendacionFinal', label: 'Recomendación final *', tipo: 'select', opciones: CAT_RECOMENDACION_FINAL_RS11, requerido: true },
+      { key: 'justificacion', label: 'Justificación de la recomendación *', tipo: 'textarea', requerido: true },
+      { key: 'condicionesSugeridas', label: 'Condiciones sugeridas de contratación', tipo: 'textarea' },
+      { key: 'elaboradoPor', label: 'Elaborado por *', tipo: 'text', requerido: true },
+      { key: 'fechaElaboracion', label: 'Fecha de elaboración *', tipo: 'date', requerido: true },
+      { key: 'validadoPor', label: 'Validado por (jefatura)', tipo: 'text' },
+      { key: 'fechaValidacion', label: 'Fecha de validación', tipo: 'date' }
+    ]
+  },
+  rs12: {
+    familia: 'RS',
+    titulo: 'INS-RS-12 Cierre de vacante',
+    listar: 'listarRS12', guardar: 'guardarFilaRS12', eliminar: 'eliminarFilaRS12',
+    validar: 'validarRS12', descargar: 'generarDescargableRS12',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'idVacante', label: 'Vacante' },
+      { key: 'fechaCierreReal', label: 'Fecha de cierre' },
+      { key: 'motivoCierre', label: 'Motivo de cierre' },
+      { key: 'diasCobertura', label: 'Días de cobertura (calc.)' },
+      { key: 'satisfaccionAreaSolicitante', label: 'Satisfacción del área' }
+    ],
+    campos: [
+      { key: 'idVacante', label: 'ID_VACANTE (RS-04) *', tipo: 'text', requerido: true, placeholder: 'ej. VAC-01' },
+      { key: 'fechaCierreReal', label: 'Fecha de cierre real *', tipo: 'date', requerido: true },
+      { key: 'motivoCierre', label: 'Motivo de cierre *', tipo: 'select', opciones: CAT_MOTIVO_CIERRE_RS12, requerido: true },
+      { key: 'costoAdicional', label: 'Costo adicional (horas-persona estimadas)', tipo: 'number' },
+      { key: 'satisfaccionAreaSolicitante', label: 'Satisfacción del área solicitante *', tipo: 'select', opciones: CAT_SATISFACCION_RS12, requerido: true },
+      { key: 'comentarioAreaSolicitante', label: 'Comentario del área solicitante', tipo: 'textarea' },
+      { key: 'leccionesAprendidas', label: 'Lecciones aprendidas / recomendaciones *', tipo: 'textarea', requerido: true },
+      { key: 'cerradoPor', label: 'Cerrado por *', tipo: 'text', requerido: true }
     ]
   },
   ter01: {
@@ -1219,8 +1544,18 @@ var INSTRUMENTOS_INSTALABLES = [
   { clave: 'DIA01', nombre: 'INS-DIA-01 — Ficha de diagnóstico inicial', tipos: ['dia01'] },
   { clave: 'DIA02', nombre: 'INS-DIA-02 — Cuestionario diagnóstico (3 pestañas: Estructura, Reactivos, Respuestas)', tipos: ['dia02_estructura', 'dia02_reactivos', 'dia02_respuestas'] },
   { clave: 'DIA03', nombre: 'INS-DIA-03 — Ficha de caracterización territorial', tipos: ['dia03'] },
+  { clave: 'RS01', nombre: 'INS-RS-01 — Requisición de personal', tipos: ['rs01'] },
+  { clave: 'RS02', nombre: 'INS-RS-02 — Perfil y descripción del puesto', tipos: ['rs02'] },
+  { clave: 'RS03', nombre: 'INS-RS-03 — Matriz de competencias del puesto', tipos: ['rs03'] },
   { clave: 'RS04', nombre: 'INS-RS-04 — Ficha de vacante', tipos: ['rs04'] },
+  { clave: 'RS05', nombre: 'INS-RS-05 — Registro de fuentes de reclutamiento', tipos: ['rs05'] },
   { clave: 'RS06', nombre: 'INS-RS-06 — Base de candidatos', tipos: ['rs06'] },
+  { clave: 'RS07', nombre: 'INS-RS-07 — Ficha individual del candidato', tipos: ['rs07'] },
+  { clave: 'RS08', nombre: 'INS-RS-08 — Matriz de filtro curricular', tipos: ['rs08'] },
+  { clave: 'RS09', nombre: 'INS-RS-09 — Screening inicial', tipos: ['rs09'] },
+  { clave: 'RS10', nombre: 'INS-RS-10 — Matriz de candidatos finalistas', tipos: ['rs10'] },
+  { clave: 'RS11', nombre: 'INS-RS-11 — Informe de recomendación', tipos: ['rs11'] },
+  { clave: 'RS12', nombre: 'INS-RS-12 — Cierre de vacante', tipos: ['rs12'] },
   { clave: 'PLA01', nombre: 'INS-PLA-01 — Árbol de problemas', tipos: ['pla01'] },
   { clave: 'PLA02', nombre: 'INS-PLA-02 — Árbol de objetivos', tipos: ['pla02'] },
   { clave: 'TER01', nombre: 'INS-TER-01 — Mapa de actores y recursos', tipos: ['ter01'] },
