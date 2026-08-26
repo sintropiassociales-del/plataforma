@@ -3657,9 +3657,12 @@ function _renderCRMInteresadosResultados() {
 function _reemplazarTagsPreview(texto, registro, campos) {
   var resultado = String(texto || '');
   campos.forEach(function (c) {
-    var tag = '<<' + c.tag + '>>';
     var valor = registro[c.key] != null ? String(registro[c.key]) : '';
-    resultado = resultado.split(tag).join(valor);
+    var tagEsc = c.tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // Igual que en el backend: el cuerpo puede traer <<Etiqueta>> literal o
+    // &lt;&lt;Etiqueta&gt;&gt; (así queda al leer innerHTML del editor).
+    var patron = '(?:<<|&lt;&lt;)\\s*' + tagEsc + '\\s*(?:>>|&gt;&gt;)';
+    resultado = resultado.replace(new RegExp(patron, 'g'), valor);
   });
   return resultado;
 }
