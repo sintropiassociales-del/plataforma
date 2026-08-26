@@ -3720,6 +3720,16 @@ async function abrirModalEnviarCorreo(tipo, codigos) {
         '<select id="correoPlantillaSel" style="width:auto;flex:1;min-width:160px"><option value="">(ninguna — correo nuevo)</option></select>' +
         '<button class="small secondary" id="btnGuardarPlantilla">Guardar como plantilla</button>' +
         '<button class="small secondary" id="btnBorrarPlantilla" style="display:none">Eliminar plantilla</button>' +
+        '<button class="small primary" id="btnAbrirIA" style="margin-left:auto">✨ Generar con IA</button>' +
+      '</div>' +
+      '<div id="panelIA" style="display:none;background:#F4F0FE;border-radius:8px;padding:12px 14px;margin:8px 0">' +
+        '<label style="margin-top:0">Descríbele a la IA qué quieres decir en este correo</label>' +
+        '<textarea id="iaInstruccion" rows="2" placeholder="Ej: invita a los interesados en Empleo a un taller gratuito el 10 de septiembre en línea"></textarea>' +
+        '<div id="iaMsg"></div>' +
+        '<div class="fila-botones" style="display:flex;gap:8px;margin-top:8px">' +
+          '<button class="small secondary" id="btnCancelarIA">Cancelar</button>' +
+          '<button class="small primary" id="btnGenerarIA">Generar borrador</button>' +
+        '</div>' +
       '</div>' +
       '<label>Asunto</label><input type="text" id="correoAsunto" placeholder="Ej: Novedades de <<Organización>>">' +
       '<label>Cuerpo del correo</label>' +
@@ -3848,6 +3858,30 @@ async function abrirModalEnviarCorreo(tipo, codigos) {
     if (!r.ok) { alert(r.error || 'No se pudo eliminar.'); return; }
     await cargarPlantillasSel();
     modal.querySelector('#btnBorrarPlantilla').style.display = 'none';
+  };
+
+  /* -------- Generar con IA (Gemini) -------- */
+  var panelIA = modal.querySelector('#panelIA');
+  modal.querySelector('#btnAbrirIA').onclick = function () {
+    panelIA.style.display = panelIA.style.display === 'none' ? 'block' : 'none';
+    if (panelIA.style.display === 'block') modal.querySelector('#iaInstruccion').focus();
+  };
+  modal.querySelector('#btnCancelarIA').onclick = function () { panelIA.style.display = 'none'; };
+  modal.querySelector('#btnGenerarIA').onclick = async function () {
+    var instruccion = modal.querySelector('#iaInstruccion').value.trim();
+    var iaMsg = modal.querySelector('#iaMsg');
+    if (!instruccion) { iaMsg.innerHTML = '<div class="msg error">Escribe qué quieres que diga el correo.</div>'; return; }
+    var btn = modal.querySelector('#btnGenerarIA');
+    btn.disabled = true; btn.textContent = 'Generando...';
+    iaMsg.innerHTML = '';
+    var r = await api('generarCorreoConIA', { instruccion: instruccion, tipo: tipo });
+    btn.disabled = false; btn.textContent = 'Generar borrador';
+    if (!r.ok) { iaMsg.innerHTML = '<div class="msg error">' + escapeHtml(r.error || 'No se pudo generar el borrador.') + '</div>'; return; }
+    asuntoInput.value = r.asunto;
+    cuerpoDiv.innerHTML = r.cuerpo;
+    actualizarVistaPrevia();
+    panelIA.style.display = 'none';
+    modal.querySelector('#correoMsg').innerHTML = '<div class="msg ok">Borrador generado con IA — revísalo (y ajusta lo que haga falta) antes de enviar.</div>';
   };
 
   modal.querySelector('#correoCancelar').onclick = function () {
