@@ -238,6 +238,29 @@ var CAT_RECOMENDACION_SIGUIENTE_PASO_ENT07 = ['Avanza a estudio socioeconómico'
   'Avanza directo a finalistas', 'No avanza'];
 
 /* ============================================================
+ * EJE 03 — ESTUDIOS SOCIOECONÓMICOS (INS-SE-01 a INS-SE-08)
+ * ============================================================ */
+var CAT_MEDIO_AVISO_SE = ['Impreso', 'Correo electrónico', 'Plataforma digital'];
+var CAT_MEDIO_CONSENTIMIENTO_SE = ['Firma autógrafa', 'Firma electrónica', 'Aceptación digital (checkbox)'];
+var CAT_TIPO_IDENTIFICACION_SE = ['INE', 'Pasaporte', 'Cédula profesional', 'Otra'];
+var CAT_ESTADO_CIVIL_SE = ['Soltero/a', 'Casado/a', 'Unión libre', 'Divorciado/a', 'Viudo/a'];
+var CAT_TIEMPO_RESIDENCIA_SE = ['Menos de 1 año', '1-3 años', '3-5 años', 'Más de 5 años'];
+var CAT_SITUACION_LABORAL_SE = ['Empleado/a', 'Desempleado/a', 'Trabajo informal', 'Estudiante', 'Otro'];
+var CAT_AFILIACION_SALUD_SE = ['IMSS', 'ISSSTE', 'IMSS-Bienestar', 'Seguro privado', 'Ninguna'];
+var CAT_MEDIO_TRANSPORTE_SE = ['A pie', 'Bicicleta', 'Transporte público', 'Vehículo propio', 'Transporte de la empresa'];
+var CAT_SITUACION_VIVIENDA_SE = ['Propia', 'Rentada', 'Prestada', 'Familiar'];
+var CAT_PARENTESCO_SE = ['Cónyuge/pareja', 'Hijo/a', 'Padre', 'Madre', 'Hermano/a', 'Otro familiar', 'No familiar'];
+var CAT_TENENCIA_VIVIENDA_SE = ['Propia pagada', 'Propia con crédito', 'Rentada', 'Prestada', 'Familiar'];
+var CAT_TIPO_VIVIENDA_SE = ['Casa independiente', 'Departamento', 'Cuarto en vecindad', 'Otro'];
+var CAT_MATERIAL_CONSTRUCCION_SE = ['Concreto/tabique', 'Lámina', 'Madera', 'Mixto'];
+var CAT_MODALIDAD_VERIFICACION_SE = ['Visita domiciliaria presencial', 'Videollamada de verificación', 'Verificación documental'];
+var CAT_COINCIDENCIA_SE = ['Sí', 'No', 'Parcial'];
+var CAT_RESULTADO_VERIFICACION_SE = ['Consistente', 'Con observaciones', 'Inconsistente', 'No aplicado'];
+var CAT_NIVEL_SOCIOECONOMICO_SE = ['A/B', 'C+', 'C', 'C-', 'D+', 'D', 'E'];
+var CAT_RESULTADO_ESTUDIO_SE = ['Favorable', 'Favorable con observaciones', 'Desfavorable', 'No concluyente'];
+var CAT_RECOMENDACION_SIGUIENTE_SE = ['Procede a investigación sociolaboral', 'Procede directo a decisión final', 'No procede'];
+
+/* ============================================================
  * CRM — Clientes / prospectos / interesados. No está ligado a
  * ningún proyecto (es la base comercial de Sintropía), así que no
  * vive dentro de INSTRUMENTOS/FAMILIAS: es su propia sección del
@@ -339,7 +362,7 @@ function _cfgTipo(tipo) { return INSTRUMENTOS[tipo] || CRM_TIPOS[tipo]; }
 // orden de este arreglo define el orden de los botones de familia; cada
 // instrumento en INSTRUMENTOS declara a qué familia pertenece con
 // `familia: 'DIA'` (etc.) usando estas mismas claves.
-var FAMILIA_ORDEN = ['DIA', 'TER', 'PLA', 'IND', 'EVA', 'OPE', 'SAL', 'PED', 'EST', 'CUA', 'RS', 'ENT'];
+var FAMILIA_ORDEN = ['DIA', 'TER', 'PLA', 'IND', 'EVA', 'OPE', 'SAL', 'PED', 'EST', 'CUA', 'RS', 'ENT', 'SE'];
 var FAMILIAS = {
   DIA: 'Diagnóstico',
   TER: 'Territorio',
@@ -353,6 +376,7 @@ var FAMILIAS = {
   CUA: 'Cuestionarios',
   RS: 'Reclutamiento y Selección',
   ENT: 'Entrevistas',
+  SE: 'Estudios Socioeconómicos',
   CRM: 'CRM'
 };
 // Igual que FAMILIA_ORDEN, pero solo para la página de administración
@@ -1028,6 +1052,236 @@ var INSTRUMENTOS = {
       { key: 'idCandidato', label: 'ID_CANDIDATO (RS-06) *', tipo: 'text', requerido: true, placeholder: 'ej. CAND-01' },
       { key: 'fortalezaDistintiva', label: 'Fortaleza distintiva', tipo: 'textarea' },
       { key: 'riesgoDistintivo', label: 'Riesgo distintivo', tipo: 'textarea' },
+      { key: 'elaboradoPor', label: 'Elaborado por *', tipo: 'text', requerido: true },
+      { key: 'fechaElaboracion', label: 'Fecha de elaboración *', tipo: 'date', requerido: true }
+    ]
+  },
+  se01: {
+    familia: 'SE',
+    titulo: 'INS-SE-01 Autorización socioeconómica',
+    listar: 'listarSE01', guardar: 'guardarFilaSE01', eliminar: 'eliminarFilaSE01',
+    validar: 'validarSE01', descargar: 'generarDescargableSE01',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'idVacante', label: 'Vacante' },
+      { key: 'idCandidato', label: 'Candidato' },
+      { key: 'consentimientoOtorgado', label: 'Consentimiento' },
+      { key: 'fechaConsentimiento', label: 'Fecha de consentimiento' }
+    ],
+    campos: [
+      { key: 'idVacante', label: 'ID_VACANTE (RS-04) *', tipo: 'text', requerido: true, placeholder: 'ej. VAC-01' },
+      { key: 'idCandidato', label: 'ID_CANDIDATO (con ENT-07=Avanza a estudio socioeconómico) *', tipo: 'text', requerido: true, placeholder: 'ej. CAND-01' },
+      { key: 'fechaSolicitud', label: 'Fecha de solicitud *', tipo: 'date', requerido: true },
+      { key: 'avisoEntregado', label: 'Aviso de privacidad entregado *', tipo: 'select', opciones: SINO_RS, requerido: true },
+      { key: 'medioEntregaAviso', label: 'Medio de entrega del aviso *', tipo: 'select', opciones: CAT_MEDIO_AVISO_SE, requerido: true },
+      { key: 'alcanceDatos', label: 'Alcance de datos a recabar *', tipo: 'text', requerido: true, placeholder: 'ej. Identificación, Composición familiar, Vivienda, Ingresos y egresos' },
+      { key: 'consentimientoOtorgado', label: 'Consentimiento expreso otorgado *', tipo: 'select', opciones: SINO_RS, requerido: true },
+      { key: 'medioConsentimiento', label: 'Medio de consentimiento', tipo: 'select', opciones: CAT_MEDIO_CONSENTIMIENTO_SE },
+      { key: 'fechaConsentimiento', label: 'Fecha de consentimiento', tipo: 'date' },
+      { key: 'responsable', label: 'Responsable *', tipo: 'text', requerido: true },
+      { key: 'observaciones', label: 'Observaciones', tipo: 'textarea' }
+    ]
+  },
+  se02: {
+    familia: 'SE',
+    titulo: 'INS-SE-02 Ficha de identificación socioeconómica',
+    listar: 'listarSE02', guardar: 'guardarFilaSE02', eliminar: 'eliminarFilaSE02',
+    validar: 'validarSE02', descargar: 'generarDescargableSE02',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'idCandidato', label: 'Candidato' },
+      { key: 'nombreCompleto', label: 'Nombre completo' },
+      { key: 'curp', label: 'CURP' },
+      { key: 'domicilioActual', label: 'Domicilio actual' }
+    ],
+    campos: [
+      { key: 'idAutorizacion', label: 'ID_AUTORIZACION (SE-01) *', tipo: 'text', requerido: true, placeholder: 'ej. ASE-01' },
+      { key: 'idVacante', label: 'ID_VACANTE (RS-04) *', tipo: 'text', requerido: true, placeholder: 'ej. VAC-01' },
+      { key: 'idCandidato', label: 'ID_CANDIDATO (RS-06) *', tipo: 'text', requerido: true, placeholder: 'ej. CAND-01' },
+      { key: 'nombreCompleto', label: 'Nombre completo (verificado) *', tipo: 'text', requerido: true },
+      { key: 'fechaNacimiento', label: 'Fecha de nacimiento *', tipo: 'date', requerido: true },
+      { key: 'curp', label: 'CURP *', tipo: 'text', requerido: true },
+      { key: 'tipoIdentificacion', label: 'Tipo de identificación oficial presentada *', tipo: 'select', opciones: CAT_TIPO_IDENTIFICACION_SE, requerido: true },
+      { key: 'numeroIdentificacion', label: 'Número de identificación *', tipo: 'text', requerido: true },
+      { key: 'estadoCivil', label: 'Estado civil *', tipo: 'select', opciones: CAT_ESTADO_CIVIL_SE, requerido: true },
+      { key: 'domicilioActual', label: 'Domicilio actual (calle, número, colonia, municipio, estado, CP) *', tipo: 'textarea', requerido: true },
+      { key: 'tiempoResidencia', label: 'Tiempo de residencia en el domicilio actual *', tipo: 'select', opciones: CAT_TIEMPO_RESIDENCIA_SE, requerido: true },
+      { key: 'telefono', label: 'Teléfono de contacto *', tipo: 'text', requerido: true },
+      { key: 'correo', label: 'Correo electrónico', tipo: 'text' },
+      { key: 'escolaridadMaxima', label: 'Escolaridad máxima (verificada) *', tipo: 'select', opciones: CAT_NIVEL_ESCOLARIDAD_RS, requerido: true },
+      { key: 'aplicador', label: 'Aplicador *', tipo: 'text', requerido: true },
+      { key: 'fechaAplicacion', label: 'Fecha de aplicación *', tipo: 'date', requerido: true }
+    ]
+  },
+  se03: {
+    familia: 'SE',
+    titulo: 'INS-SE-03 Cuestionario socioeconómico',
+    listar: 'listarSE03', guardar: 'guardarFilaSE03', eliminar: 'eliminarFilaSE03',
+    validar: 'validarSE03', descargar: 'generarDescargableSE03',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'idCandidato', label: 'Candidato' },
+      { key: 'situacionLaboral', label: 'Situación laboral' },
+      { key: 'ingresoMensualDeclarado', label: 'Ingreso declarado' },
+      { key: 'numDependientes', label: 'Dependientes' }
+    ],
+    campos: [
+      { key: 'idAutorizacion', label: 'ID_AUTORIZACION (SE-01) *', tipo: 'text', requerido: true, placeholder: 'ej. ASE-01' },
+      { key: 'idVacante', label: 'ID_VACANTE (RS-04) *', tipo: 'text', requerido: true, placeholder: 'ej. VAC-01' },
+      { key: 'idCandidato', label: 'ID_CANDIDATO (RS-06) *', tipo: 'text', requerido: true, placeholder: 'ej. CAND-01' },
+      { key: 'situacionLaboral', label: 'Situación laboral actual *', tipo: 'select', opciones: CAT_SITUACION_LABORAL_SE, requerido: true },
+      { key: 'ingresoMensualDeclarado', label: 'Ingreso mensual declarado (MXN) *', tipo: 'number', requerido: true },
+      { key: 'afiliacionSalud', label: 'Afiliación a servicios de salud *', tipo: 'select', opciones: CAT_AFILIACION_SALUD_SE, requerido: true },
+      { key: 'numDependientes', label: 'Número de dependientes económicos *', tipo: 'number', requerido: true },
+      { key: 'escolaridadDependientes', label: 'Escolaridad de dependientes (resumen)', tipo: 'textarea' },
+      { key: 'medioTransporte', label: 'Medio de transporte habitual *', tipo: 'select', opciones: CAT_MEDIO_TRANSPORTE_SE, requerido: true },
+      { key: 'tiempoTrasladoMin', label: 'Tiempo de traslado estimado (minutos) *', tipo: 'number', requerido: true },
+      { key: 'situacionVivienda', label: 'Situación de vivienda (resumen) *', tipo: 'select', opciones: CAT_SITUACION_VIVIENDA_SE, requerido: true },
+      { key: 'participaProgramasSociales', label: 'Participación en programas sociales', tipo: 'text', placeholder: 'ej. Sí (especificar) / No' },
+      { key: 'referencia1', label: 'Referencia personal 1 (nombre y teléfono) *', tipo: 'text', requerido: true },
+      { key: 'referencia2', label: 'Referencia personal 2 (nombre y teléfono) *', tipo: 'text', requerido: true },
+      { key: 'observaciones', label: 'Observaciones relevantes del candidato', tipo: 'textarea' },
+      { key: 'aplicador', label: 'Aplicador *', tipo: 'text', requerido: true },
+      { key: 'fechaAplicacion', label: 'Fecha de aplicación *', tipo: 'date', requerido: true }
+    ]
+  },
+  se04: {
+    familia: 'SE',
+    titulo: 'INS-SE-04 Ficha de composición familiar',
+    listar: 'listarSE04', guardar: 'guardarFilaSE04', eliminar: 'eliminarFilaSE04',
+    validar: 'validarSE04', descargar: 'generarDescargableSE04',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'idCandidato', label: 'Candidato' },
+      { key: 'nombreIntegrante', label: 'Integrante' },
+      { key: 'parentesco', label: 'Parentesco' },
+      { key: 'dependeEconomicamente', label: 'Depende' },
+      { key: 'aportaIngreso', label: 'Aporta ingreso' },
+      { key: 'totalIntegrantesHogar', label: 'Total integrantes (calc.)' }
+    ],
+    campos: [
+      { key: 'idAutorizacion', label: 'ID_AUTORIZACION (SE-01) *', tipo: 'text', requerido: true, placeholder: 'ej. ASE-01' },
+      { key: 'idVacante', label: 'ID_VACANTE (RS-04) *', tipo: 'text', requerido: true, placeholder: 'ej. VAC-01' },
+      { key: 'idCandidato', label: 'ID_CANDIDATO (RS-06) *', tipo: 'text', requerido: true, placeholder: 'ej. CAND-01' },
+      { key: 'nombreIntegrante', label: 'Nombre del integrante del hogar *', tipo: 'text', requerido: true },
+      { key: 'parentesco', label: 'Parentesco *', tipo: 'select', opciones: CAT_PARENTESCO_SE, requerido: true },
+      { key: 'edad', label: 'Edad *', tipo: 'number', requerido: true },
+      { key: 'ocupacion', label: 'Ocupación *', tipo: 'text', requerido: true },
+      { key: 'dependeEconomicamente', label: '¿Depende económicamente del candidato? *', tipo: 'select', opciones: SINO_RS, requerido: true },
+      { key: 'aportaIngreso', label: '¿Aporta ingreso al hogar? *', tipo: 'select', opciones: SINO_RS, requerido: true },
+      { key: 'ingresoAportado', label: 'Ingreso mensual aportado (si aplica)', tipo: 'number' },
+      { key: 'escolaridad', label: 'Escolaridad', tipo: 'select', opciones: CAT_NIVEL_ESCOLARIDAD_RS },
+      { key: 'observaciones', label: 'Observaciones', tipo: 'textarea' },
+      { key: 'aplicador', label: 'Aplicador *', tipo: 'text', requerido: true },
+      { key: 'fechaAplicacion', label: 'Fecha de aplicación *', tipo: 'date', requerido: true }
+    ]
+  },
+  se05: {
+    familia: 'SE',
+    titulo: 'INS-SE-05 Ficha de vivienda',
+    listar: 'listarSE05', guardar: 'guardarFilaSE05', eliminar: 'eliminarFilaSE05',
+    validar: 'validarSE05', descargar: 'generarDescargableSE05',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'idCandidato', label: 'Candidato' },
+      { key: 'tenencia', label: 'Tenencia' },
+      { key: 'numHabitaciones', label: 'Habitaciones' },
+      { key: 'numPersonasVivienda', label: 'Personas (calc.)' },
+      { key: 'indiceHacinamiento', label: 'Hacinamiento (calc.)' }
+    ],
+    campos: [
+      { key: 'idAutorizacion', label: 'ID_AUTORIZACION (SE-01) *', tipo: 'text', requerido: true, placeholder: 'ej. ASE-01' },
+      { key: 'idVacante', label: 'ID_VACANTE (RS-04) *', tipo: 'text', requerido: true, placeholder: 'ej. VAC-01' },
+      { key: 'idCandidato', label: 'ID_CANDIDATO (RS-06) *', tipo: 'text', requerido: true, placeholder: 'ej. CAND-01' },
+      { key: 'tenencia', label: 'Tipo de tenencia *', tipo: 'select', opciones: CAT_TENENCIA_VIVIENDA_SE, requerido: true },
+      { key: 'tipoVivienda', label: 'Tipo de vivienda *', tipo: 'select', opciones: CAT_TIPO_VIVIENDA_SE, requerido: true },
+      { key: 'materialConstruccion', label: 'Material de construcción predominante *', tipo: 'select', opciones: CAT_MATERIAL_CONSTRUCCION_SE, requerido: true },
+      { key: 'numHabitaciones', label: 'Número de habitaciones (sin cocina/baño) *', tipo: 'number', requerido: true },
+      { key: 'serviciosDisponibles', label: 'Servicios disponibles *', tipo: 'text', requerido: true, placeholder: 'ej. Agua entubada, Drenaje, Luz eléctrica, Internet' },
+      { key: 'zona', label: 'Zona/colonia *', tipo: 'text', requerido: true },
+      { key: 'observaciones', label: 'Observaciones (entorno, condiciones generales)', tipo: 'textarea' },
+      { key: 'aplicador', label: 'Aplicador *', tipo: 'text', requerido: true },
+      { key: 'fechaAplicacion', label: 'Fecha de aplicación *', tipo: 'date', requerido: true }
+    ]
+  },
+  se06: {
+    familia: 'SE',
+    titulo: 'INS-SE-06 Ficha de ingresos y egresos',
+    listar: 'listarSE06', guardar: 'guardarFilaSE06', eliminar: 'eliminarFilaSE06',
+    validar: 'validarSE06', descargar: 'generarDescargableSE06',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'idCandidato', label: 'Candidato' },
+      { key: 'ingresoFamiliarTotal', label: 'Ingreso familiar (calc.)' },
+      { key: 'totalEgresos', label: 'Egresos totales (calc.)' },
+      { key: 'balanceIngresoEgreso', label: 'Balance (calc.)' }
+    ],
+    campos: [
+      { key: 'idAutorizacion', label: 'ID_AUTORIZACION (SE-01) *', tipo: 'text', requerido: true, placeholder: 'ej. ASE-01' },
+      { key: 'idVacante', label: 'ID_VACANTE (RS-04) *', tipo: 'text', requerido: true, placeholder: 'ej. VAC-01' },
+      { key: 'idCandidato', label: 'ID_CANDIDATO (RS-06) *', tipo: 'text', requerido: true, placeholder: 'ej. CAND-01' },
+      { key: 'ingresoCandidato', label: 'Ingreso mensual del candidato (MXN) *', tipo: 'number', requerido: true },
+      { key: 'egresoVivienda', label: 'Egreso en vivienda (renta/hipoteca)', tipo: 'number' },
+      { key: 'egresoAlimentacion', label: 'Egreso en alimentación', tipo: 'number' },
+      { key: 'egresoTransporte', label: 'Egreso en transporte', tipo: 'number' },
+      { key: 'egresoEducacion', label: 'Egreso en educación', tipo: 'number' },
+      { key: 'egresoSalud', label: 'Egreso en salud', tipo: 'number' },
+      { key: 'egresoDeudas', label: 'Egreso en deudas/créditos', tipo: 'number' },
+      { key: 'observaciones', label: 'Observaciones', tipo: 'textarea' },
+      { key: 'aplicador', label: 'Aplicador *', tipo: 'text', requerido: true },
+      { key: 'fechaAplicacion', label: 'Fecha de aplicación *', tipo: 'date', requerido: true }
+    ]
+  },
+  se07: {
+    familia: 'SE',
+    titulo: 'INS-SE-07 Guía de visita/verificación',
+    listar: 'listarSE07', guardar: 'guardarFilaSE07', eliminar: 'eliminarFilaSE07',
+    validar: 'validarSE07', descargar: 'generarDescargableSE07',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'idCandidato', label: 'Candidato' },
+      { key: 'modalidadVerificacion', label: 'Modalidad' },
+      { key: 'resultadoVerificacion', label: 'Resultado' }
+    ],
+    campos: [
+      { key: 'idAutorizacion', label: 'ID_AUTORIZACION (SE-01) *', tipo: 'text', requerido: true, placeholder: 'ej. ASE-01' },
+      { key: 'idVacante', label: 'ID_VACANTE (RS-04) *', tipo: 'text', requerido: true, placeholder: 'ej. VAC-01' },
+      { key: 'idCandidato', label: 'ID_CANDIDATO (RS-06) *', tipo: 'text', requerido: true, placeholder: 'ej. CAND-01' },
+      { key: 'fechaHoraVisita', label: 'Fecha y hora de la visita *', tipo: 'text', requerido: true, placeholder: 'aaaa-mm-dd hh:mm' },
+      { key: 'modalidadVerificacion', label: 'Modalidad de verificación *', tipo: 'select', opciones: CAT_MODALIDAD_VERIFICACION_SE, requerido: true },
+      { key: 'domicilioCoincide', label: 'Domicilio coincide con lo declarado (SE-02) *', tipo: 'select', opciones: CAT_COINCIDENCIA_SE, requerido: true },
+      { key: 'familiaCoincide', label: 'Composición familiar coincide (SE-04) *', tipo: 'select', opciones: CAT_COINCIDENCIA_SE, requerido: true },
+      { key: 'viviendaCoincide', label: 'Condiciones de vivienda coinciden (SE-05) *', tipo: 'select', opciones: CAT_COINCIDENCIA_SE, requerido: true },
+      { key: 'personaAtendio', label: 'Persona que atendió la visita (relación) *', tipo: 'text', requerido: true },
+      { key: 'referenciaVecinalConsultada', label: 'Referencia vecinal consultada', tipo: 'select', opciones: SINO_RS },
+      { key: 'evidenciaFotografica', label: 'Evidencia fotográfica recabada (con consentimiento)', tipo: 'select', opciones: SINO_RS },
+      { key: 'hallazgos', label: 'Hallazgos relevantes / inconsistencias', tipo: 'textarea' },
+      { key: 'resultadoVerificacion', label: 'Resultado de la verificación *', tipo: 'select', opciones: CAT_RESULTADO_VERIFICACION_SE, requerido: true },
+      { key: 'verificador', label: 'Verificador *', tipo: 'text', requerido: true },
+      { key: 'fechaElaboracion', label: 'Fecha de elaboración del reporte *', tipo: 'date', requerido: true }
+    ]
+  },
+  se08: {
+    familia: 'SE',
+    titulo: 'INS-SE-08 Informe socioeconómico',
+    listar: 'listarSE08', guardar: 'guardarFilaSE08', eliminar: 'eliminarFilaSE08',
+    validar: 'validarSE08', descargar: 'generarDescargableSE08',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'idCandidato', label: 'Candidato' },
+      { key: 'nivelSocioeconomico', label: 'Nivel socioeconómico' },
+      { key: 'resultadoEstudio', label: 'Resultado' },
+      { key: 'recomendacionSiguientePaso', label: 'Siguiente paso' }
+    ],
+    campos: [
+      { key: 'idAutorizacion', label: 'ID_AUTORIZACION (SE-01) *', tipo: 'text', requerido: true, placeholder: 'ej. ASE-01' },
+      { key: 'idVacante', label: 'ID_VACANTE (RS-04) *', tipo: 'text', requerido: true, placeholder: 'ej. VAC-01' },
+      { key: 'idCandidato', label: 'ID_CANDIDATO (RS-06) *', tipo: 'text', requerido: true, placeholder: 'ej. CAND-01' },
+      { key: 'nivelSocioeconomico', label: 'Nivel socioeconómico estimado (AMAI) *', tipo: 'select', opciones: CAT_NIVEL_SOCIOECONOMICO_SE, requerido: true },
+      { key: 'factoresEstabilidad', label: 'Factores de estabilidad identificados', tipo: 'textarea' },
+      { key: 'factoresRiesgo', label: 'Factores de riesgo identificados', tipo: 'textarea' },
+      { key: 'resultadoEstudio', label: 'Resultado del estudio socioeconómico *', tipo: 'select', opciones: CAT_RESULTADO_ESTUDIO_SE, requerido: true },
+      { key: 'recomendacionSiguientePaso', label: 'Recomendación de siguiente paso *', tipo: 'select', opciones: CAT_RECOMENDACION_SIGUIENTE_SE, requerido: true },
       { key: 'elaboradoPor', label: 'Elaborado por *', tipo: 'text', requerido: true },
       { key: 'fechaElaboracion', label: 'Fecha de elaboración *', tipo: 'date', requerido: true }
     ]
@@ -1804,6 +2058,14 @@ var INSTRUMENTOS_INSTALABLES = [
   { clave: 'ENT06', nombre: 'INS-ENT-06 — Registro de respuestas y evidencias', tipos: ['ent06'] },
   { clave: 'ENT07', nombre: 'INS-ENT-07 — Informe individual de entrevista', tipos: ['ent07'] },
   { clave: 'ENT08', nombre: 'INS-ENT-08 — Matriz comparativa de entrevistados', tipos: ['ent08'] },
+  { clave: 'SE01', nombre: 'INS-SE-01 — Autorización socioeconómica', tipos: ['se01'] },
+  { clave: 'SE02', nombre: 'INS-SE-02 — Ficha de identificación socioeconómica', tipos: ['se02'] },
+  { clave: 'SE03', nombre: 'INS-SE-03 — Cuestionario socioeconómico', tipos: ['se03'] },
+  { clave: 'SE04', nombre: 'INS-SE-04 — Ficha de composición familiar', tipos: ['se04'] },
+  { clave: 'SE05', nombre: 'INS-SE-05 — Ficha de vivienda', tipos: ['se05'] },
+  { clave: 'SE06', nombre: 'INS-SE-06 — Ficha de ingresos y egresos', tipos: ['se06'] },
+  { clave: 'SE07', nombre: 'INS-SE-07 — Guía de visita/verificación', tipos: ['se07'] },
+  { clave: 'SE08', nombre: 'INS-SE-08 — Informe socioeconómico', tipos: ['se08'] },
   { clave: 'PLA01', nombre: 'INS-PLA-01 — Árbol de problemas', tipos: ['pla01'] },
   { clave: 'PLA02', nombre: 'INS-PLA-02 — Árbol de objetivos', tipos: ['pla02'] },
   { clave: 'TER01', nombre: 'INS-TER-01 — Mapa de actores y recursos', tipos: ['ter01'] },
