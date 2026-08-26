@@ -84,6 +84,9 @@
   .msg.ok { background: #E4F7EA; color: var(--ok); border: 1px solid #BEE5CB; }
   .msg.info { background: #EFEAFB; color: var(--purple); border: 1px solid var(--border); }
   .hidden { display: none !important; }
+  [contenteditable][data-placeholder]:empty:before { content: attr(data-placeholder); color: #999; }
+  [contenteditable] ul, [contenteditable] ol { padding-left: 22px; margin: 6px 0; }
+  [contenteditable]:focus { outline: 2px solid var(--purple); outline-offset: -1px; }
   .modal-bg {
     position: fixed; inset: 0; background: rgba(0,0,0,0.4); display: flex;
     align-items: flex-start; justify-content: center; padding: 30px 14px; overflow-y: auto; z-index: 50;
@@ -2118,6 +2121,9 @@ var state = {
   crmBusqueda: '',
   crmClientesSeleccion: [],    // códigos de clientes marcados para el mailing
   crmInteresadosSeleccion: [], // códigos de interesados marcados para el mailing
+  crmBusquedaInteresados: '',
+  crmFiltroInteresInteresados: '',
+  crmFiltroFuenteInteresados: '',
   familiaInstrumentosActiva: null // familia activa dentro de la página admin "Instrumentos" (independiente de familiaActiva, que es la de un proyecto abierto)
 };
 
@@ -2571,7 +2577,8 @@ function renderInstrumento(tipo) {
     '<div id="validacionBox"></div>' +
     (filas.length === 0
       ? '<p class="subtle">Todavía no hay filas capturadas. Puedes agregarlas una por una, o usar "Importar archivo" para cargar varias desde un CSV/Excel. Si al validar o generar aparece un error de pestaña no encontrada, pide a tu administrador que lo instale en "Instrumentos".</p>'
-      : '<table><thead>' + thead + '</thead><tbody>' + trs + '</tbody></table>');
+      : '<table><thead>' + thead + '</thead><tbody>' + trs + '</tbody></table>') +
+    (tipo === 'se01' ? '<div id="panelEnlacesSE" style="margin-top:26px"></div>' : '');
 
   document.getElementById('btnAgregarFila').onclick = function () { abrirModalFila(tipo, null); };
   document.getElementById('btnImportar').onclick = function () { abrirModalImportar(tipo); };
@@ -2593,6 +2600,83 @@ function renderInstrumento(tipo) {
       await cargarInstrumento(tipo);
     };
   });
+  if (tipo === 'se01') renderPanelEnlacesCandidatoSE(filas);
+}
+
+/* ---------------- SE-01: enlace de autollenado para candidatos ---------------- */
+// Construye la URL pública a partir de la ubicación real de este index.html
+// (así funciona sin importar el dominio/subcarpeta donde se publique) —
+// candidato.html debe subirse junto a index.html en el mismo GitHub Pages.
+function _urlCandidatoSE(token) {
+  var base = location.href.replace(/index\.html(\?.*)?(#.*)?$/, '').replace(/\/?$/, '/');
+  return base + 'candidato.html?token=' + encodeURIComponent(token);
+}
+
+async function renderPanelEnlacesCandidatoSE(filasSE01) {
+  var panel = document.getElementById('panelEnlacesSE');
+  if (!panel) return;
+  var conConsentimiento = filasSE01.filter(function (f) { return f.consentimientoOtorgado === 'Sí'; });
+
+  panel.innerHTML =
+    '<h3 style="margin-bottom:4px">Enlace para que el candidato conteste directamente</h3>' +
+    '<p class="subtle" style="margin-top:0">Genera un enlace único por candidato con INS-SE-02 a INS-SE-06 (identificación, cuestionario, composición familiar, vivienda e ingresos/egresos) — no incluye INS-SE-07, que siempre aplica un verificador en campo. Solo puede generarse si ya hay consentimiento otorgado en SE-01. Lo que el candidato conteste se guarda directo en estas mismas pestañas del Sheet.</p>' +
+    (conConsentimiento.length === 0
+      ? '<p class="subtle">Ningún registro de SE-01 tiene consentimiento otorgado todavía.</p>'
+      : '<table><thead><tr><th>Vacante</th><th>Candidato</th><th></th></tr></thead><tbody>' +
+        conConsentimiento.map(function (f) {
+          return '<tr data-par="' + escapeHtml(f.idVacante) + '|' + escapeHtml(f.idCandidato) + '">' +
+            '<td>' + escapeHtml(f.idVacante) + '</td><td>' + escapeHtml(f.idCandidato) + '</td>' +
+            '<td><button class="small secondary btnGenEnlace" data-vacante="' + escapeHtml(f.idVacante) + '" data-candidato="' + escapeHtml(f.idCandidato) + '">Generar enlace</button>' +
+            '<span class="enlaceResultado" style="margin-left:8px"></span></td></tr>';
+        }).join('') + '</tbody></table>') +
+    '<div id="listaEnlacesSE" style="margin-top:18px"></div>';
+
+  Array.prototype.forEach.call(panel.querySelectorAll('.btnGenEnlace'), function (btn) {
+    btn.onclick = async function () {
+      btn.disabled = true; btn.textContent = 'Generando...';
+      var r = await api('candidatoSEGenerarEnlace', { proyecto: state.proyectoActivo.codigo, idVacante: btn.getAttribute('data-vacante'), idCandidato: btn.getAttribute('data-candidato') });
+      btn.disabled = false; btn.textContent = 'Generar enlace';
+      var span = btn.parentNode.querySelector('.enlaceResultado');
+      if (!r.ok) { span.innerHTML = '<span class="msg error" style="display:inline-block">' + escapeHtml(r.error) + '</span>'; return; }
+      var url = _urlCandidatoSE(r.token);
+      span.innerHTML =
+        '<input type="text" readonly value="' + escapeHtml(url) + '" style="width:320px" onclick="this.select()"> ' +
+        '<button class="small secondary btnCopiarEnlace">Copiar</button> ' +
+        '<span class="subtle">Vence: ' + escapeHtml(r.expira) + (r.reutilizado ? ' (enlace ya existente)' : '') + '</span>';
+      span.querySelector('.btnCopiarEnlace').onclick = function () {
+        navigator.clipboard.writeText(url).then(function () {
+          span.querySelector('.btnCopiarEnlace').textContent = 'Copiado ✓';
+          setTimeout(function () { var b2 = span.querySelector('.btnCopiarEnlace'); if (b2) b2.textContent = 'Copiar'; }, 2000);
+        });
+      };
+      cargarListaEnlacesSE();
+    };
+  });
+
+  await cargarListaEnlacesSE();
+
+  async function cargarListaEnlacesSE() {
+    var caja = document.getElementById('listaEnlacesSE');
+    if (!caja) return;
+    var r = await api('candidatoSEListarEnlaces', { proyecto: state.proyectoActivo.codigo });
+    if (!r.ok || !r.data.length) { caja.innerHTML = ''; return; }
+    caja.innerHTML = '<p class="subtle" style="margin-bottom:4px">Enlaces generados en este proyecto</p>' +
+      '<table><thead><tr><th>Código</th><th>Vacante</th><th>Candidato</th><th>Vence</th><th>Estatus</th><th>Completado por el candidato</th><th></th></tr></thead><tbody>' +
+      r.data.map(function (e) {
+        return '<tr><td>' + escapeHtml(e.codigo) + '</td><td>' + escapeHtml(e.idVacante) + '</td><td>' + escapeHtml(e.idCandidato) + '</td>' +
+          '<td>' + escapeHtml(e.fechaExpiracion) + '</td><td>' + escapeHtml(e.estatus) + '</td>' +
+          '<td>' + (e.completado === 'Sí' ? 'Sí (' + escapeHtml(e.fechaCompletado) + ')' : 'No') + '</td>' +
+          '<td>' + (e.estatus === 'Activo' ? '<button class="small secondary btnRevocarEnlace" data-codigo="' + escapeHtml(e.codigo) + '">Revocar</button>' : '') + '</td></tr>';
+      }).join('') + '</tbody></table>';
+    Array.prototype.forEach.call(caja.querySelectorAll('.btnRevocarEnlace'), function (b) {
+      b.onclick = async function () {
+        if (!confirm('¿Revocar este enlace? El candidato ya no podrá usarlo.')) return;
+        var r2 = await api('candidatoSERevocarEnlace', { proyecto: state.proyectoActivo.codigo, codigo: b.getAttribute('data-codigo') });
+        if (!r2.ok) { alert(r2.error); return; }
+        cargarListaEnlacesSE();
+      };
+    });
+  }
 }
 
 /* ---------------- INS-IMES: captura y vista propias ---------------- */
@@ -3427,10 +3511,81 @@ async function renderCRMInteresados() {
   renderCRMInteresadosTabla();
 }
 
+// Igual que Clientes: el "shell" (barra, buscador, criterios) se construye
+// una sola vez para no perder el foco del buscador en cada tecla; solo se
+// vuelve a dibujar #crmInteresadosResultados al filtrar.
 function renderCRMInteresadosTabla() {
   var box = document.getElementById('crmContent');
   if (!box) return;
-  var filas = state.crmInteresados;
+
+  if (!box.querySelector('#crmInteresadosShell')) {
+    var opcionesInteres = ['<option value="">Cualquier interés</option>'].concat(
+      EJES_INTERES_CRM.map(function (o) { return '<option value="' + escapeHtml(o) + '">' + escapeHtml(o) + '</option>'; })
+    ).join('');
+    var opcionesFuente = ['<option value="">Cualquier fuente</option>'].concat(
+      FUENTES_CRM.map(function (o) { return '<option value="' + escapeHtml(o) + '">' + escapeHtml(o) + '</option>'; })
+    ).join('');
+    box.innerHTML =
+      '<div id="crmInteresadosShell">' +
+        '<div class="toolbar" style="justify-content:space-between;flex-wrap:wrap;gap:8px">' +
+          '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
+            '<button class="secondary" id="btnNuevoInteresado">+ Agregar interesado</button>' +
+            '<button class="secondary" id="btnImportarInteresados">Importar archivo</button>' +
+            '<button class="secondary" id="btnExportarInteresados">Exportar a Excel</button>' +
+            '<button class="primary" id="btnEnviarCorreoInteresados">Enviar correo</button>' +
+          '</div>' +
+          '<input type="text" id="buscarInteresado" placeholder="Buscar por nombre, estado, municipio o email..." style="max-width:260px">' +
+        '</div>' +
+        '<p class="subtle" style="margin:6px 0 0">Filtra por criterio para seleccionar a un grupo de golpe (por ejemplo, todos los interesados en "Empleo" desde "Redes sociales") y luego usa la casilla de encabezado para marcarlos todos.</p>' +
+        '<div class="toolbar" style="justify-content:flex-start;gap:8px;margin-top:6px">' +
+          '<select id="filtroInteresInteresados" style="width:auto">' + opcionesInteres + '</select>' +
+          '<select id="filtroFuenteInteresados" style="width:auto">' + opcionesFuente + '</select>' +
+        '</div>' +
+        '<div id="crmInteresadosResultados"></div>' +
+      '</div>';
+
+    document.getElementById('btnNuevoInteresado').onclick = function () {
+      abrirModalFila('crm_interesados', null, { proyecto: '', titulo: 'interesado', alGuardar: async function () { await renderCRMInteresados(); } });
+    };
+    document.getElementById('btnImportarInteresados').onclick = function () {
+      abrirModalImportar('crm_interesados', { proyecto: '', alTerminar: async function () { await renderCRMInteresados(); } });
+    };
+    document.getElementById('btnExportarInteresados').onclick = async function () {
+      var r = await api('exportarCRMInteresados', { formato: 'xlsx' });
+      manejarDescargable(r);
+    };
+    document.getElementById('btnEnviarCorreoInteresados').onclick = function () {
+      if (!state.crmInteresadosSeleccion.length) { alert('Marca la casilla de al menos un interesado para enviarle un correo.'); return; }
+      abrirModalEnviarCorreo('interesados', state.crmInteresadosSeleccion.slice());
+    };
+    var buscarInt = document.getElementById('buscarInteresado');
+    buscarInt.value = state.crmBusquedaInteresados;
+    buscarInt.oninput = function () { state.crmBusquedaInteresados = buscarInt.value; _renderCRMInteresadosResultados(); };
+    var selInteres = document.getElementById('filtroInteresInteresados');
+    selInteres.value = state.crmFiltroInteresInteresados;
+    selInteres.onchange = function () { state.crmFiltroInteresInteresados = selInteres.value; _renderCRMInteresadosResultados(); };
+    var selFuente = document.getElementById('filtroFuenteInteresados');
+    selFuente.value = state.crmFiltroFuenteInteresados;
+    selFuente.onchange = function () { state.crmFiltroFuenteInteresados = selFuente.value; _renderCRMInteresadosResultados(); };
+  }
+  _renderCRMInteresadosResultados();
+}
+
+function _crmInteresadosFiltrados() {
+  var q = state.crmBusquedaInteresados.trim().toLowerCase();
+  return state.crmInteresados.filter(function (i) {
+    if (state.crmFiltroInteresInteresados && i.interes !== state.crmFiltroInteresInteresados) return false;
+    if (state.crmFiltroFuenteInteresados && i.fuente !== state.crmFiltroFuenteInteresados) return false;
+    if (!q) return true;
+    var texto = [(i.nombre || '') + ' ' + (i.apellido || ''), i.estado, i.municipio, i.email].join(' ').toLowerCase();
+    return texto.indexOf(q) !== -1;
+  });
+}
+
+function _renderCRMInteresadosResultados() {
+  var caja = document.getElementById('crmInteresadosResultados');
+  if (!caja) return;
+  var filas = _crmInteresadosFiltrados();
   var todosMarcados = filas.length > 0 && filas.every(function (i) { return state.crmInteresadosSeleccion.indexOf(i.codigo) !== -1; });
   var thead = '<tr><th style="width:28px"><input type="checkbox" id="crmSelAllInteresados"' + (todosMarcados ? ' checked' : '') + '></th>' +
     '<th>Nombre</th><th>Estado</th><th>Municipio</th><th>Interesado en</th><th>Email</th><th></th></tr>';
@@ -3448,33 +3603,13 @@ function renderCRMInteresadosTabla() {
     '</tr>';
   }).join('');
 
-  box.innerHTML =
-    '<div class="toolbar" style="justify-content:flex-start;gap:8px">' +
-      '<button class="secondary" id="btnNuevoInteresado">+ Agregar interesado</button>' +
-      '<button class="secondary" id="btnImportarInteresados">Importar archivo</button>' +
-      '<button class="secondary" id="btnExportarInteresados">Exportar a Excel</button>' +
-      '<button class="primary" id="btnEnviarCorreoInteresados">Enviar correo</button>' +
-    '</div>' +
-    '<p class="subtle">' + filas.length + ' interesado(s) registrado(s).' +
+  caja.innerHTML =
+    '<p class="subtle">' + filas.length + ' de ' + state.crmInteresados.length + ' interesado(s).' +
       (state.crmInteresadosSeleccion.length ? ' · ' + state.crmInteresadosSeleccion.length + ' seleccionado(s) para correo.' : '') + '</p>' +
     (filas.length === 0
-      ? '<p class="subtle">Todavía no hay interesados registrados. Puedes agregarlos uno por uno, o usar "Importar archivo".</p>'
+      ? '<p class="subtle">Ningún interesado coincide con el criterio. Ajusta el buscador o los filtros.</p>'
       : '<div style="overflow-x:auto"><table><thead>' + thead + '</thead><tbody>' + trs + '</tbody></table></div>');
 
-  document.getElementById('btnNuevoInteresado').onclick = function () {
-    abrirModalFila('crm_interesados', null, { proyecto: '', titulo: 'interesado', alGuardar: async function () { await renderCRMInteresados(); } });
-  };
-  document.getElementById('btnImportarInteresados').onclick = function () {
-    abrirModalImportar('crm_interesados', { proyecto: '', alTerminar: async function () { await renderCRMInteresados(); } });
-  };
-  document.getElementById('btnExportarInteresados').onclick = async function () {
-    var r = await api('exportarCRMInteresados', { formato: 'xlsx' });
-    manejarDescargable(r);
-  };
-  document.getElementById('btnEnviarCorreoInteresados').onclick = function () {
-    if (!state.crmInteresadosSeleccion.length) { alert('Marca la casilla de al menos un interesado para enviarle un correo.'); return; }
-    abrirModalEnviarCorreo('interesados', state.crmInteresadosSeleccion.slice());
-  };
   var elSelAllInt = document.getElementById('crmSelAllInteresados');
   if (elSelAllInt) {
     elSelAllInt.onchange = function () {
@@ -3484,26 +3619,26 @@ function renderCRMInteresadosTabla() {
         if (marcar && idx === -1) state.crmInteresadosSeleccion.push(i.codigo);
         if (!marcar && idx !== -1) state.crmInteresadosSeleccion.splice(idx, 1);
       });
-      renderCRMInteresadosTabla();
+      _renderCRMInteresadosResultados();
     };
   }
-  Array.prototype.forEach.call(box.querySelectorAll('.crm-sel-interesado'), function (chk) {
+  Array.prototype.forEach.call(caja.querySelectorAll('.crm-sel-interesado'), function (chk) {
     chk.onchange = function () {
       var codigo = chk.getAttribute('data-codigo');
       var idx = state.crmInteresadosSeleccion.indexOf(codigo);
       if (chk.checked && idx === -1) state.crmInteresadosSeleccion.push(codigo);
       if (!chk.checked && idx !== -1) state.crmInteresadosSeleccion.splice(idx, 1);
-      renderCRMInteresadosTabla();
+      _renderCRMInteresadosResultados();
     };
   });
-  Array.prototype.forEach.call(box.querySelectorAll('button.edit'), function (b) {
+  Array.prototype.forEach.call(caja.querySelectorAll('button.edit'), function (b) {
     b.onclick = function () {
       var codigo = b.getAttribute('data-codigo');
       var fila = filas.filter(function (f) { return f.codigo === codigo; })[0];
       abrirModalFila('crm_interesados', fila, { proyecto: '', titulo: 'interesado', alGuardar: async function () { await renderCRMInteresados(); } });
     };
   });
-  Array.prototype.forEach.call(box.querySelectorAll('button.del'), function (b) {
+  Array.prototype.forEach.call(caja.querySelectorAll('button.del'), function (b) {
     b.onclick = async function () {
       if (!confirm('¿Eliminar este interesado? No se puede deshacer.')) return;
       var r = await api('eliminarFilaCRMInteresados', { codigo: b.getAttribute('data-codigo') });
@@ -3529,7 +3664,23 @@ function _reemplazarTagsPreview(texto, registro, campos) {
   return resultado;
 }
 
-function abrirModalEnviarCorreo(tipo, codigos) {
+// Botones del editor enriquecido del cuerpo del correo — cada uno ejecuta un
+// comando estándar del navegador (document.execCommand) sobre la selección
+// activa dentro del <div contenteditable>. Simple y sin dependencias
+// externas, suficiente para un correo de texto con formato básico.
+var BOTONES_RTE_CORREO = [
+  { cmd: 'bold', icono: '<b>N</b>', titulo: 'Negrita' },
+  { cmd: 'italic', icono: '<i>K</i>', titulo: 'Cursiva' },
+  { cmd: 'underline', icono: '<u>S</u>', titulo: 'Subrayado' },
+  { cmd: 'insertUnorderedList', icono: '• Lista', titulo: 'Lista con viñetas' },
+  { cmd: 'insertOrderedList', icono: '1. Lista', titulo: 'Lista numerada' },
+  { cmd: 'justifyLeft', icono: '⟸', titulo: 'Alinear a la izquierda' },
+  { cmd: 'justifyCenter', icono: '⟺', titulo: 'Centrar' },
+  { cmd: 'createLink', icono: '🔗', titulo: 'Insertar enlace', pideValor: true },
+  { cmd: 'removeFormat', icono: 'Limpiar', titulo: 'Quitar formato' }
+];
+
+async function abrirModalEnviarCorreo(tipo, codigos) {
   var esClientes = tipo === 'clientes';
   var cfg = esClientes ? CRM_TIPOS.crm_clientes : CRM_TIPOS.crm_interesados;
   var todos = esClientes ? state.crmClientes : state.crmInteresados;
@@ -3555,14 +3706,26 @@ function abrirModalEnviarCorreo(tipo, codigos) {
       escapeHtml(c.tag) + '</button>';
   }).join('');
 
+  var botonesRteHtml = BOTONES_RTE_CORREO.map(function (b, i) {
+    return '<button type="button" class="small secondary btnRte" data-idx="' + i + '" title="' + escapeHtml(b.titulo) + '" style="margin:0 3px 3px 0">' + b.icono + '</button>';
+  }).join('');
+
   var modal = el(
     '<div class="modal-bg"><div class="modal wide">' +
       '<h2>Enviar correo — ' + registros.length + ' destinatario(s)</h2>' +
       '<p class="subtle">' + listaNombres + '</p>' +
       (sinCorreoCount ? '<div class="msg error">' + sinCorreoCount + ' destinatario(s) no tienen correo registrado y no recibirán el mensaje.</div>' : '') +
+      '<div class="toolbar" style="justify-content:space-between;gap:8px;flex-wrap:wrap">' +
+        '<label style="margin:0">Plantilla</label>' +
+        '<select id="correoPlantillaSel" style="width:auto;flex:1;min-width:160px"><option value="">(ninguna — correo nuevo)</option></select>' +
+        '<button class="small secondary" id="btnGuardarPlantilla">Guardar como plantilla</button>' +
+        '<button class="small secondary" id="btnBorrarPlantilla" style="display:none">Eliminar plantilla</button>' +
+      '</div>' +
       '<label>Asunto</label><input type="text" id="correoAsunto" placeholder="Ej: Novedades de <<Organización>>">' +
-      '<label>Cuerpo del correo</label><textarea id="correoCuerpo" rows="8" placeholder="Hola <<Nombre de contacto>>, te escribimos de Sintropía Social..."></textarea>' +
-      '<p class="subtle" style="margin:8px 0 4px">Clic para insertar una etiqueta en el campo donde tengas el cursor — se reemplaza por el dato real de cada destinatario:</p>' +
+      '<label>Cuerpo del correo</label>' +
+      '<div style="border:1.5px solid #ddd;border-radius:8px 8px 0 0;padding:6px;background:#fafafa">' + botonesRteHtml + '</div>' +
+      '<div id="correoCuerpo" contenteditable="true" style="border:1.5px solid #ddd;border-top:none;border-radius:0 0 8px 8px;min-height:150px;padding:10px 12px;font-size:14px;line-height:1.5" data-placeholder="Hola <<Nombre de contacto>>, te escribimos de Sintropía Social..."></div>' +
+      '<p class="subtle" style="margin:8px 0 4px">Clic para insertar una etiqueta donde tengas el cursor — se reemplaza por el dato real de cada destinatario:</p>' +
       '<div>' + chipsHtml + '</div>' +
       '<div id="correoVistaPrevia" style="margin-top:14px"></div>' +
       '<div id="correoMsg"></div>' +
@@ -3575,10 +3738,23 @@ function abrirModalEnviarCorreo(tipo, codigos) {
   document.body.appendChild(modal);
 
   var asuntoInput = modal.querySelector('#correoAsunto');
-  var cuerpoTextarea = modal.querySelector('#correoCuerpo');
-  var campoActivo = cuerpoTextarea;
+  var cuerpoDiv = modal.querySelector('#correoCuerpo');
+  var campoActivo = cuerpoDiv;
+  var rangoGuardado = null;
   asuntoInput.addEventListener('focus', function () { campoActivo = asuntoInput; });
-  cuerpoTextarea.addEventListener('focus', function () { campoActivo = cuerpoTextarea; });
+  cuerpoDiv.addEventListener('focus', function () { campoActivo = cuerpoDiv; });
+  cuerpoDiv.addEventListener('mouseup', guardarRango);
+  cuerpoDiv.addEventListener('keyup', guardarRango);
+  function guardarRango() {
+    var sel = window.getSelection();
+    if (sel.rangeCount && cuerpoDiv.contains(sel.anchorNode)) rangoGuardado = sel.getRangeAt(0).cloneRange();
+  }
+  function restaurarRango() {
+    if (!rangoGuardado) return;
+    var sel = window.getSelection();
+    sel.removeAllRanges();
+    sel.addRange(rangoGuardado);
+  }
 
   function actualizarVistaPrevia() {
     var caja = modal.querySelector('#correoVistaPrevia');
@@ -3586,7 +3762,7 @@ function abrirModalEnviarCorreo(tipo, codigos) {
     if (!muestra) { caja.innerHTML = ''; return; }
     var nombreMuestra = esClientes ? muestra.organizacion : ((muestra.nombre || '') + ' ' + (muestra.apellido || '')).trim();
     var asuntoPrev = _reemplazarTagsPreview(asuntoInput.value, muestra, campos);
-    var cuerpoPrev = _reemplazarTagsPreview(cuerpoTextarea.value, muestra, campos).replace(/\n/g, '<br>');
+    var cuerpoPrev = _reemplazarTagsPreview(cuerpoDiv.innerHTML, muestra, campos);
     caja.innerHTML =
       '<p class="subtle" style="margin-bottom:4px">Vista previa para: ' + escapeHtml(nombreMuestra) + '</p>' +
       '<div style="border:1px solid #eee;border-radius:8px;padding:12px 14px;background:#fafafa">' +
@@ -3595,23 +3771,84 @@ function abrirModalEnviarCorreo(tipo, codigos) {
       '</div>';
   }
   asuntoInput.oninput = actualizarVistaPrevia;
-  cuerpoTextarea.oninput = actualizarVistaPrevia;
+  cuerpoDiv.oninput = actualizarVistaPrevia;
   actualizarVistaPrevia();
 
   Array.prototype.forEach.call(modal.querySelectorAll('.tagchip'), function (chip) {
     chip.onclick = function () {
-      var campoDestino = campoActivo || cuerpoTextarea;
       var tag = chip.getAttribute('data-tag');
-      var inicio = campoDestino.selectionStart != null ? campoDestino.selectionStart : campoDestino.value.length;
-      var fin = campoDestino.selectionEnd != null ? campoDestino.selectionEnd : campoDestino.value.length;
-      var val = campoDestino.value;
-      campoDestino.value = val.slice(0, inicio) + tag + val.slice(fin);
-      var nuevaPos = inicio + tag.length;
-      campoDestino.focus();
-      if (campoDestino.setSelectionRange) campoDestino.setSelectionRange(nuevaPos, nuevaPos);
+      if (campoActivo === asuntoInput) {
+        var inicio = asuntoInput.selectionStart != null ? asuntoInput.selectionStart : asuntoInput.value.length;
+        var fin = asuntoInput.selectionEnd != null ? asuntoInput.selectionEnd : asuntoInput.value.length;
+        var val = asuntoInput.value;
+        asuntoInput.value = val.slice(0, inicio) + tag + val.slice(fin);
+        asuntoInput.focus();
+      } else {
+        cuerpoDiv.focus();
+        restaurarRango();
+        document.execCommand('insertText', false, tag);
+        guardarRango();
+      }
       actualizarVistaPrevia();
     };
   });
+
+  Array.prototype.forEach.call(modal.querySelectorAll('.btnRte'), function (b) {
+    var def = BOTONES_RTE_CORREO[Number(b.getAttribute('data-idx'))];
+    b.onclick = function () {
+      cuerpoDiv.focus();
+      restaurarRango();
+      var valor = null;
+      if (def.pideValor) {
+        valor = prompt('Pega la URL del enlace (incluye https://):', 'https://');
+        if (!valor) return;
+      }
+      document.execCommand(def.cmd, false, valor);
+      guardarRango();
+      actualizarVistaPrevia();
+    };
+  });
+
+  /* -------- Plantillas: cargar, guardar, eliminar -------- */
+  var plantillas = [];
+  async function cargarPlantillasSel() {
+    var r = await api('listarPlantillasCorreo', {});
+    var sel = modal.querySelector('#correoPlantillaSel');
+    if (!r.ok) return;
+    plantillas = r.data.filter(function (pl) { return pl.tipo === 'Ambos' || (esClientes ? pl.tipo === 'Clientes' : pl.tipo === 'Interesados'); });
+    sel.innerHTML = '<option value="">(ninguna — correo nuevo)</option>' +
+      plantillas.map(function (pl) { return '<option value="' + escapeHtml(pl.codigo) + '">' + escapeHtml(pl.nombre) + '</option>'; }).join('');
+  }
+  await cargarPlantillasSel();
+  modal.querySelector('#correoPlantillaSel').onchange = function () {
+    var sel = modal.querySelector('#correoPlantillaSel');
+    var btnBorrar = modal.querySelector('#btnBorrarPlantilla');
+    var pl = plantillas.filter(function (x) { return x.codigo === sel.value; })[0];
+    btnBorrar.style.display = pl ? 'inline-block' : 'none';
+    if (!pl) return;
+    asuntoInput.value = pl.asunto;
+    cuerpoDiv.innerHTML = pl.cuerpo;
+    actualizarVistaPrevia();
+  };
+  modal.querySelector('#btnGuardarPlantilla').onclick = async function () {
+    var nombre = prompt('Nombre para identificar esta plantilla (ej. "Invitación a taller"):');
+    if (!nombre) return;
+    var asunto = asuntoInput.value.trim(), cuerpo = cuerpoDiv.innerHTML.trim();
+    if (!asunto || !cuerpo) { alert('Escribe el asunto y el cuerpo del correo antes de guardarlo como plantilla.'); return; }
+    var r = await api('guardarPlantillaCorreo', { nombre: nombre, tipo: esClientes ? 'Clientes' : 'Interesados', asunto: asunto, cuerpo: cuerpo });
+    if (!r.ok) { alert(r.error || 'No se pudo guardar la plantilla.'); return; }
+    await cargarPlantillasSel();
+    modal.querySelector('#correoPlantillaSel').value = r.codigo;
+    modal.querySelector('#btnBorrarPlantilla').style.display = 'inline-block';
+  };
+  modal.querySelector('#btnBorrarPlantilla').onclick = async function () {
+    var sel = modal.querySelector('#correoPlantillaSel');
+    if (!sel.value || !confirm('¿Eliminar esta plantilla? No se puede deshacer.')) return;
+    var r = await api('eliminarPlantillaCorreo', { codigo: sel.value });
+    if (!r.ok) { alert(r.error || 'No se pudo eliminar.'); return; }
+    await cargarPlantillasSel();
+    modal.querySelector('#btnBorrarPlantilla').style.display = 'none';
+  };
 
   modal.querySelector('#correoCancelar').onclick = function () {
     modal.remove();
@@ -3624,7 +3861,7 @@ function abrirModalEnviarCorreo(tipo, codigos) {
   modal.querySelector('#correoEnviar').onclick = async function () {
     var msgBox = modal.querySelector('#correoMsg');
     var asunto = asuntoInput.value.trim();
-    var cuerpo = cuerpoTextarea.value.trim();
+    var cuerpo = cuerpoDiv.innerHTML.trim();
     if (!asunto) { msgBox.innerHTML = '<div class="msg error">Falta el asunto del correo.</div>'; return; }
     if (!cuerpo) { msgBox.innerHTML = '<div class="msg error">Falta el cuerpo del correo.</div>'; return; }
     if (!conCorreo.length) { msgBox.innerHTML = '<div class="msg error">Ninguno de los destinatarios seleccionados tiene correo registrado.</div>'; return; }
