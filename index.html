@@ -219,6 +219,22 @@ var CAT_MOTIVO_CIERRE_RS12 = ['Vacante cubierta', 'Cancelada por el área', 'Con
 var CAT_SATISFACCION_RS12 = ['1 - Muy insatisfecho', '2 - Insatisfecho', '3 - Neutral', '4 - Satisfecho', '5 - Muy satisfecho'];
 
 /* ============================================================
+ * EJE 02 — ENTREVISTAS (INS-ENT-01 a INS-ENT-08)
+ * ============================================================ */
+var CAT_MODALIDAD_ENTREVISTA_ENT = ['Presencial', 'Videollamada', 'Telefónica'];
+var CAT_TIPO_ENTREVISTA_ENT = ['Estructurada', 'Por competencias', 'Semiestructurada', 'Panel mixto'];
+var CAT_ESTATUS_CITA_ENT = ['Programada', 'Confirmada', 'Reprogramada', 'Cancelada', 'Realizada', 'No se presentó'];
+var CAT_BLOQUE_TEMATICO_ENT02 = ['Trayectoria', 'Motivación', 'Conocimientos técnicos', 'Disponibilidad y condiciones', 'Cierre'];
+var CAT_TIPO_PREGUNTA_ENT06 = ['Situación/Tarea', 'Acción', 'Resultado', 'Sondeo', 'Estructurada', 'Temática'];
+var CAT_SINO_NA_ENT = ['Sí', 'No', 'No aplica'];
+var CAT_COHERENCIA_ENT07 = ['Alta', 'Media', 'Baja'];
+var CAT_RESULTADO_ENTREVISTA_ENT07 = ['Recomendado', 'Recomendado con reservas', 'No recomendado', 'Pendiente segunda entrevista'];
+var CAT_MOTIVO_DESCARTE_ENT07 = ['No demostró la competencia requerida en el nivel esperado', 'Respuestas evasivas o poco consistentes',
+  'Incompatibilidad con la cultura/equipo', 'Expectativas no alineadas con el puesto', 'Otro'];
+var CAT_RECOMENDACION_SIGUIENTE_PASO_ENT07 = ['Avanza a estudio socioeconómico', 'Avanza a investigación sociolaboral',
+  'Avanza directo a finalistas', 'No avanza'];
+
+/* ============================================================
  * CRM — Clientes / prospectos / interesados. No está ligado a
  * ningún proyecto (es la base comercial de Sintropía), así que no
  * vive dentro de INSTRUMENTOS/FAMILIAS: es su propia sección del
@@ -332,7 +348,8 @@ var FAMILIAS = {
   PED: 'Pedagógico',
   EST: 'Estratégico',
   CUA: 'Cuestionarios',
-  RS: 'Reclutamiento y Selección'
+  RS: 'Reclutamiento y Selección',
+  ENT: 'Entrevistas'
 };
 
 var INSTRUMENTOS = {
@@ -790,6 +807,220 @@ var INSTRUMENTOS = {
       { key: 'comentarioAreaSolicitante', label: 'Comentario del área solicitante', tipo: 'textarea' },
       { key: 'leccionesAprendidas', label: 'Lecciones aprendidas / recomendaciones *', tipo: 'textarea', requerido: true },
       { key: 'cerradoPor', label: 'Cerrado por *', tipo: 'text', requerido: true }
+    ]
+  },
+  ent01: {
+    familia: 'ENT',
+    titulo: 'INS-ENT-01 Ficha de preparación de entrevista',
+    listar: 'listarENT01', guardar: 'guardarFilaENT01', eliminar: 'eliminarFilaENT01',
+    validar: 'validarENT01', descargar: 'generarDescargableENT01',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'idVacante', label: 'Vacante' },
+      { key: 'idCandidato', label: 'Candidato' },
+      { key: 'fechaProgramada', label: 'Fecha programada' },
+      { key: 'tipoEntrevista', label: 'Tipo de entrevista' },
+      { key: 'estatusCita', label: 'Estatus de la cita' }
+    ],
+    campos: [
+      { key: 'idVacante', label: 'ID_VACANTE (RS-04) *', tipo: 'text', requerido: true, placeholder: 'ej. VAC-01' },
+      { key: 'idCandidato', label: 'ID_CANDIDATO (RS-06, con RS-09=Avanza a entrevista) *', tipo: 'text', requerido: true, placeholder: 'ej. CAND-01' },
+      { key: 'fechaProgramada', label: 'Fecha programada *', tipo: 'date', requerido: true },
+      { key: 'horaProgramada', label: 'Hora programada *', tipo: 'text', requerido: true, placeholder: 'hh:mm' },
+      { key: 'modalidad', label: 'Modalidad de la entrevista *', tipo: 'select', opciones: CAT_MODALIDAD_ENTREVISTA_ENT, requerido: true },
+      { key: 'lugarEnlace', label: 'Lugar o enlace *', tipo: 'text', requerido: true },
+      { key: 'entrevistadores', label: 'Entrevistador(es) *', tipo: 'text', requerido: true },
+      { key: 'tipoEntrevista', label: 'Tipo de entrevista a aplicar *', tipo: 'select', opciones: CAT_TIPO_ENTREVISTA_ENT, requerido: true },
+      { key: 'idGuia', label: 'ID_GUIA a aplicar (ENT-02/03/04) *', tipo: 'text', requerido: true, placeholder: 'ej. GEC-01' },
+      { key: 'competenciasPriorizadas', label: 'Competencias priorizadas (RS-03) *', tipo: 'text', requerido: true },
+      { key: 'duracionEstimadaMin', label: 'Duración estimada (minutos) *', tipo: 'number', requerido: true },
+      { key: 'documentosRevisados', label: 'Documentos revisados previamente *', tipo: 'text', requerido: true, placeholder: 'ej. CV, Filtro curricular, Screening' },
+      { key: 'puntosProfundizar', label: 'Puntos específicos a profundizar', tipo: 'textarea' },
+      { key: 'estatusCita', label: 'Estatus de la cita *', tipo: 'select', opciones: CAT_ESTATUS_CITA_ENT, requerido: true },
+      { key: 'recordatorioEnviado', label: 'Recordatorio enviado al candidato', tipo: 'select', opciones: SINO_RS },
+      { key: 'elaboradoPor', label: 'Elaborado por *', tipo: 'text', requerido: true }
+    ]
+  },
+  ent02: {
+    familia: 'ENT',
+    titulo: 'INS-ENT-02 Guía de entrevista estructurada',
+    listar: 'listarENT02', guardar: 'guardarFilaENT02', eliminar: 'eliminarFilaENT02',
+    validar: 'validarENT02', descargar: 'generarDescargableENT02',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'idPuesto', label: 'Puesto' },
+      { key: 'bloqueTematico', label: 'Bloque temático' },
+      { key: 'ordenBloque', label: 'Orden' },
+      { key: 'version', label: 'Versión' },
+      { key: 'vigente', label: 'Vigente' }
+    ],
+    campos: [
+      { key: 'idPuesto', label: 'ID_PUESTO (RS-02) *', tipo: 'text', requerido: true, placeholder: 'ej. PUE-01' },
+      { key: 'bloqueTematico', label: 'Bloque temático *', tipo: 'select', opciones: CAT_BLOQUE_TEMATICO_ENT02, requerido: true },
+      { key: 'ordenBloque', label: 'Orden del bloque *', tipo: 'number', requerido: true },
+      { key: 'preguntaFija', label: 'Pregunta fija (texto exacto a formular) *', tipo: 'textarea', requerido: true },
+      { key: 'objetivoPregunta', label: 'Objetivo de la pregunta *', tipo: 'textarea', requerido: true },
+      { key: 'tiempoAsignadoMin', label: 'Tiempo asignado (minutos) *', tipo: 'number', requerido: true },
+      { key: 'criterioCierre', label: 'Criterio de cierre de la entrevista *', tipo: 'textarea', requerido: true },
+      { key: 'version', label: 'Versión de la guía *', tipo: 'number', requerido: true },
+      { key: 'vigente', label: 'Vigente *', tipo: 'select', opciones: SINO_RS, requerido: true },
+      { key: 'elaboradoPor', label: 'Elaborado por *', tipo: 'text', requerido: true },
+      { key: 'fechaElaboracion', label: 'Fecha de elaboración *', tipo: 'date', requerido: true }
+    ]
+  },
+  ent03: {
+    familia: 'ENT',
+    titulo: 'INS-ENT-03 Guía de entrevista por competencias (STAR)',
+    listar: 'listarENT03', guardar: 'guardarFilaENT03', eliminar: 'eliminarFilaENT03',
+    validar: 'validarENT03', descargar: 'generarDescargableENT03',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'idPuesto', label: 'Puesto' },
+      { key: 'competencia', label: 'Competencia' },
+      { key: 'version', label: 'Versión' },
+      { key: 'vigente', label: 'Vigente' }
+    ],
+    campos: [
+      { key: 'idPuesto', label: 'ID_PUESTO (RS-02) *', tipo: 'text', requerido: true, placeholder: 'ej. PUE-01' },
+      { key: 'idMatrizCompetencias', label: 'ID_MATRIZ_COMPETENCIAS (RS-03) *', tipo: 'text', requerido: true, placeholder: 'ej. MCP-01' },
+      { key: 'competencia', label: 'Competencia *', tipo: 'select', opciones: CAT_COMPETENCIA_RS, requerido: true },
+      { key: 'preguntaAperturaST', label: 'Pregunta de apertura — Situación/Tarea *', tipo: 'textarea', requerido: true },
+      { key: 'preguntaAccion', label: 'Pregunta de profundización — Acción *', tipo: 'textarea', requerido: true },
+      { key: 'preguntaResultado', label: 'Pregunta de cierre — Resultado *', tipo: 'textarea', requerido: true },
+      { key: 'preguntaSondeo', label: 'Pregunta de sondeo adicional', tipo: 'textarea' },
+      { key: 'indicadorNivel1', label: 'Indicador conductual — nivel 1 (Básico) *', tipo: 'textarea', requerido: true },
+      { key: 'indicadorNivel4', label: 'Indicador conductual — nivel 4 (Experto) *', tipo: 'textarea', requerido: true },
+      { key: 'tiempoAsignadoMin', label: 'Tiempo asignado por competencia (minutos) *', tipo: 'number', requerido: true },
+      { key: 'version', label: 'Versión de la guía *', tipo: 'number', requerido: true },
+      { key: 'vigente', label: 'Vigente *', tipo: 'select', opciones: SINO_RS, requerido: true },
+      { key: 'elaboradoPor', label: 'Elaborado por *', tipo: 'text', requerido: true },
+      { key: 'fechaElaboracion', label: 'Fecha de elaboración *', tipo: 'date', requerido: true }
+    ]
+  },
+  ent04: {
+    familia: 'ENT',
+    titulo: 'INS-ENT-04 Guía de entrevista semiestructurada',
+    listar: 'listarENT04', guardar: 'guardarFilaENT04', eliminar: 'eliminarFilaENT04',
+    validar: 'validarENT04', descargar: 'generarDescargableENT04',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'idPuesto', label: 'Puesto' },
+      { key: 'temaObligatorio', label: 'Tema obligatorio' },
+      { key: 'version', label: 'Versión' },
+      { key: 'vigente', label: 'Vigente' }
+    ],
+    campos: [
+      { key: 'idPuesto', label: 'ID_PUESTO (RS-02) *', tipo: 'text', requerido: true, placeholder: 'ej. PUE-01' },
+      { key: 'temaObligatorio', label: 'Tema obligatorio *', tipo: 'text', requerido: true },
+      { key: 'preguntaOrientativa', label: 'Pregunta orientativa *', tipo: 'textarea', requerido: true },
+      { key: 'criterioMinimo', label: 'Criterio mínimo a cubrir por tema *', tipo: 'textarea', requerido: true },
+      { key: 'exploracionLibre', label: 'Exploración libre permitida *', tipo: 'select', opciones: SINO_RS, requerido: true },
+      { key: 'tiempoOrientativoMin', label: 'Tiempo orientativo por tema (minutos) *', tipo: 'number', requerido: true },
+      { key: 'version', label: 'Versión de la guía *', tipo: 'number', requerido: true },
+      { key: 'vigente', label: 'Vigente *', tipo: 'select', opciones: SINO_RS, requerido: true },
+      { key: 'elaboradoPor', label: 'Elaborado por *', tipo: 'text', requerido: true },
+      { key: 'fechaElaboracion', label: 'Fecha de elaboración *', tipo: 'date', requerido: true }
+    ]
+  },
+  ent05: {
+    familia: 'ENT',
+    titulo: 'INS-ENT-05 Matriz de evaluación de competencias',
+    listar: 'listarENT05', guardar: 'guardarFilaENT05', eliminar: 'eliminarFilaENT05',
+    validar: 'validarENT05', descargar: 'generarDescargableENT05',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'idVacante', label: 'Vacante' },
+      { key: 'idCandidato', label: 'Candidato' },
+      { key: 'competencia', label: 'Competencia' },
+      { key: 'nivelObservado', label: 'Nivel observado' },
+      { key: 'brecha', label: 'Brecha (calc.)' },
+      { key: 'puntajeTotalEntrevista', label: 'Puntaje total del par (calc.)' }
+    ],
+    campos: [
+      { key: 'idVacante', label: 'ID_VACANTE (RS-04) *', tipo: 'text', requerido: true, placeholder: 'ej. VAC-01' },
+      { key: 'idCandidato', label: 'ID_CANDIDATO (RS-06) *', tipo: 'text', requerido: true, placeholder: 'ej. CAND-01' },
+      { key: 'idPreparacion', label: 'ID_PREPARACION (ENT-01) *', tipo: 'text', requerido: true, placeholder: 'ej. EPR-01' },
+      { key: 'competencia', label: 'Competencia *', tipo: 'select', opciones: CAT_COMPETENCIA_RS, requerido: true },
+      { key: 'nivelObservado', label: 'Nivel observado *', tipo: 'select', opciones: CAT_NIVEL_COMPETENCIA_RS, requerido: true },
+      { key: 'evidenciaObservada', label: 'Evidencia observada (resumen conductual) *', tipo: 'textarea', requerido: true },
+      { key: 'entrevistador', label: 'Entrevistador *', tipo: 'text', requerido: true },
+      { key: 'fechaEntrevista', label: 'Fecha de la entrevista *', tipo: 'date', requerido: true }
+    ]
+  },
+  ent06: {
+    familia: 'ENT',
+    titulo: 'INS-ENT-06 Registro de respuestas y evidencias',
+    listar: 'listarENT06', guardar: 'guardarFilaENT06', eliminar: 'eliminarFilaENT06',
+    validar: 'validarENT06', descargar: 'generarDescargableENT06',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'idVacante', label: 'Vacante' },
+      { key: 'idCandidato', label: 'Candidato' },
+      { key: 'tipoPregunta', label: 'Tipo de pregunta' },
+      { key: 'preguntaFormulada', label: 'Pregunta' }
+    ],
+    campos: [
+      { key: 'idVacante', label: 'ID_VACANTE (RS-04) *', tipo: 'text', requerido: true, placeholder: 'ej. VAC-01' },
+      { key: 'idCandidato', label: 'ID_CANDIDATO (RS-06) *', tipo: 'text', requerido: true, placeholder: 'ej. CAND-01' },
+      { key: 'idGuiaAplicada', label: 'ID_GUIA aplicada (ENT-02/03/04) *', tipo: 'text', requerido: true, placeholder: 'ej. GEC-01' },
+      { key: 'preguntaFormulada', label: 'Pregunta formulada *', tipo: 'textarea', requerido: true },
+      { key: 'tipoPregunta', label: 'Tipo de pregunta *', tipo: 'select', opciones: CAT_TIPO_PREGUNTA_ENT06, requerido: true },
+      { key: 'competenciaAsociada', label: 'Competencia asociada', tipo: 'select', opciones: CAT_COMPETENCIA_RS },
+      { key: 'respuestaCandidato', label: 'Respuesta del candidato (resumen) *', tipo: 'textarea', requerido: true },
+      { key: 'identificoSituacionTarea', label: '¿Identificó Situación/Tarea concreta?', tipo: 'select', opciones: CAT_SINO_NA_ENT },
+      { key: 'identificoAccion', label: '¿Identificó Acción individual concreta?', tipo: 'select', opciones: CAT_SINO_NA_ENT },
+      { key: 'identificoResultado', label: '¿Identificó Resultado verificable?', tipo: 'select', opciones: CAT_SINO_NA_ENT },
+      { key: 'observacionEntrevistador', label: 'Observación del entrevistador', tipo: 'textarea' },
+      { key: 'entrevistador', label: 'Entrevistador *', tipo: 'text', requerido: true },
+      { key: 'fecha', label: 'Fecha *', tipo: 'date', requerido: true }
+    ]
+  },
+  ent07: {
+    familia: 'ENT',
+    titulo: 'INS-ENT-07 Informe individual de entrevista',
+    listar: 'listarENT07', guardar: 'guardarFilaENT07', eliminar: 'eliminarFilaENT07',
+    validar: 'validarENT07', descargar: 'generarDescargableENT07',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'idVacante', label: 'Vacante' },
+      { key: 'idCandidato', label: 'Candidato' },
+      { key: 'puntajeTotal', label: 'Puntaje total (calc.)' },
+      { key: 'resultadoEntrevista', label: 'Resultado' },
+      { key: 'recomendacionSiguientePaso', label: 'Siguiente paso' }
+    ],
+    campos: [
+      { key: 'idVacante', label: 'ID_VACANTE (RS-04) *', tipo: 'text', requerido: true, placeholder: 'ej. VAC-01' },
+      { key: 'idCandidato', label: 'ID_CANDIDATO (RS-06) *', tipo: 'text', requerido: true, placeholder: 'ej. CAND-01' },
+      { key: 'fortalezasObservadas', label: 'Fortalezas observadas (hasta 5) *', tipo: 'textarea', requerido: true },
+      { key: 'areasOportunidad', label: 'Áreas de oportunidad (hasta 5)', tipo: 'textarea' },
+      { key: 'coherenciaRespuestas', label: 'Coherencia de las respuestas *', tipo: 'select', opciones: CAT_COHERENCIA_ENT07, requerido: true },
+      { key: 'resultadoEntrevista', label: 'Resultado de la entrevista *', tipo: 'select', opciones: CAT_RESULTADO_ENTREVISTA_ENT07, requerido: true },
+      { key: 'motivoDescarte', label: 'Motivo si "No recomendado"', tipo: 'select', opciones: CAT_MOTIVO_DESCARTE_ENT07 },
+      { key: 'recomendacionSiguientePaso', label: 'Recomendación de siguiente paso *', tipo: 'select', opciones: CAT_RECOMENDACION_SIGUIENTE_PASO_ENT07, requerido: true },
+      { key: 'entrevistadores', label: 'Entrevistador(es) *', tipo: 'text', requerido: true },
+      { key: 'fechaElaboracion', label: 'Fecha de elaboración *', tipo: 'date', requerido: true }
+    ]
+  },
+  ent08: {
+    familia: 'ENT',
+    titulo: 'INS-ENT-08 Matriz comparativa de entrevistados',
+    listar: 'listarENT08', guardar: 'guardarFilaENT08', eliminar: 'eliminarFilaENT08',
+    validar: 'validarENT08', descargar: 'generarDescargableENT08',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'idVacante', label: 'Vacante' },
+      { key: 'idCandidato', label: 'Candidato' },
+      { key: 'puntajeTotal', label: 'Puntaje total (calc.)' },
+      { key: 'ranking', label: 'Ranking (calc.)' },
+      { key: 'resultado', label: 'Resultado (calc.)' }
+    ],
+    campos: [
+      { key: 'idVacante', label: 'ID_VACANTE (RS-04) *', tipo: 'text', requerido: true, placeholder: 'ej. VAC-01' },
+      { key: 'idCandidato', label: 'ID_CANDIDATO (RS-06) *', tipo: 'text', requerido: true, placeholder: 'ej. CAND-01' },
+      { key: 'fortalezaDistintiva', label: 'Fortaleza distintiva', tipo: 'textarea' },
+      { key: 'riesgoDistintivo', label: 'Riesgo distintivo', tipo: 'textarea' },
+      { key: 'elaboradoPor', label: 'Elaborado por *', tipo: 'text', requerido: true },
+      { key: 'fechaElaboracion', label: 'Fecha de elaboración *', tipo: 'date', requerido: true }
     ]
   },
   ter01: {
@@ -1556,6 +1787,14 @@ var INSTRUMENTOS_INSTALABLES = [
   { clave: 'RS10', nombre: 'INS-RS-10 — Matriz de candidatos finalistas', tipos: ['rs10'] },
   { clave: 'RS11', nombre: 'INS-RS-11 — Informe de recomendación', tipos: ['rs11'] },
   { clave: 'RS12', nombre: 'INS-RS-12 — Cierre de vacante', tipos: ['rs12'] },
+  { clave: 'ENT01', nombre: 'INS-ENT-01 — Ficha de preparación de entrevista', tipos: ['ent01'] },
+  { clave: 'ENT02', nombre: 'INS-ENT-02 — Guía de entrevista estructurada', tipos: ['ent02'] },
+  { clave: 'ENT03', nombre: 'INS-ENT-03 — Guía de entrevista por competencias (STAR)', tipos: ['ent03'] },
+  { clave: 'ENT04', nombre: 'INS-ENT-04 — Guía de entrevista semiestructurada', tipos: ['ent04'] },
+  { clave: 'ENT05', nombre: 'INS-ENT-05 — Matriz de evaluación de competencias', tipos: ['ent05'] },
+  { clave: 'ENT06', nombre: 'INS-ENT-06 — Registro de respuestas y evidencias', tipos: ['ent06'] },
+  { clave: 'ENT07', nombre: 'INS-ENT-07 — Informe individual de entrevista', tipos: ['ent07'] },
+  { clave: 'ENT08', nombre: 'INS-ENT-08 — Matriz comparativa de entrevistados', tipos: ['ent08'] },
   { clave: 'PLA01', nombre: 'INS-PLA-01 — Árbol de problemas', tipos: ['pla01'] },
   { clave: 'PLA02', nombre: 'INS-PLA-02 — Árbol de objetivos', tipos: ['pla02'] },
   { clave: 'TER01', nombre: 'INS-TER-01 — Mapa de actores y recursos', tipos: ['ter01'] },
