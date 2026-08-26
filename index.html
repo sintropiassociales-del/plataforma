@@ -249,10 +249,12 @@ var CAT_TIPO_IDENTIFICACION_SE = ['INE', 'Pasaporte', 'Cédula profesional', 'Ot
 var CAT_ESTADO_CIVIL_SE = ['Soltero/a', 'Casado/a', 'Unión libre', 'Divorciado/a', 'Viudo/a'];
 var CAT_TIEMPO_RESIDENCIA_SE = ['Menos de 1 año', '1-3 años', '3-5 años', 'Más de 5 años'];
 var CAT_SITUACION_LABORAL_SE = ['Empleado/a', 'Desempleado/a', 'Trabajo informal', 'Estudiante', 'Otro'];
+var NUM_EMPLEOS_ANTERIORES_SE = ['0', '1', '2', '3 o más'];
 var CAT_AFILIACION_SALUD_SE = ['IMSS', 'ISSSTE', 'IMSS-Bienestar', 'Seguro privado', 'Ninguna'];
 var CAT_MEDIO_TRANSPORTE_SE = ['A pie', 'Bicicleta', 'Transporte público', 'Vehículo propio', 'Transporte de la empresa'];
 var CAT_SITUACION_VIVIENDA_SE = ['Propia', 'Rentada', 'Prestada', 'Familiar'];
 var CAT_PARENTESCO_SE = ['Cónyuge/pareja', 'Hijo/a', 'Padre', 'Madre', 'Hermano/a', 'Otro familiar', 'No familiar'];
+var CAT_PERMANENCIA_HOGAR_SE = ['Tiempo completo', 'Parcial / temporal', 'Fines de semana', 'Otro'];
 var CAT_TENENCIA_VIVIENDA_SE = ['Propia pagada', 'Propia con crédito', 'Rentada', 'Prestada', 'Familiar'];
 var CAT_TIPO_VIVIENDA_SE = ['Casa independiente', 'Departamento', 'Cuarto en vecindad', 'Otro'];
 var CAT_MATERIAL_CONSTRUCCION_SE = ['Concreto/tabique', 'Lámina', 'Madera', 'Mixto'];
@@ -1083,7 +1085,10 @@ var INSTRUMENTOS = {
       { key: 'fechaConsentimiento', label: 'Fecha de consentimiento', tipo: 'date' },
       { key: 'responsable', label: 'Responsable *', tipo: 'text', requerido: true },
       { key: 'observaciones', label: 'Observaciones', tipo: 'textarea' }
-    ]
+    ],
+    // Foto se sube aparte (POST directo a Drive) una vez que la fila ya
+    // existe — ver _wireFotosInstrumento en abrirModalFila.
+    fotos: [{ key: 'fotoInfantil', urlKey: 'fotoInfantilUrl', label: 'Foto infantil del candidato' }]
   },
   se02: {
     familia: 'SE',
@@ -1113,7 +1118,10 @@ var INSTRUMENTOS = {
       { key: 'correo', label: 'Correo electrónico', tipo: 'text' },
       { key: 'escolaridadMaxima', label: 'Escolaridad máxima (verificada) *', tipo: 'select', opciones: CAT_NIVEL_ESCOLARIDAD_RS, requerido: true },
       { key: 'aplicador', label: 'Aplicador *', tipo: 'text', requerido: true },
-      { key: 'fechaAplicacion', label: 'Fecha de aplicación *', tipo: 'date', requerido: true }
+      { key: 'fechaAplicacion', label: 'Fecha de aplicación *', tipo: 'date', requerido: true },
+      { key: 'vecesMudanzaDosAnios', label: 'Veces de mudanza (últimos 2 años)', tipo: 'number' },
+      { key: 'contactoEmergencia', label: 'Contacto de emergencia (nombre y teléfono)', tipo: 'text' },
+      { key: 'accesoTelefono', label: 'Acceso regular a un teléfono', tipo: 'select', opciones: SINO_RS }
     ]
   },
   se03: {
@@ -1145,7 +1153,41 @@ var INSTRUMENTOS = {
       { key: 'referencia2', label: 'Referencia personal 2 (nombre y teléfono) *', tipo: 'text', requerido: true },
       { key: 'observaciones', label: 'Observaciones relevantes del candidato', tipo: 'textarea' },
       { key: 'aplicador', label: 'Aplicador *', tipo: 'text', requerido: true },
-      { key: 'fechaAplicacion', label: 'Fecha de aplicación *', tipo: 'date', requerido: true }
+      { key: 'fechaAplicacion', label: 'Fecha de aplicación *', tipo: 'date', requerido: true },
+      { key: 'empresaActual', label: 'Empresa actual', tipo: 'text' },
+      { key: 'giroActual', label: 'Giro actual', tipo: 'text' },
+      { key: 'puestoActual', label: 'Puesto actual', tipo: 'text' },
+      { key: 'fechaInicioActual', label: 'Fecha de inicio (actual)', tipo: 'date' },
+      { key: 'nombreContactoActual', label: 'Nombre de contacto (actual)', tipo: 'text' },
+      { key: 'contactoActual', label: 'Teléfono o correo de contacto (actual)', tipo: 'text' },
+      { key: 'numEmpleosAnteriores', label: '¿Cuántos empleos anteriores ha tenido?', tipo: 'select', opciones: NUM_EMPLEOS_ANTERIORES_SE },
+      { key: 'empresaAnt1', label: 'Empresa anterior 1', tipo: 'text' },
+      { key: 'giroAnt1', label: 'Giro anterior 1', tipo: 'text' },
+      { key: 'puestoAnt1', label: 'Puesto anterior 1', tipo: 'text' },
+      { key: 'fechaInicioAnt1', label: 'Fecha de inicio anterior 1', tipo: 'date' },
+      { key: 'fechaTerminoAnt1', label: 'Fecha de término anterior 1', tipo: 'date' },
+      { key: 'motivoSalidaAnt1', label: 'Motivo de salida anterior 1', tipo: 'text' },
+      { key: 'nombreContactoAnt1', label: 'Nombre de contacto anterior 1', tipo: 'text' },
+      { key: 'contactoAnt1', label: 'Teléfono o correo de contacto anterior 1', tipo: 'text' },
+      { key: 'empresaAnt2', label: 'Empresa anterior 2', tipo: 'text' },
+      { key: 'giroAnt2', label: 'Giro anterior 2', tipo: 'text' },
+      { key: 'puestoAnt2', label: 'Puesto anterior 2', tipo: 'text' },
+      { key: 'fechaInicioAnt2', label: 'Fecha de inicio anterior 2', tipo: 'date' },
+      { key: 'fechaTerminoAnt2', label: 'Fecha de término anterior 2', tipo: 'date' },
+      { key: 'motivoSalidaAnt2', label: 'Motivo de salida anterior 2', tipo: 'text' },
+      { key: 'nombreContactoAnt2', label: 'Nombre de contacto anterior 2', tipo: 'text' },
+      { key: 'contactoAnt2', label: 'Teléfono o correo de contacto anterior 2', tipo: 'text' },
+      { key: 'empresaAnt3', label: 'Empresa anterior 3', tipo: 'text' },
+      { key: 'giroAnt3', label: 'Giro anterior 3', tipo: 'text' },
+      { key: 'puestoAnt3', label: 'Puesto anterior 3', tipo: 'text' },
+      { key: 'fechaInicioAnt3', label: 'Fecha de inicio anterior 3', tipo: 'date' },
+      { key: 'fechaTerminoAnt3', label: 'Fecha de término anterior 3', tipo: 'date' },
+      { key: 'motivoSalidaAnt3', label: 'Motivo de salida anterior 3', tipo: 'text' },
+      { key: 'nombreContactoAnt3', label: 'Nombre de contacto anterior 3', tipo: 'text' },
+      { key: 'contactoAnt3', label: 'Teléfono o correo de contacto anterior 3', tipo: 'text' },
+      { key: 'periodoSinEmpleo', label: '¿Periodos sin empleo mayores a 6 meses (últimos 2 años)?', tipo: 'select', opciones: SINO_RS },
+      { key: 'dependeTransporteTercero', label: '¿Depende de alguien más para trasladarse al trabajo?', tipo: 'select', opciones: SINO_RS },
+      { key: 'documentosExperiencia', label: '¿Cuenta con documentos que respalden su experiencia laboral reciente?', tipo: 'select', opciones: SINO_RS }
     ]
   },
   se04: {
@@ -1176,7 +1218,10 @@ var INSTRUMENTOS = {
       { key: 'escolaridad', label: 'Escolaridad', tipo: 'select', opciones: CAT_NIVEL_ESCOLARIDAD_RS },
       { key: 'observaciones', label: 'Observaciones', tipo: 'textarea' },
       { key: 'aplicador', label: 'Aplicador *', tipo: 'text', requerido: true },
-      { key: 'fechaAplicacion', label: 'Fecha de aplicación *', tipo: 'date', requerido: true }
+      { key: 'fechaAplicacion', label: 'Fecha de aplicación *', tipo: 'date', requerido: true },
+      { key: 'dependeCuidadoDirecto', label: '¿Requiere que alguien esté pendiente de él/ella regularmente?', tipo: 'select', opciones: SINO_RS },
+      { key: 'permanenciaHogar', label: 'Permanencia en el hogar', tipo: 'select', opciones: CAT_PERMANENCIA_HOGAR_SE },
+      { key: 'documentosVigentes', label: '¿Cuenta con documentos de identificación vigentes?', tipo: 'select', opciones: SINO_RS }
     ]
   },
   se05: {
@@ -1204,7 +1249,12 @@ var INSTRUMENTOS = {
       { key: 'zona', label: 'Zona/colonia *', tipo: 'text', requerido: true },
       { key: 'observaciones', label: 'Observaciones (entorno, condiciones generales)', tipo: 'textarea' },
       { key: 'aplicador', label: 'Aplicador *', tipo: 'text', requerido: true },
-      { key: 'fechaAplicacion', label: 'Fecha de aplicación *', tipo: 'date', requerido: true }
+      { key: 'fechaAplicacion', label: 'Fecha de aplicación *', tipo: 'date', requerido: true },
+      { key: 'mapaUbicacion', label: 'Ubicación en mapa (enlace de Google Maps o coordenadas)', tipo: 'text', placeholder: 'ej. https://maps.google.com/?q=19.4326,-99.1332' },
+      { key: 'referenciaUbicacion', label: 'Referencia de ubicación', tipo: 'text', placeholder: 'ej. Frente a la tienda "El Sol", portón verde' },
+      { key: 'alumbradoPublico', label: '¿La calle cuenta con alumbrado público?', tipo: 'select', opciones: SINO_RS },
+      { key: 'viviendaCompartidaTerceros', label: '¿Vivienda compartida con personas ajenas al núcleo familiar?', tipo: 'select', opciones: SINO_RS },
+      { key: 'masDeUnaSalidaEmergencia', label: '¿Cuenta con más de una salida en caso de emergencia?', tipo: 'select', opciones: SINO_RS }
     ]
   },
   se06: {
@@ -1232,7 +1282,10 @@ var INSTRUMENTOS = {
       { key: 'egresoDeudas', label: 'Egreso en deudas/créditos', tipo: 'number' },
       { key: 'observaciones', label: 'Observaciones', tipo: 'textarea' },
       { key: 'aplicador', label: 'Aplicador *', tipo: 'text', requerido: true },
-      { key: 'fechaAplicacion', label: 'Fecha de aplicación *', tipo: 'date', requerido: true }
+      { key: 'fechaAplicacion', label: 'Fecha de aplicación *', tipo: 'date', requerido: true },
+      { key: 'deudasInformales', label: '¿Tiene deudas o préstamos informales (tandas, empeños, préstamos personales)?', tipo: 'select', opciones: SINO_RS },
+      { key: 'dependienteExternoRegular', label: '¿Alguien fuera de su hogar depende económicamente de usted de forma regular?', tipo: 'select', opciones: SINO_RS },
+      { key: 'fondoAhorroEmergencia', label: '¿Cuenta con algún ahorro o fondo disponible para una emergencia?', tipo: 'select', opciones: SINO_RS }
     ]
   },
   se07: {
@@ -1262,6 +1315,11 @@ var INSTRUMENTOS = {
       { key: 'resultadoVerificacion', label: 'Resultado de la verificación *', tipo: 'select', opciones: CAT_RESULTADO_VERIFICACION_SE, requerido: true },
       { key: 'verificador', label: 'Verificador *', tipo: 'text', requerido: true },
       { key: 'fechaElaboracion', label: 'Fecha de elaboración del reporte *', tipo: 'date', requerido: true }
+    ],
+    fotos: [
+      { key: 'fotoInterior', urlKey: 'fotoInteriorUrl', label: 'Foto del interior del domicilio' },
+      { key: 'fotoExterior', urlKey: 'fotoExteriorUrl', label: 'Foto del exterior del domicilio' },
+      { key: 'fotoPersona', urlKey: 'fotoPersonaUrl', label: 'Foto de la persona (primer plano)' }
     ]
   },
   se08: {
@@ -2889,6 +2947,7 @@ function abrirModalFila(tipo, fila, opts) {
   var cfg = _cfgTipo(tipo);
   var editando = !!fila;
   var conIA = INSTRUMENTOS_IA_FAMILIAS.indexOf(cfg.familia) !== -1;
+  var proyectoCodigo = ('proyecto' in opts) ? opts.proyecto : (state.proyectoActivo ? state.proyectoActivo.codigo : '');
 
   var camposHtml = cfg.campos.map(function (c) {
     var id = 'f_' + c.key;
@@ -2923,11 +2982,31 @@ function abrirModalFila(tipo, fila, opts) {
       '</div>' +
     '</div>' : '';
 
+  // Las fotos se suben aparte (POST directo, no cabe en la URL de jsonp()) y
+  // solo una vez que la fila ya existe, porque hace falta su código para
+  // saber en qué renglón anotar la URL resultante.
+  var fotosHtml = !cfg.fotos ? '' : (!editando ?
+    '<p class="subtle" style="margin:14px 0">Guarda la ficha primero — después podrás subir aquí las fotos.</p>' :
+    '<div style="margin:16px 0"><h3 style="margin:0 0 8px;font-size:15px">Fotos</h3>' +
+      cfg.fotos.map(function (f) {
+        var urlActual = fila[f.urlKey];
+        return '<div class="foto-slot" data-foto-key="' + f.key + '" style="border:1.5px solid #eee;border-radius:8px;padding:10px 12px;margin-bottom:8px">' +
+          '<label style="margin-top:0">' + f.label + '</label>' +
+          (urlActual ? '<div style="margin-bottom:6px"><a href="' + escapeHtml(urlActual) + '" target="_blank" rel="noopener">Ver foto actual</a></div>' :
+            '<div class="subtle" style="margin-bottom:6px">Sin foto todavía.</div>') +
+          '<input type="file" accept="image/jpeg,image/png,image/webp" class="foto-input">' +
+          '<button type="button" class="small secondary foto-subir" style="margin-left:8px">Subir foto</button>' +
+          '<div class="foto-msg" style="margin-top:6px"></div>' +
+        '</div>';
+      }).join('') +
+    '</div>');
+
   var modal = el(
     '<div class="modal-bg"><div class="modal">' +
       '<h2>' + (editando ? 'Editar ' + (opts.titulo || 'fila') + ' ' + fila.codigo : 'Agregar ' + (opts.titulo || 'fila')) + '</h2>' +
       panelEstructurarHtml +
       camposHtml +
+      fotosHtml +
       '<div id="filaMsg"></div>' +
       '<div class="modal-actions">' +
         '<button class="secondary" id="filaCancelar">Cancelar</button>' +
@@ -2939,12 +3018,12 @@ function abrirModalFila(tipo, fila, opts) {
   modal.querySelector('#filaCancelar').onclick = function () { modal.remove(); };
 
   if (conIA) _wireIAInstrumento(modal, cfg, tipo);
+  if (cfg.fotos && editando) _wireFotosInstrumento(modal, cfg, tipo, proyectoCodigo, fila.codigo);
 
   modal.querySelector('#filaGuardar').onclick = async function () {
     var btn = modal.querySelector('#filaGuardar');
     var msgBox = modal.querySelector('#filaMsg');
     var params = {};
-    var proyectoCodigo = ('proyecto' in opts) ? opts.proyecto : (state.proyectoActivo ? state.proyectoActivo.codigo : '');
     if (proyectoCodigo) params.proyecto = proyectoCodigo;
     if (opts.extra) Object.keys(opts.extra).forEach(function (k) { params[k] = opts.extra[k]; });
     if (editando) params.codigo = fila.codigo;
@@ -3053,6 +3132,65 @@ function _wireIAInstrumento(modal, cfg, tipo) {
       : '<div class="msg error">No se encontró información en las notas para ningún campo.</div>';
     if (llenados) panelE.classList.add('hidden');
   };
+}
+
+/* ---------------- FOTOS (SE-01 foto infantil, SE-07 evidencia) ----------------
+ * Van por POST directo al Web App (no por jsonp(), que manda todo por la URL
+ * y no aguanta el tamaño de una foto real) — ver doPost/apiSubirFotoInstrumento
+ * en WebApp.gs. Content-Type: text/plain evita que el navegador dispare una
+ * petición de verificación (preflight) que Apps Script no sabe responder.
+ * ------------------------------------------------------------------------- */
+
+function _leerArchivoComoBase64(file) {
+  return new Promise(function (resolve, reject) {
+    var reader = new FileReader();
+    reader.onload = function () {
+      var resultado = String(reader.result || '');
+      var coma = resultado.indexOf(',');
+      resolve(coma >= 0 ? resultado.slice(coma + 1) : resultado);
+    };
+    reader.onerror = function () { reject(new Error('No se pudo leer el archivo.')); };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function _subirFotoInstrumento(instrumento, campo, proyecto, codigo, file) {
+  if (!file) return { ok: false, error: 'Selecciona una foto primero.' };
+  if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return { ok: false, error: 'Solo se aceptan fotos JPG, PNG o WEBP.' };
+  if (file.size > 8 * 1024 * 1024) return { ok: false, error: 'La foto es demasiado pesada (máximo 8MB) — comprímela o usa una de menor resolución.' };
+  var base64;
+  try { base64 = await _leerArchivoComoBase64(file); } catch (eLeer) { return { ok: false, error: eLeer.message }; }
+  try {
+    var resp = await fetch(WEB_APP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'subirFotoInstrumento', token: session ? session.token : '',
+        instrumento: instrumento, campo: campo, proyecto: proyecto, codigo: codigo,
+        archivoBase64: base64, mimeType: file.type
+      })
+    });
+    return await resp.json();
+  } catch (eRed) {
+    return { ok: false, error: 'No se pudo conectar con la plataforma para subir la foto (revisa tu conexión a internet).' };
+  }
+}
+
+function _wireFotosInstrumento(modal, cfg, tipo, proyectoCodigo, codigoFila) {
+  Array.prototype.forEach.call(modal.querySelectorAll('.foto-slot'), function (slot) {
+    var key = slot.getAttribute('data-foto-key');
+    var input = slot.querySelector('.foto-input');
+    var btn = slot.querySelector('.foto-subir');
+    var msgBox = slot.querySelector('.foto-msg');
+    btn.onclick = async function () {
+      var file = input.files[0];
+      btn.disabled = true; var textoOriginal = btn.textContent; btn.textContent = 'Subiendo...'; msgBox.innerHTML = '';
+      var r = await _subirFotoInstrumento(tipo, key, proyectoCodigo, codigoFila, file);
+      btn.disabled = false; btn.textContent = textoOriginal;
+      if (!r.ok) { msgBox.innerHTML = '<div class="msg error">' + r.error + '</div>'; return; }
+      msgBox.innerHTML = '<div class="msg ok">Foto subida — <a href="' + escapeHtml(r.url) + '" target="_blank" rel="noopener">verla</a>.</div>';
+    };
+  });
 }
 
 /* ---------------- IMPORTAR ARCHIVO (CSV / Excel) ----------------
