@@ -2876,12 +2876,19 @@ async function generarDescargable(tipo) {
   manejarDescargable(r);
 }
 
+// Familias de instrumentos donde se ofrece ayuda de IA al llenar (las más
+// narrativas: diagnóstico, teoría de cambio, planeación, indicadores,
+// evaluación, pedagogía). Reutiliza el mismo Gemini del mailing — cualquier
+// Aplicador o Administrador con sesión puede usarla, no solo Administrador.
+var INSTRUMENTOS_IA_FAMILIAS = ['DIA', 'TER', 'PLA', 'IND', 'EVA', 'PED'];
+
 // opts (todos opcionales): { proyecto: '...', extra: {...}, alGuardar: async fn, titulo: '...' }
 // Sin opts, se comporta igual que antes (instrumento dentro de un proyecto).
 function abrirModalFila(tipo, fila, opts) {
   opts = opts || {};
   var cfg = _cfgTipo(tipo);
   var editando = !!fila;
+  var conIA = INSTRUMENTOS_IA_FAMILIAS.indexOf(cfg.familia) !== -1;
 
   var camposHtml = cfg.campos.map(function (c) {
     var id = 'f_' + c.key;
@@ -2893,15 +2900,33 @@ function abrirModalFila(tipo, fila, opts) {
       return '<label>' + c.label + '</label><select id="' + id + '">' + opts2 + '</select>';
     }
     if (c.tipo === 'textarea') {
-      return '<label>' + c.label + '</label><textarea id="' + id + '">' + escapeHtml(val) + '</textarea>';
+      var btnIA = conIA ? ' <button type="button" class="small secondary btn-ia-campo" data-campo-key="' + c.key + '" style="padding:1px 8px;font-size:12px">✨ IA</button>' : '';
+      var panelIA = conIA ? '<div class="panelIACampo hidden" data-campo-key="' + c.key + '" style="background:#F4F0FE;border-radius:6px;padding:8px 10px;margin:4px 0 8px">' +
+        '<input type="text" class="iaCampoInstruccion" placeholder="¿Qué quieres que diga este campo?" style="width:100%;margin-bottom:6px;box-sizing:border-box">' +
+        '<div style="display:flex;gap:6px"><button type="button" class="small secondary iaCampoCancelar">Cancelar</button><button type="button" class="small primary iaCampoGenerar">Generar</button></div>' +
+        '<div class="iaCampoMsg" style="margin-top:4px"></div>' +
+      '</div>' : '';
+      return '<label>' + c.label + btnIA + '</label>' + panelIA + '<textarea id="' + id + '">' + escapeHtml(val) + '</textarea>';
     }
     return '<label>' + c.label + '</label><input type="' + c.tipo + '" id="' + id + '" value="' + escapeHtml(val) + '"' +
       (c.placeholder ? ' placeholder="' + c.placeholder + '"' : '') + '>';
   }).join('');
 
+  var panelEstructurarHtml = conIA ?
+    '<div style="margin-bottom:14px">' +
+      '<button type="button" class="small secondary" id="btnAbrirIAEstructurar">✨ Llenar con IA desde notas</button>' +
+      '<div id="panelIAEstructurar" class="hidden" style="background:#F4F0FE;border-radius:8px;padding:12px 14px;margin-top:8px">' +
+        '<label style="font-weight:600">Pega o escribe notas (entrevista, visita de campo, observación...)</label>' +
+        '<textarea id="notasIAEstructurar" style="width:100%;min-height:100px;box-sizing:border-box" placeholder="La IA repartirá lo relevante entre los campos de texto de este formulario. Los campos de catálogo/menú no se tocan."></textarea>' +
+        '<div style="display:flex;gap:8px;margin-top:8px"><button type="button" class="small secondary" id="btnCancelarIAEstructurar">Cancelar</button><button type="button" class="small primary" id="btnGenerarIAEstructurar">Repartir en los campos</button></div>' +
+        '<div id="iaEstructurarMsg" style="margin-top:6px"></div>' +
+      '</div>' +
+    '</div>' : '';
+
   var modal = el(
     '<div class="modal-bg"><div class="modal">' +
       '<h2>' + (editando ? 'Editar ' + (opts.titulo || 'fila') + ' ' + fila.codigo : 'Agregar ' + (opts.titulo || 'fila')) + '</h2>' +
+      panelEstructurarHtml +
       camposHtml +
       '<div id="filaMsg"></div>' +
       '<div class="modal-actions">' +
@@ -2912,6 +2937,9 @@ function abrirModalFila(tipo, fila, opts) {
   );
   document.body.appendChild(modal);
   modal.querySelector('#filaCancelar').onclick = function () { modal.remove(); };
+
+  if (conIA) _wireIAInstrumento(modal, cfg, tipo);
+
   modal.querySelector('#filaGuardar').onclick = async function () {
     var btn = modal.querySelector('#filaGuardar');
     var msgBox = modal.querySelector('#filaMsg');
@@ -2936,6 +2964,94 @@ function abrirModalFila(tipo, fila, opts) {
     if (!r.ok) { msgBox.innerHTML = '<div class="msg error">' + r.error + '</div>'; btn.disabled = false; btn.textContent = 'Guardar'; return; }
     modal.remove();
     if (opts.alGuardar) { await opts.alGuardar(); } else { await cargarInstrumento(tipo); }
+  };
+}
+
+// Conecta los dos modos de ayuda de IA dentro del modal de abrirModalFila:
+// redactar un campo de texto libre desde una instrucción corta, y repartir
+// notas largas entre varios campos de texto libre a la vez. En ningún caso
+// se guarda nada solo — únicamente llena el formulario para que la persona
+// lo revise antes de darle a "Guardar".
+function _wireIAInstrumento(modal, cfg, tipo) {
+  // --- Campo por campo ---
+  Array.prototype.forEach.call(modal.querySelectorAll('.btn-ia-campo'), function (btn) {
+    btn.onclick = function () {
+      var key = btn.getAttribute('data-campo-key');
+      var panel = modal.querySelector('.panelIACampo[data-campo-key="' + key + '"]');
+      panel.classList.toggle('hidden');
+      if (!panel.classList.contains('hidden')) panel.querySelector('.iaCampoInstruccion').focus();
+    };
+  });
+  Array.prototype.forEach.call(modal.querySelectorAll('.iaCampoCancelar'), function (btn) {
+    btn.onclick = function () { btn.closest('.panelIACampo').classList.add('hidden'); };
+  });
+  Array.prototype.forEach.call(modal.querySelectorAll('.iaCampoGenerar'), function (btn) {
+    btn.onclick = async function () {
+      var panel = btn.closest('.panelIACampo');
+      var key = panel.getAttribute('data-campo-key');
+      var campoCfg = cfg.campos.filter(function (c) { return c.key === key; })[0];
+      var instruccion = panel.querySelector('.iaCampoInstruccion').value.trim();
+      var msgBox = panel.querySelector('.iaCampoMsg');
+      if (!instruccion) { msgBox.innerHTML = '<div class="msg error">Escribe qué quieres que diga este campo.</div>'; return; }
+      var contexto = {};
+      cfg.campos.forEach(function (c) {
+        if (c.key === key) return;
+        var elx = modal.querySelector('#f_' + c.key);
+        if (elx && elx.value && elx.value.trim()) contexto[c.label.replace(/\s*\*\s*$/, '')] = elx.value.trim();
+      });
+      btn.disabled = true; btn.textContent = 'Generando...'; msgBox.innerHTML = '';
+      var r = await api('generarCampoInstrumentoIA', {
+        instrumentoLabel: cfg.titulo,
+        campoLabel: campoCfg ? campoCfg.label.replace(/\s*\*\s*$/, '') : key,
+        instruccion: instruccion,
+        contexto: JSON.stringify(contexto)
+      });
+      btn.disabled = false; btn.textContent = 'Generar';
+      if (!r.ok) { msgBox.innerHTML = '<div class="msg error">' + r.error + '</div>'; return; }
+      modal.querySelector('#f_' + key).value = r.texto;
+      panel.classList.add('hidden');
+    };
+  });
+
+  // --- Repartir notas largas entre varios campos ---
+  var btnAbrir = modal.querySelector('#btnAbrirIAEstructurar');
+  if (!btnAbrir) return;
+  var panelE = modal.querySelector('#panelIAEstructurar');
+  btnAbrir.onclick = function () {
+    panelE.classList.toggle('hidden');
+    if (!panelE.classList.contains('hidden')) modal.querySelector('#notasIAEstructurar').focus();
+  };
+  modal.querySelector('#btnCancelarIAEstructurar').onclick = function () { panelE.classList.add('hidden'); };
+  modal.querySelector('#btnGenerarIAEstructurar').onclick = async function () {
+    var notas = modal.querySelector('#notasIAEstructurar').value.trim();
+    var msgBox = modal.querySelector('#iaEstructurarMsg');
+    if (!notas) { msgBox.innerHTML = '<div class="msg error">Pega o escribe las notas primero.</div>'; return; }
+    var camposTexto = cfg.campos.filter(function (c) { return c.tipo !== 'select'; })
+      .map(function (c) { return { key: c.key, label: c.label.replace(/\s*\*\s*$/, '') }; });
+
+    var btn = modal.querySelector('#btnGenerarIAEstructurar');
+    btn.disabled = true; btn.textContent = 'Repartiendo...'; msgBox.innerHTML = '';
+    var r = await api('estructurarInstrumentoIA', {
+      instrumentoLabel: cfg.titulo,
+      notas: notas,
+      campos: JSON.stringify(camposTexto)
+    });
+    btn.disabled = false; btn.textContent = 'Repartir en los campos';
+    if (!r.ok) { msgBox.innerHTML = '<div class="msg error">' + r.error + '</div>'; return; }
+
+    var llenados = 0;
+    Object.keys(r.campos || {}).forEach(function (key) {
+      var valor = r.campos[key];
+      if (!valor || !String(valor).trim()) return;
+      var elx = modal.querySelector('#f_' + key);
+      if (!elx) return;
+      elx.value = String(valor).trim();
+      llenados++;
+    });
+    msgBox.innerHTML = llenados
+      ? '<div class="msg ok">Se llenaron ' + llenados + ' campo(s) — revísalos antes de guardar.</div>'
+      : '<div class="msg error">No se encontró información en las notas para ningún campo.</div>';
+    if (llenados) panelE.classList.add('hidden');
   };
 }
 
