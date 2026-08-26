@@ -174,6 +174,18 @@ var TIPOS_PREGUNTA_CUA = ['Introductoria', 'Central', 'Profundización', 'Cierre
 var NIVELES_CONSENSO_CUA02 = ['Consenso amplio', 'Opiniones divididas', 'Opinión aislada'];
 
 /* ============================================================
+ * EJE 01 — RECLUTAMIENTO Y SELECCIÓN DE PERSONAL (INS-RS-04, INS-RS-06)
+ * ============================================================ */
+var CAT_ESTATUS_VACANTE = ['Abierta', 'En proceso', 'Con finalistas', 'Cubierta', 'Cancelada', 'Pausada'];
+var CAT_PRIORIDAD_RS = ['Alta', 'Media', 'Baja'];
+var CAT_DISPONIBILIDAD_RS = ['Inmediata', '1-2 semanas', '2-4 semanas', 'Más de 1 mes'];
+var CAT_ESTATUS_CANDIDATO_RS = ['Postulado', 'En revisión', 'Preseleccionado', 'Descartado', 'Contratado', 'Banco de talento'];
+var CAT_FUENTE_RECLUTAMIENTO_RS = ['Bolsa digital', 'Referido interno', 'Referido externo', 'Universidad / bolsa escolar',
+  'Redes sociales', 'Sitio propio de la empresa', 'Feria de empleo', 'Agencia / headhunter', 'Banco de talento interno',
+  'Reclutamiento en campo', 'Otro'];
+var SINO_RS = ['Sí', 'No'];
+
+/* ============================================================
  * CRM — Clientes / prospectos / interesados. No está ligado a
  * ningún proyecto (es la base comercial de Sintropía), así que no
  * vive dentro de INSTRUMENTOS/FAMILIAS: es su propia sección del
@@ -286,7 +298,8 @@ var FAMILIAS = {
   SAL: 'Salida',
   PED: 'Pedagógico',
   EST: 'Estratégico',
-  CUA: 'Cuestionarios'
+  CUA: 'Cuestionarios',
+  RS: 'Reclutamiento y Selección'
 };
 
 var INSTRUMENTOS = {
@@ -389,6 +402,69 @@ var INSTRUMENTOS = {
       { key: 'fuente', label: 'Fuente *', tipo: 'text', requerido: true },
       { key: 'fecha', label: 'Fecha del dato', tipo: 'date' },
       { key: 'notas', label: 'Notas', tipo: 'textarea' }
+    ]
+  },
+  rs04: {
+    familia: 'RS',
+    titulo: 'INS-RS-04 Ficha de vacante',
+    listar: 'listarRS04', guardar: 'guardarFilaRS04', eliminar: 'eliminarFilaRS04',
+    validar: 'validarRS04', descargar: 'generarDescargableRS04',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'puesto', label: 'Puesto' },
+      { key: 'area', label: 'Área' },
+      { key: 'estatus', label: 'Estatus' },
+      { key: 'responsable', label: 'Responsable' },
+      { key: 'fechaCierreProgramada', label: 'Cierre programado' }
+    ],
+    campos: [
+      { key: 'idRequisicion', label: 'ID_REQUISICION (RS-01, si existe)', tipo: 'text', placeholder: 'ej. REQ-01' },
+      { key: 'idPuesto', label: 'ID_PUESTO (RS-02, si existe)', tipo: 'text', placeholder: 'ej. PUE-01' },
+      { key: 'puesto', label: 'Puesto *', tipo: 'text', requerido: true },
+      { key: 'area', label: 'Área', tipo: 'text' },
+      { key: 'fechaApertura', label: 'Fecha de apertura *', tipo: 'date', requerido: true },
+      { key: 'fechaPublicacion', label: 'Fecha de publicación', tipo: 'date' },
+      { key: 'fechaCierreProgramada', label: 'Fecha de cierre programada *', tipo: 'date', requerido: true },
+      { key: 'fechaCierreReal', label: 'Fecha de cierre real', tipo: 'date' },
+      { key: 'estatus', label: 'Estatus de la vacante *', tipo: 'select', opciones: CAT_ESTATUS_VACANTE, requerido: true },
+      { key: 'responsable', label: 'Responsable del proceso (reclutador/a) *', tipo: 'text', requerido: true },
+      { key: 'candidatosRecibidos', label: 'Candidatos recibidos', tipo: 'number' },
+      { key: 'candidatosPreseleccionados', label: 'Candidatos preseleccionados', tipo: 'number' },
+      { key: 'finalistas', label: 'Finalistas', tipo: 'number' },
+      { key: 'candidatoContratado', label: 'ID_CANDIDATO contratado', tipo: 'text', placeholder: 'ej. CAND-01' },
+      { key: 'fechaContratacion', label: 'Fecha de contratación', tipo: 'date' },
+      { key: 'prioridad', label: 'Prioridad', tipo: 'select', opciones: CAT_PRIORIDAD_RS },
+      { key: 'observaciones', label: 'Observaciones', tipo: 'textarea' }
+    ]
+  },
+  rs06: {
+    familia: 'RS',
+    titulo: 'INS-RS-06 Base de candidatos',
+    listar: 'listarRS06', guardar: 'guardarFilaRS06', eliminar: 'eliminarFilaRS06',
+    validar: 'validarRS06', descargar: 'generarDescargableRS06',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'nombre', label: 'Nombre' },
+      { key: 'idVacante', label: 'Vacante' },
+      { key: 'fuente', label: 'Fuente' },
+      { key: 'estatus', label: 'Estatus' },
+      { key: 'consentimiento', label: 'Consentimiento' }
+    ],
+    campos: [
+      { key: 'nombre', label: 'Nombre completo *', tipo: 'text', requerido: true },
+      { key: 'telefono', label: 'Teléfono de contacto (10 dígitos) *', tipo: 'text', requerido: true },
+      { key: 'correo', label: 'Correo electrónico *', tipo: 'text', requerido: true },
+      { key: 'idVacante', label: 'ID_VACANTE a la que postula (RS-04) *', tipo: 'text', requerido: true, placeholder: 'ej. VAC-01' },
+      { key: 'fuente', label: 'Fuente de reclutamiento', tipo: 'select', opciones: CAT_FUENTE_RECLUTAMIENTO_RS },
+      { key: 'fechaPostulacion', label: 'Fecha de postulación *', tipo: 'date', requerido: true },
+      { key: 'estatus', label: 'Estatus del candidato *', tipo: 'select', opciones: CAT_ESTATUS_CANDIDATO_RS, requerido: true },
+      { key: 'disponibilidad', label: 'Disponibilidad para iniciar *', tipo: 'select', opciones: CAT_DISPONIBILIDAD_RS, requerido: true },
+      { key: 'ubicacion', label: 'Ubicación de residencia', tipo: 'text' },
+      { key: 'experienciaAnios', label: 'Años de experiencia general', tipo: 'number' },
+      { key: 'puestoActual', label: 'Puesto actual o más reciente', tipo: 'text' },
+      { key: 'consentimiento', label: 'Consentimiento de tratamiento de datos', tipo: 'select', opciones: SINO_RS },
+      { key: 'fechaConsentimiento', label: 'Fecha de consentimiento', tipo: 'date' },
+      { key: 'cv', label: 'CV (enlace de Drive)', tipo: 'text' }
     ]
   },
   ter01: {
@@ -1143,6 +1219,8 @@ var INSTRUMENTOS_INSTALABLES = [
   { clave: 'DIA01', nombre: 'INS-DIA-01 — Ficha de diagnóstico inicial', tipos: ['dia01'] },
   { clave: 'DIA02', nombre: 'INS-DIA-02 — Cuestionario diagnóstico (3 pestañas: Estructura, Reactivos, Respuestas)', tipos: ['dia02_estructura', 'dia02_reactivos', 'dia02_respuestas'] },
   { clave: 'DIA03', nombre: 'INS-DIA-03 — Ficha de caracterización territorial', tipos: ['dia03'] },
+  { clave: 'RS04', nombre: 'INS-RS-04 — Ficha de vacante', tipos: ['rs04'] },
+  { clave: 'RS06', nombre: 'INS-RS-06 — Base de candidatos', tipos: ['rs06'] },
   { clave: 'PLA01', nombre: 'INS-PLA-01 — Árbol de problemas', tipos: ['pla01'] },
   { clave: 'PLA02', nombre: 'INS-PLA-02 — Árbol de objetivos', tipos: ['pla02'] },
   { clave: 'TER01', nombre: 'INS-TER-01 — Mapa de actores y recursos', tipos: ['ter01'] },
