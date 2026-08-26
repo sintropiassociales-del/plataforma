@@ -110,6 +110,31 @@ var CAT_PARENTESCO = ['Cónyuge/pareja', 'Hijo/a', 'Padre', 'Madre', 'Hermano/a'
 var CAT_TENENCIA_VIVIENDA = ['Propia pagada', 'Propia con crédito', 'Rentada', 'Prestada', 'Familiar'];
 var CAT_TIPO_VIVIENDA = ['Casa independiente', 'Departamento', 'Cuarto en vecindad', 'Otro'];
 var CAT_MATERIAL_CONSTRUCCION = ['Concreto/tabique', 'Lámina', 'Madera', 'Mixto'];
+var CAT_NUM_EMPLEOS_ANTERIORES = ['0', '1', '2', '3 o más'];
+var CAT_PERMANENCIA_HOGAR = ['Tiempo completo', 'Parcial / temporal', 'Fines de semana', 'Otro'];
+
+// Bloques de empleo actual / anteriores para CSE-01 (SE-03). Las claves
+// deben coincidir exactamente con las columnas de SE03_HEADERS en WebApp.gs.
+var CAMPOS_EMPLEO_ACTUAL_SE03 = [
+  { key: 'empresaActual', label: 'Nombre de la empresa donde trabajas actualmente', tipo: 'text', requerido: true },
+  { key: 'giroActual', label: 'Giro de la empresa (a qué se dedica)', tipo: 'text', requerido: true },
+  { key: 'puestoActual', label: 'Puesto que ocupas', tipo: 'text', requerido: true },
+  { key: 'fechaInicioActual', label: 'Fecha en la que empezaste a trabajar ahí', tipo: 'date', requerido: true },
+  { key: 'nombreContactoActual', label: 'Nombre de alguien que pueda confirmar que trabajas ahí', tipo: 'text', requerido: true },
+  { key: 'contactoActual', label: 'Teléfono o correo de esa persona de contacto', tipo: 'text', requerido: true }
+];
+function bloqueEmpleoAnteriorSE03(n) {
+  return [
+    { key: 'empresaAnt' + n, label: 'Nombre de la empresa (empleo anterior ' + n + ')', tipo: 'text', requerido: true },
+    { key: 'giroAnt' + n, label: 'Giro de la empresa (a qué se dedicaba)', tipo: 'text', requerido: true },
+    { key: 'puestoAnt' + n, label: 'Puesto que ocupabas', tipo: 'text', requerido: true },
+    { key: 'fechaInicioAnt' + n, label: 'Fecha de inicio', tipo: 'date', requerido: true },
+    { key: 'fechaTerminoAnt' + n, label: 'Fecha de término', tipo: 'date', requerido: true },
+    { key: 'motivoSalidaAnt' + n, label: 'Motivo de salida', tipo: 'text', requerido: true },
+    { key: 'nombreContactoAnt' + n, label: 'Nombre de alguien que pueda confirmar que trabajaste ahí', tipo: 'text', requerido: true },
+    { key: 'contactoAnt' + n, label: 'Teléfono o correo de esa persona de contacto', tipo: 'text', requerido: true }
+  ];
+}
 
 // Cada sección corresponde a INS-SE-02..06. Los campos son un subconjunto de
 // los que usa el equipo interno: se excluyen ID_AUTORIZACION/ID_VACANTE/
@@ -129,8 +154,11 @@ var SECCIONES = [
       { key: 'domicilioActual', label: 'Domicilio actual completo', tipo: 'textarea', requerido: true, placeholder: 'Calle, número, colonia, municipio, estado, código postal' },
       { key: 'tiempoResidencia', label: '¿Cuánto tiempo llevas viviendo ahí?', tipo: 'select', opciones: CAT_TIEMPO_RESIDENCIA, requerido: true },
       { key: 'telefono', label: 'Teléfono de contacto', tipo: 'text', requerido: true },
-      { key: 'correo', label: 'Correo electrónico', tipo: 'text', requerido: false },
-      { key: 'escolaridadMaxima', label: 'Escolaridad máxima', tipo: 'select', opciones: CAT_NIVEL_ESCOLARIDAD, requerido: true }
+      { key: 'correo', label: 'Correo electrónico', tipo: 'email', requerido: false, placeholder: 'nombre@correo.com' },
+      { key: 'escolaridadMaxima', label: 'Escolaridad máxima', tipo: 'select', opciones: CAT_NIVEL_ESCOLARIDAD, requerido: true },
+      { key: 'vecesMudanzaDosAnios', label: '¿Cuántas veces te has mudado de domicilio en los últimos 2 años?', tipo: 'number', requerido: true },
+      { key: 'contactoEmergencia', label: 'Contacto de emergencia (nombre y teléfono)', tipo: 'text', requerido: true, placeholder: 'Nombre completo y teléfono' },
+      { key: 'accesoTelefono', label: '¿Tienes acceso regular a un teléfono donde podamos contactarte?', tipo: 'select', opciones: SINO, requerido: true }
     ]
   },
   {
@@ -148,7 +176,10 @@ var SECCIONES = [
       { key: 'participaProgramasSociales', label: '¿Participas en algún programa social?', tipo: 'text', requerido: false, placeholder: 'ej. Sí (especificar) / No' },
       { key: 'referencia1', label: 'Referencia personal 1 (nombre y teléfono)', tipo: 'text', requerido: true },
       { key: 'referencia2', label: 'Referencia personal 2 (nombre y teléfono)', tipo: 'text', requerido: true },
-      { key: 'observaciones', label: 'Algo más que quieras contarnos', tipo: 'textarea', requerido: false }
+      { key: 'observaciones', label: 'Algo más que quieras contarnos', tipo: 'textarea', requerido: false },
+      { key: 'periodoSinEmpleo', label: '¿Has tenido periodos de más de 6 meses sin ningún ingreso en los últimos 2 años?', tipo: 'select', opciones: SINO, requerido: true },
+      { key: 'dependeTransporteTercero', label: '¿Dependes de que alguien más te lleve para poder trasladarte a tu trabajo?', tipo: 'select', opciones: SINO, requerido: true },
+      { key: 'documentosExperiencia', label: '¿Cuentas con documentos (recibos, contratos, cartas) que respalden tu experiencia laboral reciente?', tipo: 'select', opciones: SINO, requerido: true }
     ]
   },
   {
@@ -163,7 +194,10 @@ var SECCIONES = [
       { key: 'aportaIngreso', label: '¿Aporta ingreso al hogar?', tipo: 'select', opciones: SINO, requerido: true },
       { key: 'ingresoAportado', label: 'Ingreso mensual que aporta (si aplica)', tipo: 'number', requerido: false },
       { key: 'escolaridad', label: 'Escolaridad', tipo: 'select', opciones: CAT_NIVEL_ESCOLARIDAD, requerido: false },
-      { key: 'observaciones', label: 'Observaciones', tipo: 'textarea', requerido: false }
+      { key: 'observaciones', label: 'Observaciones', tipo: 'textarea', requerido: false },
+      { key: 'dependeCuidadoDirecto', label: '¿Esta persona requiere que alguien esté pendiente de ella regularmente (por edad u otra razón)?', tipo: 'select', opciones: SINO, requerido: true },
+      { key: 'permanenciaHogar', label: 'Permanencia de esta persona en el hogar', tipo: 'select', opciones: CAT_PERMANENCIA_HOGAR, requerido: true },
+      { key: 'documentosVigentes', label: '¿Cuenta con documentos de identificación vigentes?', tipo: 'select', opciones: SINO, requerido: true }
     ]
   },
   {
@@ -176,7 +210,12 @@ var SECCIONES = [
       { key: 'numHabitaciones', label: 'Número de habitaciones (sin cocina ni baño)', tipo: 'number', requerido: true },
       { key: 'serviciosDisponibles', label: 'Servicios con los que cuenta tu vivienda', tipo: 'text', requerido: true, placeholder: 'ej. Agua entubada, Drenaje, Luz eléctrica, Internet' },
       { key: 'zona', label: 'Zona o colonia', tipo: 'text', requerido: true },
-      { key: 'observaciones', label: 'Observaciones sobre tu vivienda o entorno', tipo: 'textarea', requerido: false }
+      { key: 'mapaUbicacion', label: 'Ubicación en mapa (opcional)', tipo: 'text', requerido: false, placeholder: 'Pega aquí un enlace de Google Maps de tu domicilio' },
+      { key: 'referenciaUbicacion', label: 'Referencia para llegar a tu domicilio (opcional)', tipo: 'textarea', requerido: false, placeholder: 'ej. Frente a la tienda tal, portón azul, casa de dos pisos...' },
+      { key: 'observaciones', label: 'Observaciones sobre tu vivienda o entorno', tipo: 'textarea', requerido: false },
+      { key: 'alumbradoPublico', label: '¿La calle donde vives cuenta con alumbrado público?', tipo: 'select', opciones: SINO, requerido: true },
+      { key: 'viviendaCompartidaTerceros', label: '¿Tu vivienda es compartida con personas ajenas a tu núcleo familiar (además de tu familia)?', tipo: 'select', opciones: SINO, requerido: true },
+      { key: 'masDeUnaSalidaEmergencia', label: '¿Tu vivienda cuenta con más de una salida en caso de emergencia?', tipo: 'select', opciones: SINO, requerido: true }
     ]
   },
   {
@@ -190,7 +229,10 @@ var SECCIONES = [
       { key: 'egresoEducacion', label: 'Gasto mensual en educación', tipo: 'number', requerido: false },
       { key: 'egresoSalud', label: 'Gasto mensual en salud', tipo: 'number', requerido: false },
       { key: 'egresoDeudas', label: 'Gasto mensual en deudas o créditos', tipo: 'number', requerido: false },
-      { key: 'observaciones', label: 'Observaciones', tipo: 'textarea', requerido: false }
+      { key: 'observaciones', label: 'Observaciones', tipo: 'textarea', requerido: false },
+      { key: 'deudasInformales', label: '¿Tienes deudas o préstamos informales (tandas, empeños, préstamos entre personas)?', tipo: 'select', opciones: SINO, requerido: true },
+      { key: 'dependienteExternoRegular', label: '¿Alguien fuera de tu hogar depende económicamente de ti de forma regular?', tipo: 'select', opciones: SINO, requerido: true },
+      { key: 'fondoAhorroEmergencia', label: '¿Cuentas con algún ahorro o fondo disponible para una emergencia?', tipo: 'select', opciones: SINO, requerido: true }
     ]
   }
 ];
@@ -260,6 +302,63 @@ function leerCampos(campos) {
   return { datos: datos, faltantes: faltantes };
 }
 
+// Igual que leerCampos, pero sin marcar nada como faltante — sirve para leer
+// bloques cuyo carácter obligatorio depende de otra respuesta (ej. los
+// empleos anteriores del CSE-01, que solo son obligatorios hasta el número
+// que el propio candidato declaró).
+function leerCamposLibre(campos) {
+  var datos = {};
+  campos.forEach(function (c) {
+    var el = document.getElementById('f_' + c.key);
+    datos[c.key] = el ? el.value.trim() : '';
+  });
+  return datos;
+}
+
+/* -------- "Candados" de formato: mayúsculas/minúsculas y correo -------- *
+ * Réplica en el cliente (con mensajes amigables por nombre de campo) de la
+ * validación que también corre en el backend (_validarCandadosCandidatoSE
+ * en WebApp.gs) como defensa en profundidad. */
+var CAMPOS_MAYUSCULAS = {
+  se02: ['nombreCompleto', 'domicilioActual', 'contactoEmergencia'],
+  se03: ['referencia1', 'referencia2', 'observaciones', 'empresaActual', 'nombreContactoActual',
+    'empresaAnt1', 'nombreContactoAnt1', 'empresaAnt2', 'nombreContactoAnt2', 'empresaAnt3', 'nombreContactoAnt3'],
+  se04: ['nombreIntegrante', 'ocupacion', 'observaciones'],
+  se05: ['zona', 'observaciones', 'referenciaUbicacion'],
+  se06: ['observaciones']
+};
+
+function tieneMayusYMinusIncorrecto(texto) {
+  var letras = String(texto || '').replace(/[^A-Za-zÁÉÍÓÚÑÜáéíóúñü]/g, '');
+  if (letras.length < 4) return false; // muy corto para juzgar (iniciales, siglas, etc.)
+  var mayus = letras.replace(/[^A-ZÁÉÍÓÚÑÜ]/g, '').length;
+  var minus = letras.replace(/[^a-záéíóúñü]/g, '').length;
+  return mayus === letras.length || minus === letras.length;
+}
+
+function correoValido(correo) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(correo || '').trim());
+}
+
+// clave: sección (se02..se06). datos: objeto key->valor ya leído.
+// camposDefs: lista de field-defs de esa sección (para mostrar el label real).
+// Devuelve un mensaje de error (string) o null si todo está bien.
+function validarCandados(clave, datos, camposDefs) {
+  if (clave === 'se02' && datos.correo && String(datos.correo).trim() && !correoValido(datos.correo)) {
+    return 'El correo electrónico no parece válido — revísalo (ej. nombre@correo.com). Si te equivocaste de dominio (como "gmial.com" o "hotmial.com"), corrígelo antes de continuar.';
+  }
+  var claves = CAMPOS_MAYUSCULAS[clave] || [];
+  for (var i = 0; i < claves.length; i++) {
+    var v = datos[claves[i]];
+    if (v && tieneMayusYMinusIncorrecto(v)) {
+      var def = (camposDefs || []).filter(function (c) { return c.key === claves[i]; })[0];
+      var nombreCampo = def ? def.label : claves[i];
+      return 'Revisa el campo "' + nombreCampo + '": no lo escribas todo en MAYÚSCULAS ni todo en minúsculas — usa mayúsculas y minúsculas como en un texto normal.';
+    }
+  }
+  return null;
+}
+
 function progresoHtml() {
   var total = SECCIONES.length;
   return '<div class="progreso">' + SECCIONES.map(function (s, i) {
@@ -318,6 +417,7 @@ function renderBienvenida() {
 function renderPaso() {
   var sec = SECCIONES[state.paso];
   if (sec.repetible) { renderPasoSE04(); return; }
+  if (sec.clave === 'se03') { renderPasoSE03(); return; }
   var registroActual = state.registros[sec.clave] || {};
   app.innerHTML =
     progresoHtml() +
@@ -340,6 +440,8 @@ async function guardarSeccionActual(sec, codigoExistente) {
     msgBox.innerHTML = '<div class="msg error">Falta completar: ' + escapeHtml(lectura.faltantes.join(', ')) + '.</div>';
     return;
   }
+  var errorCandado = validarCandados(sec.clave, lectura.datos, sec.campos);
+  if (errorCandado) { msgBox.innerHTML = '<div class="msg error">' + escapeHtml(errorCandado) + '</div>'; return; }
   var btn = document.getElementById('btnSiguiente');
   btn.disabled = true; btn.textContent = 'Guardando...';
   var payload = Object.assign({ instrumento: sec.clave }, lectura.datos);
@@ -348,6 +450,119 @@ async function guardarSeccionActual(sec, codigoExistente) {
   btn.disabled = false; btn.textContent = 'Guardar y continuar';
   if (!r.ok) { msgBox.innerHTML = '<div class="msg error">' + escapeHtml(r.error || 'No se pudo guardar.') + '</div>'; return; }
   state.registros[sec.clave] = Object.assign({}, lectura.datos, { codigo: r.codigo });
+  if (state.paso < SECCIONES.length - 1) { state.paso++; renderPaso(); }
+  else { state.paso = SECCIONES.length; renderFin(); }
+}
+
+/* -------- SE-03: empleo actual + hasta 3 empleos anteriores -------- *
+ * El bloque de "empleo actual" solo se pide (y solo es obligatorio) cuando
+ * la situación laboral declarada es "Empleado/a" o "Trabajo informal". Los
+ * bloques de empleos anteriores se muestran/exigen según lo que el propio
+ * candidato declare en "¿Cuántos empleos anteriores has tenido?" — si tuvo
+ * menos de 3, puede decirlo y avanzar sin inventar información. Sin el
+ * contacto de referencia de cada empleo declarado, no se puede continuar. */
+function renderPasoSE03() {
+  var sec = SECCIONES[state.paso];
+  var reg = state.registros.se03 || {};
+  var idxCorte = -1;
+  sec.campos.forEach(function (c, i) { if (c.key === 'referencia1' && idxCorte === -1) idxCorte = i; });
+  var antes = sec.campos.slice(0, idxCorte);
+  var despues = sec.campos.slice(idxCorte);
+
+  var empleoActualHtml = CAMPOS_EMPLEO_ACTUAL_SE03.map(function (c) { return campoHtml(c, reg[c.key]); }).join('');
+  var numEmpleosCampo = { key: 'numEmpleosAnteriores', label: '¿Cuántos empleos anteriores has tenido (sin contar el actual)?', tipo: 'select', opciones: CAT_NUM_EMPLEOS_ANTERIORES, requerido: true };
+  var bloquesHtml = [1, 2, 3].map(function (n) {
+    return '<div class="bloque-empleo-ant" data-bloque="' + n + '" style="display:none">' +
+      '<h2 style="font-size:15px;margin:18px 0 2px">Empleo anterior ' + n + '</h2>' +
+      bloqueEmpleoAnteriorSE03(n).map(function (c) { return campoHtml(c, reg[c.key]); }).join('') +
+      '</div>';
+  }).join('');
+
+  app.innerHTML =
+    progresoHtml() +
+    '<h2>' + escapeHtml(sec.titulo) + '</h2>' +
+    '<p class="subtle" style="margin-top:0">' + escapeHtml(sec.intro) + '</p>' +
+    '<div id="secMsg"></div>' +
+    '<form id="secForm">' +
+      antes.map(function (c) { return campoHtml(c, reg[c.key]); }).join('') +
+      '<h2 id="tituloEmpleoActual" style="font-size:15px;margin:18px 0 2px">Tu empleo actual</h2>' +
+      '<div id="bloqueEmpleoActual">' + empleoActualHtml + '</div>' +
+      '<h2 style="font-size:15px;margin:18px 0 2px">Empleos anteriores</h2>' +
+      '<p class="hint" style="margin-top:-2px">Necesitamos poder confirmar tu experiencia laboral — por eso pedimos el contacto de tu empleo actual (si tienes) y de tus empleos anteriores, hasta un máximo de 3.</p>' +
+      campoHtml(numEmpleosCampo, reg.numEmpleosAnteriores) +
+      bloquesHtml +
+      despues.map(function (c) { return campoHtml(c, reg[c.key]); }).join('') +
+    '</form>' +
+    '<div class="fila-botones">' +
+      (state.paso > 0 ? '<button class="secondary" id="btnAtras">Atrás</button>' : '') +
+      '<button class="primary" id="btnSiguiente">Guardar y continuar</button>' +
+    '</div>';
+
+  function actualizarVisibilidadSE03() {
+    var elSituacion = document.getElementById('f_situacionLaboral');
+    var conEmpleo = elSituacion && (elSituacion.value === 'Empleado/a' || elSituacion.value === 'Trabajo informal');
+    document.getElementById('tituloEmpleoActual').style.display = conEmpleo ? '' : 'none';
+    document.getElementById('bloqueEmpleoActual').style.display = conEmpleo ? '' : 'none';
+
+    var n = document.getElementById('f_numEmpleosAnteriores').value;
+    var requeridos = n === '3 o más' ? 3 : (parseInt(n, 10) || 0);
+    [1, 2, 3].forEach(function (i) {
+      var div = document.querySelector('.bloque-empleo-ant[data-bloque="' + i + '"]');
+      if (div) div.style.display = i <= requeridos ? '' : 'none';
+    });
+  }
+  document.getElementById('f_situacionLaboral').addEventListener('change', actualizarVisibilidadSE03);
+  document.getElementById('f_numEmpleosAnteriores').addEventListener('change', actualizarVisibilidadSE03);
+  actualizarVisibilidadSE03();
+
+  if (state.paso > 0) document.getElementById('btnAtras').onclick = function () { state.paso--; renderPaso(); };
+  document.getElementById('btnSiguiente').onclick = function () { guardarSeccionSE03(reg.codigo); };
+}
+
+async function guardarSeccionSE03(codigoExistente) {
+  var sec = SECCIONES[state.paso];
+  var msgBox = document.getElementById('secMsg');
+  var lecturaBase = leerCampos(sec.campos);
+  var faltantes = lecturaBase.faltantes.slice();
+
+  var conEmpleo = lecturaBase.datos.situacionLaboral === 'Empleado/a' || lecturaBase.datos.situacionLaboral === 'Trabajo informal';
+  var datosActual = leerCamposLibre(CAMPOS_EMPLEO_ACTUAL_SE03);
+  if (conEmpleo) {
+    CAMPOS_EMPLEO_ACTUAL_SE03.forEach(function (c) { if (!datosActual[c.key]) faltantes.push(c.label); });
+  }
+
+  var n = document.getElementById('f_numEmpleosAnteriores').value;
+  if (!n) faltantes.push('¿Cuántos empleos anteriores has tenido?');
+  var requeridos = n === '3 o más' ? 3 : (parseInt(n, 10) || 0);
+  var datosAnt = {}, camposAntTodos = [];
+  for (var i = 1; i <= 3; i++) {
+    var camposBloque = bloqueEmpleoAnteriorSE03(i);
+    camposAntTodos = camposAntTodos.concat(camposBloque);
+    var datosBloque = leerCamposLibre(camposBloque);
+    Object.assign(datosAnt, datosBloque);
+    if (i <= requeridos) {
+      camposBloque.forEach(function (c) { if (!datosBloque[c.key]) faltantes.push(c.label); });
+    }
+  }
+
+  if (faltantes.length) {
+    msgBox.innerHTML = '<div class="msg error">Falta completar: ' + escapeHtml(faltantes.join(', ')) + '.</div>';
+    return;
+  }
+
+  var datosCompletos = Object.assign({}, lecturaBase.datos, datosActual, { numEmpleosAnteriores: n }, datosAnt);
+  var camposDefsCompletos = sec.campos.concat(CAMPOS_EMPLEO_ACTUAL_SE03).concat(camposAntTodos);
+  var errorCandado = validarCandados('se03', datosCompletos, camposDefsCompletos);
+  if (errorCandado) { msgBox.innerHTML = '<div class="msg error">' + escapeHtml(errorCandado) + '</div>'; return; }
+
+  var btn = document.getElementById('btnSiguiente');
+  btn.disabled = true; btn.textContent = 'Guardando...';
+  var payload = Object.assign({ instrumento: 'se03' }, datosCompletos);
+  if (codigoExistente) payload.codigo = codigoExistente;
+  var r = await api('candidatoSEGuardarFila', payload);
+  btn.disabled = false; btn.textContent = 'Guardar y continuar';
+  if (!r.ok) { msgBox.innerHTML = '<div class="msg error">' + escapeHtml(r.error || 'No se pudo guardar.') + '</div>'; return; }
+  state.registros.se03 = Object.assign({}, datosCompletos, { codigo: r.codigo });
   if (state.paso < SECCIONES.length - 1) { state.paso++; renderPaso(); }
   else { state.paso = SECCIONES.length; renderFin(); }
 }
@@ -418,6 +633,8 @@ function abrirFormIntegrante(itExistente) {
     var lectura = leerCampos(sec.campos);
     var msgBox = document.getElementById('integranteMsg');
     if (lectura.faltantes.length) { msgBox.innerHTML = '<div class="msg error">Falta completar: ' + escapeHtml(lectura.faltantes.join(', ')) + '.</div>'; return; }
+    var errorCandado = validarCandados('se04', lectura.datos, sec.campos);
+    if (errorCandado) { msgBox.innerHTML = '<div class="msg error">' + escapeHtml(errorCandado) + '</div>'; return; }
     var btn = document.getElementById('btnGuardarIntegrante');
     btn.disabled = true; btn.textContent = 'Guardando...';
     var payload = Object.assign({ instrumento: 'se04' }, lectura.datos);
