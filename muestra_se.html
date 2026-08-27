@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Semáforo de riesgo del proceso de Estudios Socioeconómicos — muestra gratuita de Sintropía Social.">
+<title>Semáforo de riesgo SE — Sintropía Social</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+  :root {
+    --purple: #631EEB;
+    --purple-dark: #4E17B8;
+    --orange: #FF7929;
+    --bg: #F5F3FC;
+    --card: #FFFFFF;
+    --text: #2C2C2C;
+    --subtle: #6B6B78;
+    --border: #E6E2F5;
+    --error: #C0392B;
+    --error-bg: #FDECEA;
+    --verde: #1E8449; --verde-bg: #EAF7EE;
+    --amarillo: #9A7B0A; --amarillo-bg: #FDF6E3;
+    --rojo: #C0392B; --rojo-bg: #FDECEA;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: 'Open Sans', -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.55;
+  }
+  header.top {
+    background: var(--purple); color: #fff; padding: 26px 18px 44px; text-align: center;
+    border-radius: 0 0 22px 22px;
+  }
+  header.top .marca { font-size: 20px; font-weight: 800; letter-spacing: .3px; }
+  header.top .marca span { color: var(--orange); }
+  header.top .subt { font-size: 13.5px; opacity: .92; margin-top: 6px; max-width: 440px; margin-left: auto; margin-right: auto; }
+  main { max-width: 660px; margin: -26px auto 40px; padding: 0 16px; }
+  .card {
+    background: var(--card); border-radius: 14px; padding: 26px 24px; margin-bottom: 16px;
+    box-shadow: 0 6px 20px rgba(99,30,235,.08); border: 1px solid var(--border);
+  }
+  h1 { font-size: 21px; margin: 0 0 8px; }
+  h2 { font-size: 18px; margin: 0 0 4px; color: var(--purple-dark); }
+  h3 { font-size: 15px; margin: 22px 0 2px; color: var(--purple-dark); }
+  p.subtle, .subtle { color: var(--subtle); font-size: 13.5px; }
+  .progreso { display: flex; gap: 6px; margin: 18px 0 22px; }
+  .progreso .paso { flex: 1; height: 6px; border-radius: 4px; background: var(--border); }
+  .progreso .paso.hecho { background: var(--orange); }
+  .progreso .paso.actual { background: var(--purple); }
+  label { display: block; font-size: 13.5px; font-weight: 600; margin: 14px 0 5px; }
+  label .req { color: var(--orange); }
+  input[type=text], input[type=email], select {
+    width: 100%; padding: 11px 12px; border: 1.5px solid var(--border); border-radius: 9px;
+    font-size: 15px; font-family: inherit; background: #fff; color: var(--text);
+  }
+  input:focus, select:focus { outline: none; border-color: var(--purple); }
+  .fila-botones { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+  button {
+    font-family: inherit; font-size: 14.5px; font-weight: 700; border-radius: 999px;
+    padding: 12px 24px; border: none; cursor: pointer;
+  }
+  button.primary { background: var(--purple); color: #fff; }
+  button.primary:hover { background: var(--purple-dark); }
+  button.secondary { background: #fff; color: var(--purple); border: 1.5px solid var(--purple); }
+  button:disabled { opacity: .5; cursor: default; }
+  .msg { padding: 10px 13px; border-radius: 9px; font-size: 13.5px; margin: 12px 0; }
+  .msg.error { background: var(--error-bg); color: var(--error); }
+
+  /* Consentimiento + honeypot */
+  .consentimiento { display: flex; gap: 10px; align-items: flex-start; margin-top: 18px; background: #FAF8FF;
+    border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .consentimiento input { margin-top: 3px; }
+  .consentimiento label { margin: 0; font-weight: 400; font-size: 13px; }
+  .campo-trampa { position: absolute; left: -9999px; top: -9999px; opacity: 0; height: 0; overflow: hidden; }
+
+  /* Preguntas por categoría */
+  .bloque-categoria { margin-bottom: 26px; }
+  .bloque-categoria .num-bloque { display: inline-block; font-size: 11.5px; font-weight: 700; letter-spacing: .5px;
+    color: var(--purple); text-transform: uppercase; margin-bottom: 2px; }
+  .bloque-categoria .nombre-categoria { font-size: 16px; font-weight: 700; margin: 0 0 14px; }
+  .pregunta-riesgo { border-top: 1px solid var(--border); padding: 16px 0; }
+  .pregunta-riesgo:first-of-type { border-top: none; padding-top: 4px; }
+  .pregunta-texto { font-size: 14.5px; font-weight: 600; margin-bottom: 10px; }
+  .opciones-riesgo { display: flex; gap: 8px; flex-wrap: wrap; }
+  .op-choice {
+    flex: 1; min-width: 96px; border: 1.5px solid var(--border); border-radius: 9px; background: #fff;
+    color: var(--subtle); font-weight: 600; font-size: 13px; padding: 10px 8px; cursor: pointer; text-align: center;
+    transition: background .12s, border-color .12s, color .12s;
+  }
+  .op-choice.marcada { background: var(--purple); border-color: var(--purple); color: #fff; }
+
+  /* Resultado / semáforo */
+  .semaforo-box { text-align: center; padding: 8px 4px 4px; }
+  .semaforo-luz {
+    display: inline-block; width: 22px; height: 22px; border-radius: 50%; margin-right: 8px; vertical-align: middle;
+  }
+  .semaforo-luz.verde { background: var(--verde); }
+  .semaforo-luz.amarillo { background: var(--amarillo); }
+  .semaforo-luz.rojo { background: var(--rojo); }
+  .semaforo-etiqueta {
+    display: inline-block; font-size: 15px; font-weight: 800; letter-spacing: .3px; text-transform: uppercase;
+    vertical-align: middle;
+  }
+  .semaforo-etiqueta.verde { color: var(--verde); }
+  .semaforo-etiqueta.amarillo { color: var(--amarillo); }
+  .semaforo-etiqueta.rojo { color: var(--rojo); }
+  .semaforo-puntaje { font-size: 13px; color: var(--subtle); margin: 6px 0 0; }
+
+  .categoria-resultado { border: 1.5px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 12px; }
+  .categoria-resultado .nombre { font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+  .barra-riesgo { height: 8px; border-radius: 5px; background: var(--border); overflow: hidden; margin-bottom: 4px; }
+  .barra-riesgo .relleno { height: 100%; border-radius: 5px; }
+  .barra-riesgo .relleno.baja { background: var(--verde); }
+  .barra-riesgo .relleno.media { background: var(--amarillo); }
+  .barra-riesgo .relleno.alta { background: var(--rojo); }
+
+  .cta { background: linear-gradient(135deg, var(--purple), var(--purple-dark)); color: #fff; border-radius: 14px;
+    padding: 22px 24px; margin-top: 8px; }
+  .cta h2 { color: #fff; }
+  .cta p { font-size: 13.5px; opacity: .95; }
+  .cta a { color: #fff; font-weight: 700; }
+  .cta .fila-botones a.boton-cta {
+    display: inline-block; text-decoration: none; border-radius: 999px; padding: 12px 22px; font-weight: 700; font-size: 14px;
+  }
+  .cta .boton-cta.solido { background: #fff; color: var(--purple-dark); }
+  .cta .boton-cta.contorno { border: 1.5px solid rgba(255,255,255,.7); color: #fff; }
+
+  footer.pie { text-align: center; font-size: 12px; color: var(--subtle); padding: 10px 16px 34px; }
+  footer.pie .wordmark { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+  footer.pie a { color: var(--purple); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="marca">Sintropía <span>Social</span></div>
+  <div class="subt">Semáforo de riesgo — ¿qué tan expuesto está tu proceso de contratación?</div>
+</header>
+
+<main>
+  <div id="app" class="card">
+    <p class="subtle">Cargando...</p>
+  </div>
+</main>
+
+<footer class="pie">
+  <div class="wordmark"><span style="color:var(--purple)">Sintropía</span> <span style="color:var(--orange)">Social</span></div>
+  <a href="https://sintropiassociales-del.github.io/">Sintropía Social</a> · <a href="mailto:comunicacion@sintropiasocial.com">comunicacion@sintropiasocial.com</a>
+</footer>
+
+<script>
+var WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxZbLiOP7QXvrgUIDhhVciVGY-Yval3YBvqBHOpQfK8El2wHXNNBtZvsnkbwMaJUss/exec';
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+
+function jsonp(action, params) {
+  return new Promise(function (resolve) {
+    var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+    var url = WEB_APP_URL + '?action=' + encodeURIComponent(action) + '&callback=' + cbName;
+    params = params || {};
+    for (var k in params) {
+      if (params[k] !== undefined && params[k] !== null) url += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+    }
+    var script = document.createElement('script');
+    var cleaned = false;
+    function cleanup() { if (cleaned) return; cleaned = true; delete window[cbName]; if (script.parentNode) script.parentNode.removeChild(script); }
+    window[cbName] = function (data) { cleanup(); resolve(data); };
+    script.onerror = function () { cleanup(); resolve({ ok: false, error: 'No se pudo conectar. Revisa tu conexión a internet e intenta de nuevo.' }); };
+    setTimeout(function () { if (!cleaned) { cleanup(); resolve({ ok: false, error: 'La plataforma tardó demasiado en responder. Intenta de nuevo.' }); } }, 25000);
+    script.src = url;
+    document.body.appendChild(script);
+  });
+}
+
+/* ============================================================
+ * Catálogo de riesgo — 5 categorías × 4 preguntas = 20. Dos tipos:
+ *  - "practica": pregunta sobre qué tan riguroso es TU proceso hoy.
+ *    Responder "Sí, siempre" = 0 puntos de riesgo; "No" = 2 (hueco).
+ *  - "exposicion": pregunta sobre qué tan expuesto está el puesto/área.
+ *    Responder "Sí" = 2 puntos de riesgo (mayor exposición); "No" = 0.
+ * Con 20 preguntas × máx. 2 puntos = 40 puntos posibles.
+ * ============================================================ */
+var OPCIONES_PRACTICA = [
+  { etiqueta: 'Sí, siempre', puntos: 0 },
+  { etiqueta: 'A veces / parcial', puntos: 1 },
+  { etiqueta: 'No', puntos: 2 }
+];
+var OPCIONES_EXPOSICION = [
+  { etiqueta: 'No', puntos: 0 },
+  { etiqueta: 'Parcialmente', puntos: 1 },
+  { etiqueta: 'Sí', puntos: 2 }
+];
+
+var CATEGORIAS_RIESGO = [
+  {
+    clave: 'verificacion', nombre: 'Verificación de identidad y trayectoria', tipo: 'practica',
+    items: [
+      '¿Verificas referencias laborales por contacto directo de los últimos 3 empleos del candidato?',
+      '¿Confirmas la autenticidad de identificación oficial y comprobantes que te entregan?',
+      '¿Indagas y documentas los motivos de salida de empleos anteriores?',
+      '¿Das seguimiento cuando hay huecos de empleo sin explicación en el historial?'
+    ]
+  },
+  {
+    clave: 'vivienda', nombre: 'Estabilidad y seguridad de la vivienda', tipo: 'practica',
+    items: [
+      '¿Verificas el domicilio real del candidato (visita, geolocalización o comprobante)?',
+      '¿Conoces la estabilidad habitacional del candidato (tiempo en su domicilio actual)?',
+      '¿Evalúas la seguridad física del entorno donde vive, cuando el puesto lo amerita?',
+      '¿Tienes un protocolo definido para candidatos que no pueden comprobar domicilio fijo?'
+    ]
+  },
+  {
+    clave: 'financiera', nombre: 'Situación financiera', tipo: 'practica',
+    items: [
+      '¿Indagas compromisos financieros relevantes cuando el puesto maneja dinero o valores?',
+      '¿Tu proceso detecta señales de sobreendeudamiento del candidato?',
+      '¿Sabes si el candidato depende económicamente de terceros de forma significativa?',
+      '¿Tienes un protocolo distinto para puestos con manejo de efectivo/inventario vs. los que no?'
+    ]
+  },
+  {
+    clave: 'redes', nombre: 'Redes de apoyo y contexto social', tipo: 'practica',
+    items: [
+      '¿Sabes si el candidato tiene personas dependientes a su cargo (menores, adultos mayores, personas con discapacidad)?',
+      '¿Tu proceso identifica señales de aislamiento o redes de apoyo débiles?',
+      '¿Sabes cómo se traslada el candidato a su trabajo y si depende de terceros para hacerlo?',
+      '¿Cuentas con un contacto de referencia personal (no laboral) verificable del candidato?'
+    ]
+  },
+  {
+    clave: 'exposicion', nombre: 'Exposición del puesto', tipo: 'exposicion',
+    items: [
+      '¿El puesto maneja dinero, valores o inventario sensible?',
+      '¿El puesto implica acceso a información confidencial o datos de terceros?',
+      '¿El puesto se desempeña en domicilios de terceros o sin supervisión directa?',
+      '¿Este puesto o área ha tenido alta rotación en el último año?'
+    ]
+  }
+];
+
+function _opcionesDe(tipo) { return tipo === 'exposicion' ? OPCIONES_EXPOSICION : OPCIONES_PRACTICA; }
+
+function _semaforo(puntaje) {
+  if (puntaje <= 13) return { clave: 'verde', etiqueta: 'Riesgo bajo', claseCss: 'verde' };
+  if (puntaje <= 26) return { clave: 'amarillo', etiqueta: 'Riesgo moderado', claseCss: 'amarillo' };
+  return { clave: 'rojo', etiqueta: 'Riesgo alto', claseCss: 'rojo' };
+}
+
+function _nivelBarra(sub, max) {
+  var pct = sub / max;
+  if (pct <= 0.33) return 'baja';
+  if (pct <= 0.66) return 'media';
+  return 'alta';
+}
+
+var CATEGORIAS_CRM_OPCIONES = ['Gobierno y Sector Público', 'ONG y Fundaciones', 'Educación', 'Salud y Bienestar',
+  'Universidad', 'Cámara empresarial', 'Empresa privada', 'Retail y Consumo', 'Fintech y Servicios',
+  'Tecnología y Telecom', 'Turismo y Hospitalidad', 'Organismo internacional', 'Otro'];
+
+var state = { paso: 0, datos: null, respuestas: {}, resultado: null };
+var app = document.getElementById('app');
+var TOTAL_PASOS = 3; // 0 datos de la organización · 1 preguntas de riesgo · 2 resultado (semáforo)
+
+function progresoHtml() {
+  var html = '<div class="progreso">';
+  for (var i = 0; i < TOTAL_PASOS; i++) {
+    var cls = i < state.paso ? 'hecho' : (i === state.paso ? 'actual' : '');
+    html += '<div class="paso ' + cls + '"></div>';
+  }
+  return html + '</div>';
+}
+
+function render() {
+  if (state.paso === 0) return renderDatos();
+  if (state.paso === 1) return renderPreguntas();
+  return renderResultado();
+}
+
+/* ---- PASO 0: datos de la organización (antes de la prueba) ---- */
+function renderDatos() {
+  var d = state.datos || {};
+  app.innerHTML =
+    progresoHtml() +
+    '<h1>Semáforo de riesgo de tu proceso de contratación</h1>' +
+    '<p class="subtle">20 preguntas breves sobre tu proceso actual y la exposición del puesto — menos de 4 minutos. Primero necesitamos algunos datos de tu organización para poder enviarte tu resultado.</p>' +
+    '<div id="secMsg"></div>' +
+    '<form id="datosForm">' +
+      '<label>Nombre completo <span class="req">*</span></label><input type="text" id="dNombre" value="' + escapeHtml(d.nombre || '') + '">' +
+      '<label>Organización <span class="req">*</span></label><input type="text" id="dOrganizacion" value="' + escapeHtml(d.organizacion || '') + '">' +
+      '<label>Categoría <span class="req">*</span></label>' +
+      '<select id="dCategoria">' +
+        '<option value="">Selecciona una opción</option>' +
+        CATEGORIAS_CRM_OPCIONES.map(function (c) {
+          return '<option' + (d.categoria === c ? ' selected' : '') + '>' + escapeHtml(c) + '</option>';
+        }).join('') +
+      '</select>' +
+      '<label>Correo electrónico <span class="req">*</span></label><input type="email" id="dEmail" placeholder="nombre@tuorganizacion.com" value="' + escapeHtml(d.email || '') + '">' +
+      '<label>Teléfono (opcional)</label><input type="text" id="dTelefono" value="' + escapeHtml(d.telefono || '') + '">' +
+      '<label>Cargo (opcional)</label><input type="text" id="dCargo" value="' + escapeHtml(d.cargo || '') + '">' +
+      '<input type="text" id="dTrampa" class="campo-trampa" tabindex="-1" autocomplete="off">' +
+      '<div class="consentimiento">' +
+        '<input type="checkbox" id="dConsentimiento"' + (d.consentimiento ? ' checked' : '') + '>' +
+        '<label for="dConsentimiento">Autorizo a Sintropía Social a contactarme para compartirme mi resultado y contarme sobre sus servicios. Puedo pedir que borren mis datos cuando quiera escribiendo a comunicacion@sintropiasocial.com.</label>' +
+      '</div>' +
+    '</form>' +
+    '<div class="fila-botones"><button class="primary" id="btnSiguiente">Continuar al cuestionario →</button></div>';
+
+  document.getElementById('btnSiguiente').onclick = function () {
+    var msgBox = document.getElementById('secMsg');
+    var nombre = document.getElementById('dNombre').value.trim();
+    var organizacion = document.getElementById('dOrganizacion').value.trim();
+    var categoria = document.getElementById('dCategoria').value;
+    var email = document.getElementById('dEmail').value.trim();
+    var consentimiento = document.getElementById('dConsentimiento').checked;
+    if (!nombre || !organizacion) { msgBox.innerHTML = '<div class="msg error">Escribe tu nombre y el de tu organización.</div>'; return; }
+    if (!categoria) { msgBox.innerHTML = '<div class="msg error">Selecciona una categoría.</div>'; return; }
+    if (!email || email.indexOf('@') === -1) { msgBox.innerHTML = '<div class="msg error">Escribe un correo electrónico válido.</div>'; return; }
+    if (!consentimiento) { msgBox.innerHTML = '<div class="msg error">Necesitamos tu autorización para poder contactarte con tu resultado.</div>'; return; }
+
+    state.datos = {
+      nombre: nombre, organizacion: organizacion, categoria: categoria, email: email,
+      telefono: document.getElementById('dTelefono').value.trim(),
+      cargo: document.getElementById('dCargo').value.trim(),
+      consentimiento: true,
+      sitioWebTrampa: document.getElementById('dTrampa').value
+    };
+    state.paso = 1;
+    render();
+  };
+}
+
+/* ---- PASO 1: 20 preguntas de riesgo, agrupadas en 5 categorías ---- */
+function renderPreguntas() {
+  var bloquesHtml = CATEGORIAS_RIESGO.map(function (cat, ci) {
+    var opciones = _opcionesDe(cat.tipo);
+    var itemsHtml = cat.items.map(function (texto, ii) {
+      var name = 'c' + ci + 'i' + ii;
+      var opcionesHtml = opciones.map(function (op, oi) {
+        var marcada = state.respuestas[name] === op.puntos;
+        return '<button type="button" class="op-choice' + (marcada ? ' marcada' : '') + '" data-name="' + name + '" data-puntos="' + op.puntos + '">' + escapeHtml(op.etiqueta) + '</button>';
+      }).join('');
+      return '<div class="pregunta-riesgo" data-name="' + name + '">' +
+        '<div class="pregunta-texto">' + escapeHtml(texto) + '</div>' +
+        '<div class="opciones-riesgo">' + opcionesHtml + '</div>' +
+      '</div>';
+    }).join('');
+    return '<div class="bloque-categoria">' +
+      '<div class="num-bloque">Categoría ' + (ci + 1) + ' de ' + CATEGORIAS_RIESGO.length + '</div>' +
+      '<div class="nombre-categoria">' + escapeHtml(cat.nombre) + '</div>' +
+      itemsHtml +
+    '</div>';
+  }).join('');
+
+  app.innerHTML =
+    progresoHtml() +
+    '<h2>20 preguntas sobre tu proceso actual</h2>' +
+    '<p class="subtle" style="margin-top:0">Responde con honestidad — no hay respuestas correctas, solo un panorama de dónde estás hoy.</p>' +
+    '<div id="secMsg"></div>' +
+    bloquesHtml +
+    '<div class="fila-botones">' +
+      '<button class="secondary" id="btnAtras">Atrás</button>' +
+      '<button class="primary" id="btnVerResultado">Ver mi semáforo de riesgo</button>' +
+    '</div>';
+
+  Array.prototype.forEach.call(app.querySelectorAll('.op-choice'), function (btn) {
+    btn.onclick = function () {
+      var name = btn.getAttribute('data-name');
+      var puntos = Number(btn.getAttribute('data-puntos'));
+      state.respuestas[name] = puntos;
+      var grupo = app.querySelector('.pregunta-riesgo[data-name="' + name + '"]');
+      Array.prototype.forEach.call(grupo.querySelectorAll('.op-choice'), function (b) { b.classList.remove('marcada'); });
+      btn.classList.add('marcada');
+    };
+  });
+
+  document.getElementById('btnAtras').onclick = function () { state.paso = 0; render(); };
+  document.getElementById('btnVerResultado').onclick = async function () {
+    var totalPreguntas = CATEGORIAS_RIESGO.reduce(function (n, c) { return n + c.items.length; }, 0);
+    var respondidas = Object.keys(state.respuestas).length;
+    if (respondidas < totalPreguntas) {
+      document.getElementById('secMsg').innerHTML = '<div class="msg error">Responde las ' + totalPreguntas + ' preguntas antes de continuar (llevas ' + respondidas + ').</div>';
+      return;
+    }
+
+    var categorias = CATEGORIAS_RIESGO.map(function (cat, ci) {
+      var maxCat = cat.items.length * 2;
+      var subtotal = cat.items.reduce(function (s, _t, ii) { return s + (state.respuestas['c' + ci + 'i' + ii] || 0); }, 0);
+      return { nombre: cat.nombre, clave: cat.clave, subtotal: subtotal, max: maxCat, nivel: _nivelBarra(subtotal, maxCat) };
+    });
+    var puntajeTotal = categorias.reduce(function (s, c) { return s + c.subtotal; }, 0);
+    var semaforo = _semaforo(puntajeTotal);
+    var peor = categorias.slice().sort(function (a, b) { return (b.subtotal / b.max) - (a.subtotal / a.max); })[0];
+
+    state.resultado = { categorias: categorias, puntajeTotal: puntajeTotal, semaforo: semaforo, peor: peor };
+
+    var btn = document.getElementById('btnVerResultado');
+    btn.disabled = true; btn.textContent = 'Guardando...';
+    var d = state.datos || {};
+    var resumenNotas = 'Semáforo de riesgo SE: ' + semaforo.etiqueta + ' (' + puntajeTotal + '/40). ' +
+      'Mayor oportunidad: ' + peor.nombre + ' (' + peor.subtotal + '/' + peor.max + '). ' +
+      categorias.map(function (c) { return c.nombre + ': ' + c.subtotal + '/' + c.max; }).join(' — ');
+    await jsonp('capturarClienteDiagnostico', {
+      organizacion: d.organizacion,
+      categoria: d.categoria,
+      ejeInteres: 'Reclutamiento y Selección de Personal',
+      nombreContacto: d.nombre,
+      cargo: d.cargo,
+      correo: d.email,
+      telefono: d.telefono,
+      leadMagnet: 'Semáforo de riesgo SE',
+      consentimiento: 'Sí',
+      notas: resumenNotas,
+      sitioWebTrampa: d.sitioWebTrampa
+    });
+    // El resultado se muestra siempre, incluso si el guardado del lead
+    // falla por algún motivo de red.
+    state.paso = 2;
+    render();
+  };
+}
+
+/* ---- PASO 2: resultado — semáforo + desglose + recomendación + PDF ---- */
+var RECOMENDACION_SEMAFORO = {
+  rojo: {
+    titulo: '¿Quieres blindar tu proceso de contratación?',
+    texto: 'Tu proceso tiene huecos de verificación importantes y/o el puesto tiene alta exposición. Te recomendamos el servicio completo de Estudios Socioeconómicos (SE) de Sintropía Social — nosotros operamos la verificación por ti.',
+    ctaSolido: 'Haz tu cita', ctaContorno: 'Escríbenos'
+  },
+  amarillo: {
+    titulo: '¿Quieres sistematizar tu proceso?',
+    texto: 'Ya tienes bases, pero hay huecos que vale la pena cerrar. Te recomendamos el Banco de Instrumentos RyS (eje SE) en la Plataforma Sintropía, para que tu propio equipo aplique el proceso completo con nuestros formatos.',
+    ctaSolido: 'Agenda una demo', ctaContorno: 'Escríbenos'
+  },
+  verde: {
+    titulo: '¡Tu proceso ya cubre lo esencial!',
+    texto: 'Vas bien — tu proceso de verificación ya cubre los puntos clave. Para mantenerlo así, te compartimos recursos y noticias del sector.',
+    ctaSolido: 'Conoce más servicios', ctaContorno: 'Escríbenos'
+  }
+};
+
+function renderResultado() {
+  var r = state.resultado;
+  var rec = RECOMENDACION_SEMAFORO[r.semaforo.clave];
+
+  var categoriasHtml = r.categorias.map(function (c) {
+    var pct = Math.round((c.subtotal / c.max) * 100);
+    return '<div class="categoria-resultado">' +
+      '<div class="nombre">' + escapeHtml(c.nombre) + '</div>' +
+      '<div class="barra-riesgo"><div class="relleno ' + c.nivel + '" style="width:' + pct + '%"></div></div>' +
+      '<p class="subtle" style="margin:0">' + c.subtotal + ' de ' + c.max + ' puntos de riesgo</p>' +
+    '</div>';
+  }).join('');
+
+  app.innerHTML =
+    progresoHtml() +
+    '<div class="semaforo-box">' +
+      '<span class="semaforo-luz ' + r.semaforo.claseCss + '"></span>' +
+      '<span class="semaforo-etiqueta ' + r.semaforo.claseCss + '">' + r.semaforo.etiqueta + '</span>' +
+      '<p class="semaforo-puntaje">' + r.puntajeTotal + ' de 40 puntos de riesgo · tu mayor oportunidad: ' + escapeHtml(r.peor.nombre) + '</p>' +
+    '</div>' +
+    categoriasHtml +
+    '<div class="fila-botones">' +
+      '<button class="secondary" id="btnDescargarPdf">Descargar mi semáforo en PDF</button>' +
+    '</div>' +
+    '<div class="cta">' +
+      '<h2>' + escapeHtml(rec.titulo) + '</h2>' +
+      '<p>' + escapeHtml(rec.texto) + '</p>' +
+      '<div class="fila-botones">' +
+        '<a class="boton-cta solido" href="https://calendly.com/sintropiassociales/30min" target="_blank" rel="noopener">' + escapeHtml(rec.ctaSolido) + '</a>' +
+        '<a class="boton-cta contorno" href="mailto:comunicacion@sintropiasocial.com">' + escapeHtml(rec.ctaContorno) + '</a>' +
+      '</div>' +
+    '</div>';
+
+  document.getElementById('btnDescargarPdf').onclick = function () { descargarSemaforoPdf(); };
+}
+
+/* ---- Descargable en PDF ---- */
+function descargarSemaforoPdf() {
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    alert('No se pudo cargar el generador de PDF. Revisa tu conexión e intenta de nuevo.');
+    return;
+  }
+  var r = state.resultado, d = state.datos || {};
+  var doc = new window.jspdf.jsPDF({ unit: 'pt', format: 'letter' });
+  var purple = [99, 30, 235];
+  var coloresLuz = { verde: [30, 132, 73], amarillo: [154, 123, 10], rojo: [192, 57, 43] };
+  var margenIzq = 40, anchoTexto = 532, y;
+
+  doc.setFillColor(purple[0], purple[1], purple[2]);
+  doc.rect(0, 0, 612, 70, 'F');
+  doc.setTextColor(255, 255, 255);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(16);
+  doc.text('Sintropía Social — Semáforo de riesgo SE', margenIzq, 42);
+
+  y = 100;
+  doc.setTextColor(30, 30, 30);
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(14);
+  doc.text(d.organizacion || 'Tu organización', margenIzq, y);
+  y += 22;
+
+  var col = coloresLuz[r.semaforo.clave];
+  doc.setFillColor(col[0], col[1], col[2]);
+  doc.circle(margenIzq + 7, y - 5, 6, 'F');
+  doc.setFont('helvetica', 'bold'); doc.setFontSize(12);
+  doc.setTextColor(col[0], col[1], col[2]);
+  doc.text(r.semaforo.etiqueta.toUpperCase() + '   ·   ' + r.puntajeTotal + ' de 40 puntos de riesgo', margenIzq + 20, y);
+  y += 24;
+
+  r.categorias.forEach(function (c) {
+    doc.setDrawColor(230, 226, 245); doc.setLineWidth(1);
+    doc.line(margenIzq, y, margenIzq + anchoTexto, y);
+    y += 16;
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(11);
+    doc.setTextColor(30, 30, 30);
+    doc.text(c.nombre + '  —  ' + c.subtotal + '/' + c.max, margenIzq, y);
+    y += 18;
+  });
+
+  y += 6;
+  doc.setDrawColor(230, 226, 245); doc.line(margenIzq, y, margenIzq + anchoTexto, y);
+  y += 20;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(9.5);
+  doc.setTextColor(107, 107, 120);
+  doc.text('¿Quieres blindar tu proceso de contratación? Haz tu cita en calendly.com/sintropiassociales/30min o escríbenos a comunicacion@sintropiasocial.com.', margenIzq, y, { maxWidth: anchoTexto });
+
+  doc.save('semaforo-riesgo-se-sintropia.pdf');
+}
+
+render();
+</script>
+</body>
+</html>
