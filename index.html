@@ -340,8 +340,8 @@ var CRM_TIPOS = {
     campos: [
       { key: 'nombre', label: 'Nombre *', tipo: 'text', requerido: true },
       { key: 'apellido', label: 'Apellido', tipo: 'text' },
-      { key: 'estado', label: 'Estado', tipo: 'text' },
-      { key: 'municipio', label: 'Municipio', tipo: 'text' },
+      { key: 'estado', label: 'Estado', tipo: 'select-estado' },
+      { key: 'municipio', label: 'Municipio', tipo: 'select-municipio' },
       { key: 'edad', label: 'Edad', tipo: 'number' },
       { key: 'email', label: 'Email', tipo: 'text' },
       { key: 'telefono', label: 'Teléfono', tipo: 'text' },
@@ -2958,6 +2958,27 @@ function abrirModalFila(tipo, fila, opts) {
       }).join('');
       return '<label>' + c.label + '</label><select id="' + id + '">' + opts2 + '</select>';
     }
+    // Estado/Municipio de México en cascada — mismo catálogo ESTADOS_MUNICIPIOS
+    // que ya usa el alta de Proyecto. El <select> de municipio se llena vacío
+    // (o precargado con los municipios del estado ya guardado) aquí mismo;
+    // el cambio dinámico al elegir otro estado lo conecta _wireEstadoMunicipio
+    // después de insertar el modal en el DOM.
+    if (c.tipo === 'select-estado') {
+      var optsEstado = '<option value="">Selecciona un estado</option>' +
+        ESTADOS_MEXICO.map(function (e) {
+          return '<option value="' + escapeHtml(e) + '"' + (val === e ? ' selected' : '') + '>' + escapeHtml(e) + '</option>';
+        }).join('');
+      return '<label>' + c.label + '</label><select id="' + id + '">' + optsEstado + '</select>';
+    }
+    if (c.tipo === 'select-municipio') {
+      var estadoDeLaFila = fila ? (fila.estado || '') : '';
+      var municipiosDeLaFila = ESTADOS_MUNICIPIOS[estadoDeLaFila] || [];
+      var optsMunicipio = '<option value="">' + (estadoDeLaFila ? 'Selecciona un municipio' : 'Selecciona un estado primero') + '</option>' +
+        municipiosDeLaFila.map(function (m) {
+          return '<option value="' + escapeHtml(m) + '"' + (val === m ? ' selected' : '') + '>' + escapeHtml(m) + '</option>';
+        }).join('');
+      return '<label>' + c.label + '</label><select id="' + id + '">' + optsMunicipio + '</select>';
+    }
     if (c.tipo === 'textarea') {
       var btnIA = conIA ? ' <button type="button" class="small secondary btn-ia-campo" data-campo-key="' + c.key + '" style="padding:1px 8px;font-size:12px">✨ IA</button>' : '';
       var panelIA = conIA ? '<div class="panelIACampo hidden" data-campo-key="' + c.key + '" style="background:#F4F0FE;border-radius:6px;padding:8px 10px;margin:4px 0 8px">' +
@@ -3019,6 +3040,7 @@ function abrirModalFila(tipo, fila, opts) {
 
   if (conIA) _wireIAInstrumento(modal, cfg, tipo);
   if (cfg.fotos && editando) _wireFotosInstrumento(modal, cfg, tipo, proyectoCodigo, fila.codigo);
+  _wireEstadoMunicipio(modal);
 
   modal.querySelector('#filaGuardar').onclick = async function () {
     var btn = modal.querySelector('#filaGuardar');
@@ -3032,7 +3054,7 @@ function abrirModalFila(tipo, fila, opts) {
     cfg.campos.forEach(function (c) {
       var elx = modal.querySelector('#f_' + c.key);
       var v = elx.value;
-      if (c.tipo !== 'select' && c.tipo !== 'date') v = v.trim();
+      if (c.tipo !== 'select' && c.tipo !== 'select-estado' && c.tipo !== 'select-municipio' && c.tipo !== 'date') v = v.trim();
       if (c.requerido && !v && !faltante) faltante = c.label;
       params[c.key] = v;
     });
@@ -3043,6 +3065,22 @@ function abrirModalFila(tipo, fila, opts) {
     if (!r.ok) { msgBox.innerHTML = '<div class="msg error">' + r.error + '</div>'; btn.disabled = false; btn.textContent = 'Guardar'; return; }
     modal.remove();
     if (opts.alGuardar) { await opts.alGuardar(); } else { await cargarInstrumento(tipo); }
+  };
+}
+
+// Si el modal tiene un campo "estado" (select-estado) y uno "municipio"
+// (select-municipio) — hoy solo CRM_Interesados, pero cualquier instrumento
+// futuro con ambas claves lo obtiene gratis — conecta el cambio de estado
+// para recargar las opciones de municipio, igual que ya hace el alta de
+// Proyecto con #npEstado/#npLocalidad.
+function _wireEstadoMunicipio(modal) {
+  var selEstado = modal.querySelector('#f_estado');
+  var selMunicipio = modal.querySelector('#f_municipio');
+  if (!selEstado || !selMunicipio || selEstado.tagName !== 'SELECT') return;
+  selEstado.onchange = function () {
+    var municipios = ESTADOS_MUNICIPIOS[selEstado.value] || [];
+    selMunicipio.innerHTML = '<option value="">' + (selEstado.value ? 'Selecciona un municipio' : 'Selecciona un estado primero') + '</option>' +
+      municipios.map(function (m) { return '<option value="' + escapeHtml(m) + '">' + escapeHtml(m) + '</option>'; }).join('');
   };
 }
 

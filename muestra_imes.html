@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Prueba una muestra gratuita del IMES, el Instrumento de Medición de Empleabilidad Social de Sintropía Social.">
+<title>Muestra IMES — Sintropía Social</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --purple: #631EEB;
+    --purple-dark: #4E17B8;
+    --orange: #FF7929;
+    --bg: #F5F3FC;
+    --card: #FFFFFF;
+    --text: #2C2C2C;
+    --subtle: #6B6B78;
+    --border: #E6E2F5;
+    --error: #C0392B;
+    --error-bg: #FDECEA;
+    --ok: #1E8449;
+    --ok-bg: #EAF7EE;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; font-family: 'Open Sans', -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+    background: var(--bg); color: var(--text); line-height: 1.55;
+  }
+  header.top {
+    background: var(--purple); color: #fff; padding: 26px 18px 44px; text-align: center;
+    border-radius: 0 0 22px 22px;
+  }
+  header.top .marca { font-size: 20px; font-weight: 800; letter-spacing: .3px; }
+  header.top .marca span { color: var(--orange); }
+  header.top .subt { font-size: 13.5px; opacity: .92; margin-top: 6px; max-width: 420px; margin-left: auto; margin-right: auto; }
+  main { max-width: 640px; margin: -26px auto 40px; padding: 0 16px; }
+  .card {
+    background: var(--card); border-radius: 14px; padding: 26px 24px; margin-bottom: 16px;
+    box-shadow: 0 6px 20px rgba(99,30,235,.08); border: 1px solid var(--border);
+  }
+  h1 { font-size: 21px; margin: 0 0 8px; }
+  h2 { font-size: 18px; margin: 0 0 4px; color: var(--purple-dark); }
+  h3 { font-size: 15px; margin: 22px 0 2px; color: var(--purple-dark); }
+  p.subtle, .subtle { color: var(--subtle); font-size: 13.5px; }
+  .progreso { display: flex; gap: 6px; margin: 18px 0 22px; }
+  .progreso .paso { flex: 1; height: 6px; border-radius: 4px; background: var(--border); }
+  .progreso .paso.hecho { background: var(--orange); }
+  .progreso .paso.actual { background: var(--purple); }
+  label { display: block; font-size: 13.5px; font-weight: 600; margin: 14px 0 5px; }
+  label .req { color: var(--orange); }
+  input[type=text], input[type=number], input[type=email], select {
+    width: 100%; padding: 11px 12px; border: 1.5px solid var(--border); border-radius: 9px;
+    font-size: 15px; font-family: inherit; background: #fff; color: var(--text);
+  }
+  input:focus, select:focus { outline: none; border-color: var(--purple); }
+  .hint { font-size: 12px; color: var(--subtle); margin-top: 3px; }
+  .fila-botones { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+  button {
+    font-family: inherit; font-size: 14.5px; font-weight: 700; border-radius: 999px;
+    padding: 12px 24px; border: none; cursor: pointer;
+  }
+  button.primary { background: var(--purple); color: #fff; }
+  button.primary:hover { background: var(--purple-dark); }
+  button.secondary { background: #fff; color: var(--purple); border: 1.5px solid var(--purple); }
+  button.link { background: none; color: var(--purple); padding: 6px 4px; text-decoration: underline; }
+  button:disabled { opacity: .5; cursor: default; }
+  .msg { padding: 10px 13px; border-radius: 9px; font-size: 13.5px; margin: 12px 0; }
+  .msg.error { background: var(--error-bg); color: var(--error); }
+  .msg.ok { background: var(--ok-bg); color: var(--ok); }
+  .pantalla-centrada { text-align: center; padding: 6px 4px 12px; }
+
+  /* Bloques de dimensión */
+  .bloque-dimension { margin-bottom: 26px; }
+  .bloque-dimension .num-bloque { display: inline-block; font-size: 11.5px; font-weight: 700; letter-spacing: .5px;
+    color: var(--purple); text-transform: uppercase; margin-bottom: 2px; }
+  .bloque-dimension .nombre-dimension { font-size: 16px; font-weight: 700; margin: 0 0 14px; }
+
+  /* Escala Likert */
+  .likert { border-top: 1px solid var(--border); padding: 16px 0; }
+  .likert:first-of-type { border-top: none; padding-top: 4px; }
+  .likert-pregunta { font-size: 14.5px; font-weight: 600; margin-bottom: 10px; }
+  .likert-escala { display: flex; justify-content: space-between; align-items: flex-start; gap: 4px; }
+  .likert-opcion { display: flex; flex-direction: column; align-items: center; gap: 6px; flex: 1; cursor: pointer; }
+  .likert-opcion input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+  .likert-circulo {
+    width: 34px; height: 34px; border-radius: 50%; border: 1.5px solid var(--border); background: #fff;
+    display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: var(--subtle);
+    transition: background .12s, border-color .12s, color .12s;
+  }
+  .likert-opcion input:checked + .likert-circulo { background: var(--purple); border-color: var(--purple); color: #fff; }
+  .likert-opcion .likert-texto { font-size: 10px; color: var(--subtle); text-align: center; line-height: 1.25; min-height: 26px; }
+
+  /* Consentimiento */
+  .consentimiento { display: flex; gap: 10px; align-items: flex-start; margin-top: 18px; background: #FAF8FF;
+    border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .consentimiento input { margin-top: 3px; }
+  .consentimiento label { margin: 0; font-weight: 400; font-size: 13px; }
+
+  /* Campo trampa anti-bots — invisible para personas, visible para bots que rellenan todo */
+  .campo-trampa { position: absolute; left: -9999px; top: -9999px; opacity: 0; height: 0; overflow: hidden; }
+
+  /* Resultado */
+  .resultado-dimension { border: 1.5px solid var(--border); border-radius: 12px; padding: 18px 20px; margin-bottom: 16px; }
+  .resultado-dimension .banda {
+    display: inline-block; font-size: 11.5px; font-weight: 700; letter-spacing: .3px; text-transform: uppercase;
+    padding: 3px 10px; border-radius: 999px; margin-bottom: 8px;
+  }
+  .banda.banda-desarrollo { background: #FDF2E9; color: #B9560A; }
+  .banda.banda-proceso { background: #FDF6E3; color: #9A7B0A; }
+  .banda.banda-consolidada { background: var(--ok-bg); color: var(--ok); }
+  .resultado-dimension .puntaje { font-size: 13px; color: var(--subtle); margin: 0 0 8px; }
+  .resultado-dimension p { margin: 0; font-size: 14px; }
+
+  .cta { background: linear-gradient(135deg, var(--purple), var(--purple-dark)); color: #fff; border-radius: 14px;
+    padding: 22px 24px; margin-top: 8px; }
+  .cta h2 { color: #fff; }
+  .cta p { font-size: 13.5px; opacity: .95; }
+  .cta a { color: #fff; font-weight: 700; }
+
+  footer.pie { text-align: center; font-size: 12px; color: var(--subtle); padding: 10px 16px 34px; }
+  footer.pie .wordmark { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+  footer.pie a { color: var(--purple); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="marca">Sintropía <span>Social</span></div>
+  <div class="subt">Muestra gratuita del IMES — Instrumento de Medición de Empleabilidad Social</div>
+</header>
+
+<main>
+  <div id="app" class="card">
+    <p class="subtle">Cargando...</p>
+  </div>
+</main>
+
+<footer class="pie">
+  <div class="wordmark"><span style="color:var(--purple)">Sintropía</span> <span style="color:var(--orange)">Social</span></div>
+  <a href="https://sintropiassociales-del.github.io/">Sintropía Social</a> · <a href="mailto:comunicacion@sintropiasocial.com">comunicacion@sintropiasocial.com</a>
+</footer>
+
+<script>
+var WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxZbLiOP7QXvrgUIDhhVciVGY-Yval3YBvqBHOpQfK8El2wHXNNBtZvsnkbwMaJUss/exec';
+
+/* ============================================================
+ * Catálogo Estado → Municipio (México completo). Copia exacta del que usa
+ * el resto de la plataforma (index.html / candidato.html) — esta página
+ * vive fuera de la plataforma (es una "muestra" pública), así que trae su
+ * propia copia en vez de depender de un archivo compartido.
+ * ============================================================ */
+var ESTADOS_MUNICIPIOS = {"Aguascalientes":["Aguascalientes","Asientos","Calvillo","Cosío","El Llano","Jesús María","Pabellón de Arteaga","Rincón de Romos","San Francisco de los Romo","San José de Gracia","Tepezalá"],"Baja California":["Ensenada","Mexicali","Playas de Rosarito","San Felipe","San Quintín","Tecate","Tijuana"],"Baja California Sur":["Comondú","La Paz","Loreto","Los Cabos","Mulegé"],"Campeche":["Calakmul","Calkiní","Campeche","Candelaria","Carmen","Champotón","Dzitbalché","Escárcega","Hecelchakán","Hopelchén","Palizada","Seybaplaya","Tenabo"],"Chiapas":["Acacoyagua","Acala","Acapetahua","Aldama","Altamirano","Amatenango de la Frontera","Amatenango del Valle","Amatán","Arriaga","Bejucal de Ocampo","Bella Vista","Benemérito de las Américas","Berriozábal","Bochil","Cacahoatán","Capitán Luis Ángel Vidal","Catazajá","Chalchihuitán","Chamula","Chanal","Chapultenango","Chenalhó","Chiapa de Corzo","Chiapilla","Chicoasén","Chicomuselo","Chilón","Cintalapa de Figueroa","Coapilla","Comitán de Domínguez","Copainalá","El Bosque","El Parral","El Porvenir","Emiliano Zapata","Escuintla","Francisco León","Frontera Comalapa","Frontera Hidalgo","Honduras de la Sierra","Huehuetán","Huitiupán","Huixtla","Huixtán","Ixhuatán","Ixtacomitán","Ixtapa","Ixtapangajoya","Jiquipilas","Jitotol","Juárez","La Concordia","La Grandeza","La Independencia","La Libertad","La Trinitaria","Larráinzar","Las Margaritas","Las Rosas","Mapastepec","Maravilla Tenejapa","Marqués de Comillas","Mazapa de Madero","Mazatán","Metapa","Mezcalapa","Mitontic","Montecristo de Guerrero","Motozintla","Nicolás Ruíz","Ocosingo","Ocotepec","Ocozocoautla de Espinosa","Ostuacán","Osumacinta","Oxchuc","Palenque","Pantelhó","Pantepec","Pichucalco","Pijijiapan","Pueblo Nuevo Solistahuacán","Rayón","Reforma","Rincón Chamula San Pedro","Sabanilla","Salto de Agua","San Andrés Duraznal","San Cristóbal de las Casas","San Fernando","San Juan Cancuc","San Lucas","Santiago el Pinar","Siltepec","Simojovel","Sitalá","Socoltenango","Solosuchiapa","Soyaló","Suchiapa","Suchiate","Sunuapa","Tapachula","Tapalapa","Tapilula","Tecpatán","Tenejapa","Teopisca","Tila","Tonalá","Totolapa","Tumbalá","Tuxtla Chico","Tuxtla Gutiérrez","Tuzantán","Tzimol","Unión Juárez","Venustiano Carranza","Villa Comaltitlán","Villa Corzo","Villaflores","Yajalón","Zinacantán","Ángel Albino Corzo"],"Chihuahua":["Ahumada","Aldama","Allende","Aquiles Serdán","Ascensión","Bachíniva","Balleza","Batopilas de Manuel Gómez Morín","Bocoyna","Buenaventura","Camargo","Carichí","Casas Grandes","Chihuahua","Chínipas","Coronado","Coyame del Sotol","Cuauhtémoc","Cusihuiriachi","Delicias","Dr. Belisario Domínguez","El Tule","Galeana","Gran Morelos","Guachochi","Guadalupe","Guadalupe y Calvo","Guazapares","Guerrero","Gómez Farías","Hidalgo del Parral","Huejotitán","Ignacio Zaragoza","Janos","Jiménez","Julimes","Juárez","La Cruz","López","Madera","Maguarichi","Manuel Benavides","Matachí","Matamoros","Meoqui","Morelos","Moris","Namiquipa","Nonoava","Nuevo Casas Grandes","Ocampo","Ojinaga","Praxedis G. Guerrero","Riva Palacio","Rosales","San Francisco de Borja","San Francisco de Conchos","San Francisco del Oro","Santa Bárbara","Santa Isabel","Satevó","Saucillo","Temósachic","Urique","Uruachi","Valle de Zaragoza","Valle del Rosario"],"Ciudad de México":["Azcapotzalco","Benito Juárez","Coyoacán","Cuajimalpa de Morelos","Cuauhtémoc","Gustavo A. Madero","Iztacalco","Iztapalapa","La Magdalena Contreras","Miguel Hidalgo","Milpa Alta","Tlalpan","Tláhuac","Venustiano Carranza","Xochimilco","Álvaro Obregón"],"Coahuila":["Abasolo","Acuña","Allende","Arteaga","Candela","Castaños","Cuatro Ciénegas","Escobedo","Francisco I. Madero","Frontera","General Cepeda","Guerrero","Hidalgo","Jiménez","Juárez","Lamadrid","Matamoros","Monclova","Morelos","Múzquiz","Nadadores","Nava","Ocampo","Parras","Piedras Negras","Progreso","Ramos Arizpe","Sabinas","Sacramento","Saltillo","San Buenaventura","San Juan de Sabinas","San Pedro","Sierra Mojada","Torreón","Viesca","Villa Unión","Zaragoza"],"Colima":["Armería","Colima","Comala","Coquimatlán","Cuauhtémoc","Ixtlahuacán","Manzanillo","Minatitlán","Tecomán","Villa de Álvarez"],"Durango":["Canatlán","Canelas","Coneto de Comonfort","Cuencamé","Durango","El Oro","General Simón Bolívar","Guadalupe Victoria","Guanaceví","Gómez Palacio","Hidalgo","Indé","Lerdo","Mapimí","Mezquital","Nazas","Nombre de Dios","Nuevo Ideal","Ocampo","Otáez","Peñón Blanco","Poanas","Pueblo Nuevo","Pánuco de Coronado","Rodeo","San Bernardo","San Dimas","San Juan de Guadalupe","San Juan del Río","San Luis del Cordero","San Pedro del Gallo","Santa Clara","Santiago Papasquiaro","Súchil","Tamazula","Tepehuanes","Tlahualilo","Topia","Vicente Guerrero"],"Estado de México":["Acambay de Ruíz Castañeda","Acolman","Aculco","Almoloya de Alquisiras","Almoloya de Juárez","Almoloya del Río","Amanalco","Amatepec","Amecameca","Apaxco","Atenco","Atizapán","Atizapán de Zaragoza","Atlacomulco","Atlautla","Axapusco","Ayapango","Calimaya","Capulhuac","Chalco","Chapa de Mota","Chapultepec","Chiautla","Chicoloapan","Chiconcuac","Chimalhuacán","Coacalco de Berriozábal","Coatepec Harinas","Cocotitlán","Coyotepec","Cuautitlán","Cuautitlán Izcalli","Donato Guerra","Ecatepec de Morelos","Ecatzingo","El Oro","Huehuetoca","Hueypoxtla","Huixquilucan","Isidro Fabela","Ixtapaluca","Ixtapan de la Sal","Ixtapan del Oro","Ixtlahuaca","Jaltenco","Jilotepec","Jilotzingo","Jiquipilco","Jocotitlán","Joquicingo","Juchitepec","La Paz","Lerma","Luvianos","Malinalco","Melchor Ocampo","Metepec","Mexicaltzingo","Morelos","Naucalpan de Juárez","Nextlalpan","Nezahualcóyotl","Nicolás Romero","Nopaltepec","Ocoyoacac","Ocuilan","Otumba","Otzoloapan","Otzolotepec","Ozumba","Papalotla","Polotitlán","Rayón","San Antonio la Isla","San Felipe del Progreso","San José del Rincón","San Martín de las Pirámides","San Mateo Atenco","San Simón de Guerrero","Santo Tomás","Soyaniquilpan de Juárez","Sultepec","Tecámac","Tejupilco","Temamatla","Temascalapa","Temascalcingo","Temascaltepec","Temoaya","Tenancingo","Tenango del Aire","Tenango del Valle","Teoloyucan","Teotihuacán","Tepetlaoxtoc","Tepetlixpa","Tepotzotlán","Tequixquiac","Texcaltitlán","Texcalyacac","Texcoco","Tezoyuca","Tianguistenco","Timilpan","Tlalmanalco","Tlalnepantla de Baz","Tlatlaya","Toluca","Tonanitla","Tonatico","Tultepec","Tultitlán","Valle de Bravo","Valle de Chalco Solidaridad","Villa Guerrero","Villa Victoria","Villa de Allende","Villa del Carbón","Xalatlaco","Xonacatlán","Zacazonapan","Zacualpan","Zinacantepec","Zumpahuacán","Zumpango"],"Guanajuato":["Abasolo","Acámbaro","Apaseo el Alto","Apaseo el Grande","Atarjea","Celaya","Comonfort","Coroneo","Cortazar","Cuerámaro","Doctor Mora","Dolores Hidalgo Cuna de la Independencia Nacional","Guanajuato","Huanímaro","Irapuato","Jaral del Progreso","Jerécuaro","León","Manuel Doblado","Moroleón","Ocampo","Pueblo Nuevo","Purísima del Rincón","Pénjamo","Romita","Salamanca","Salvatierra","San Diego de la Unión","San Felipe","San Francisco del Rincón","San José de Iturbide","San Luis de la Paz","San Miguel de Allende","Santa Catarina","Santa Cruz de Juventino Rosas","Santiago Maravatío","Silao de la Victoria","Tarandacuao","Tarimoro","Tierra Blanca","Uriangato","Valle de Santiago","Victoria","Villagrán","Xichú","Yuriria"],"Guerrero":["Acapulco de Juárez","Acatepec","Ahuacuotzingo","Ajuchitlán del Progreso","Alcozauca de Guerrero","Alpoyeca","Apaxtla de Castrejón","Arcelia","Atenango del Río","Atlamajalcingo del Monte","Atlixtac","Atoyac de Álvarez","Ayutla de los Libres","Azoyú","Benito Juárez","Buenavista de Cuéllar","Chilapa de Álvarez","Chilpancingo de los Bravo","Coahuayutla de José María Izazaga","Cochoapa el Grande","Cocula","Copala","Copalillo","Copanatoyac","Coyuca de Benítez","Coyuca de Catalán","Cuajinicuilapa","Cualác","Cuautepec","Cuetzala del Progreso","Cutzamala de Pinzón","Eduardo Neri","Florencio Villarreal","General Canuto A. Neri","General Heliodoro Castillo","Huamuxtitlán","Huitzuco de los Figueroa","Iguala de la Independencia","Igualapa","Iliatenco","Ixcateopan de Cuauhtémoc","José Joaquín de Herrera","Juan R. Escudero","Juchitán","La Unión de Isidoro Montes de Oca","Las Vigas","Leonardo Bravo","Malinaltepec","Marquelia","Metlatónoc","Mochitlán","Mártir de Cuilapan","Olinalá","Ometepec","Pedro Ascencio Alquisiras","Petatlán","Pilcaya","Pungarabato","Quechultenango","San Luis Acatlán","San Marcos","San Miguel Totolapan","San Nicolás","Santa Cruz del Rincón","Taxco de Alarcón","Tecoanapa","Teloloapan","Tepecoacuilco de Trujano","Tetipac","Tixtla de Guerrero","Tlacoachistlahuaca","Tlacoapa","Tlalchapa","Tlalixtaquilla de Maldonado","Tlapa de Comonfort","Tlapehuala","Técpan de Galeana","Xalpatláhuac","Xochihuehuetlán","Xochistlahuaca","Zapotitlán Tablas","Zihuatanejo de Azueta","Zirándaro","Zitlala","Ñuu Savi"],"Hidalgo":["Acatlán","Acaxochitlán","Actopan","Agua Blanca de Iturbide","Ajacuba","Alfajayucan","Almoloya","Apan","Atitalaquia","Atlapexco","Atotonilco de Tula","Atotonilco el Grande","Calnali","Cardonal","Chapantongo","Chapulhuacán","Chilcuautla","Cuautepec de Hinojosa","El Arenal","Eloxochitlán","Emiliano Zapata","Epazoyucan","Francisco I. Madero","Huasca de Ocampo","Huautla","Huazalingo","Huehuetla","Huejutla de Reyes","Huichapan","Ixmiquilpan","Jacala de Ledezma","Jaltocán","Juárez Hidalgo","La Misión","Lolotla","Metepec","Metztitlán","Mineral de la Reforma","Mineral del Chico","Mineral del Monte","Mixquiahuala de Juárez","Molango de Escamilla","Nicolás Flores","Nopala de Villagrán","Omitlán de Juárez","Pachuca de Soto","Pacula","Pisaflores","Progreso de Obregón","San Agustín Metzquititlán","San Agustín Tlaxiaca","San Bartolo Tutotepec","San Felipe Orizatlán","San Salvador","Santiago Tulantepec de Lugo Guerrero","Santiago de Anaya","Singuilucan","Tasquillo","Tecozautla","Tenango de Doria","Tepeapulco","Tepehuacán de Guerrero","Tepeji del Río de Ocampo","Tepetitlán","Tetepango","Tezontepec de Aldama","Tianguistengo","Tizayuca","Tlahuelilpan","Tlahuiltepa","Tlanalapa","Tlanchinol","Tlaxcoapan","Tolcayuca","Tula de Allende","Tulancingo de Bravo","Villa de Tezontepec","Xochiatipan","Xochicoatlán","Yahualica","Zacualtipán de Ángeles","Zapotlán de Juárez","Zempoala","Zimapán"],"Jalisco":["Acatic","Acatlán de Juárez","Ahualulco de Mercado","Amacueca","Amatitán","Ameca","Arandas","Atemajac de Brizuela","Atengo","Atenguillo","Atotonilco el Alto","Atoyac","Autlán de Navarro","Ayotlán","Ayutla","Bolaños","Cabo Corrientes","Casimiro Castillo","Cañadas de Obregón","Chapala","Chimaltitán","Chiquilistlán","Cihuatlán","Cocula","Colotlán","Concepción de Buenos Aires","Cuautitlán de García Barragán","Cuautla","Cuquío","Degollado","Ejutla","El Arenal","El Grullo","El Limón","El Salto","Encarnación de Díaz","Etzatlán","Guachinango","Guadalajara","Gómez Farías","Hostotipaquillo","Huejuquilla el Alto","Huejúcar","Ixtlahuacán de los Membrillos","Ixtlahuacán del Río","Jalostotitlán","Jamay","Jesús María","Jilotlán de los Dolores","Jocotepec","Juanacatlán","Juchitlán","La Barca","La Huerta","La Manzanilla de la Paz","Lagos de Moreno","Magdalena","Mascota","Mazamitla","Mexticacán","Mezquitic","Mixtlán","Ocotlán","Ojuelos de Jalisco","Pihuamo","Poncitlán","Puerto Vallarta","Quitupan","San Cristóbal de la Barranca","San Diego de Alejandría","San Gabriel","San Ignacio Cerro Gordo","San Juan de los Lagos","San Juanito de Escobedo","San Julián","San Marcos","San Martín Hidalgo","San Martín de Bolaños","San Miguel el Alto","San Pedro Tlaquepaque","San Sebastián del Oeste","Santa María de los Ángeles","Santa María del Oro","Sayula","Tala","Talpa de Allende","Tamazula de Gordiano","Tapalpa","Tecalitlán","Techaluta de Montenegro","Tecolotlán","Tenamaxtlán","Teocaltiche","Teocuitatlán de Corona","Tepatitlán de Morelos","Tequila","Teuchitlán","Tizapán el Alto","Tlajomulco de Zúñiga","Tolimán","Tomatlán","Tonalá","Tonaya","Tonila","Totatiche","Tototlán","Tuxcacuesco","Tuxcueca","Tuxpan","Unión de San Antonio","Unión de Tula","Valle de Guadalupe","Valle de Juárez","Villa Corona","Villa Guerrero","Villa Hidalgo","Villa Purificación","Yahualica de González Gallo","Zacoalco de Torres","Zapopan","Zapotiltic","Zapotitlán de Vadillo","Zapotlanejo","Zapotlán del Rey","Zapotlán el Grande"],"Michoacán":["Acuitzio","Aguililla","Angamacutiro","Angangueo","Apatzingán","Aporo","Aquila","Ario","Arteaga","Briseñas","Buenavista","Carácuaro","Charapan","Charo","Chavinda","Cherán","Chilchota","Chinicuila","Chucándiro","Churintzio","Churumuco","Coahuayana","Coalcomán de Vázquez Pallares","Coeneo","Cojumatlán de Régules","Contepec","Copándaro","Cotija","Cuitzeo","Ecuandureo","Epitacio Huerta","Erongarícuaro","Gabriel Zamora","Hidalgo","Huandacareo","Huaniqueo","Huetamo","Huiramba","Indaparapeo","Irimbo","Ixtlán","Jacona","Jiménez","Jiquilpan","José Sixto Verduzco","Jungapeo","Juárez","La Huacana","La Piedad","Lagunillas","Los Reyes","Lázaro Cárdenas","Madero","Maravatío","Marcos Castellanos","Morelia","Morelos","Múgica","Nahuatzen","Nocupétaro","Nuevo Parangaricutiro","Nuevo Urecho","Numarán","Ocampo","Pajacuarán","Panindícuaro","Paracho","Parácuaro","Penjamillo","Peribán","Puruándiro","Purépero","Pátzcuaro","Queréndaro","Quiroga","Sahuayo","Salvador Escalante","San Lucas","Santa Ana Maya","Senguio","Susupuato","Tacámbaro","Tancítaro","Tangamandapio","Tangancícuaro","Tanhuato","Taretan","Tarímbaro","Tepalcatepec","Tingambato","Tingüindín","Tiquicheo de Nicolás Romero","Tlalpujahua","Tlazazalca","Tocumbo","Tumbiscatío","Turicato","Tuxpan","Tuzantla","Tzintzuntzan","Tzitzio","Uruapan","Venustiano Carranza","Villamar","Vista Hermosa","Yurécuaro","Zacapu","Zamora","Zinapécuaro","Zináparo","Ziracuaretiro","Zitácuaro","Álvaro Obregón"],"Morelos":["Amacuzac","Atlatlahucan","Axochiapan","Ayala","Coatetelco","Coatlán del Río","Cuautla","Cuernavaca","Emiliano Zapata","Hueyapan","Huitzilac","Jantetelco","Jiutepec","Jojutla","Jonacatepec de Leandro Valle","Mazatepec","Miacatlán","Ocuituco","Puente de Ixtla","Temixco","Temoac","Tepalcingo","Tepoztlán","Tetecala","Tetela del Volcán","Tlalnepantla","Tlaltizapán de Zapata","Tlaquiltenango","Tlayacapan","Totolapan","Xochitepec","Xoxocotla","Yautepec","Yecapixtla","Zacatepec","Zacualpan de Amilpas"],"Nayarit":["Acaponeta","Ahuacatlán","Amatlán de Cañas","Bahía de Banderas","Compostela","Del Nayar","Huajicori","Ixtlán del Río","Jala","La Yesca","Rosamorada","Ruíz","San Blas","San Pedro Lagunillas","Santa María del Oro","Santiago Ixcuintla","Tecuala","Tepic","Tuxpan","Xalisco"],"Nuevo León":["Abasolo","Agualeguas","Allende","Anáhuac","Apodaca","Aramberri","Bustamante","Cadereyta Jiménez","Cerralvo","China","Ciénega de Flores","Doctor Arroyo","Doctor Coss","Doctor González","El Carmen","Galeana","García","General Bravo","General Escobedo","General Terán","General Treviño","General Zaragoza","General Zuazua","Guadalupe","Hidalgo","Higueras","Hualahuises","Iturbide","Juárez","Lampazos de Naranjo","Linares","Los Aldamas","Los Herreras","Los Ramones","Marín","Melchor Ocampo","Mier y Noriega","Mina","Montemorelos","Monterrey","Parás","Pesquería","Rayones","Sabinas Hidalgo","Salinas Victoria","San Nicolás de los Garza","San Pedro Garza García","Santa Catarina","Santiago","Vallecillo","Villaldama"],"Oaxaca":["Abejones","Acatlán de Pérez Figueroa","Asunción Cacalotepec","Asunción Cuyotepeji","Asunción Ixtaltepec","Asunción Nochixtlán","Asunción Ocotlán","Asunción Tlacolulita","Ayoquezco de Aldama","Ayotzintepec","Calihualá","Candelaria Loxicha","Capulálpam de Méndez","Chahuites","Chalcatongo de Hidalgo","Chiquihuitlán de Benito Juárez","Ciudad Ixtepec","Ciénega de Zimatlán","Coatecas Altas","Coicoyán de las Flores","Concepción Buenavista","Concepción Pápalo","Constancia del Rosario","Cosolapa","Cosoltepec","Cuilápam de Guerrero","Cuyamecalco Villa de Zaragoza","El Barrio de la Soledad","El Espinal","Eloxochitlán de Flores Magón","Fresnillo de Trujano","Guadalupe Etla","Guadalupe de Ramírez","Guelatao de Juárez","Guevea de Humboldt","Heroica Ciudad de Ejutla de Crespo","Heroica Ciudad de Huajuapan de León","Heroica Ciudad de Juchitán de Zaragoza","Heroica Ciudad de Miahuatlán de Porfirio Díaz","Heroica Ciudad de Tlaxiaco","Heroica Villa Tezoatlán de Segura y Luna, Cuna de la Independencia de Oaxaca","Heroica Villa de San Blas Atempa","Heroico San Martín de los Cansecos","Huautepec","Huautla de Jiménez","Ixpantepec Nieves","Ixtlán de Juárez","La Compañía","La Pe","La Reforma","La Trinidad Vista Hermosa","Loma Bonita","Magdalena Apasco","Magdalena Jaltepec","Magdalena Mixtepec","Magdalena Ocotlán","Magdalena Peñasco","Magdalena Teitipac","Magdalena Tequisistlán","Magdalena Tlacotepec","Magdalena Yodocono de Porfirio Díaz","Magdalena Zahuatlán","Mariscala de Juárez","Matías Romero Avendaño","Mazatlán Villa de Flores","Mesones Hidalgo","Mixistlán de la Reforma","Monjas","Mártires de Tacubaya","Natividad","Nazareno Etla","Nejapa de Madero","Nuevo Zoquiápam","Oaxaca de Juárez","Ocotlán de Morelos","Pinotepa de Don Luis","Pluma Hidalgo","Putla Villa de Guerrero","Reforma de Pineda","Reyes Etla","Rojas de Cuauhtémoc","Salina Cruz","San Agustín Amatengo","San Agustín Atenango","San Agustín Chayuco","San Agustín Etla","San Agustín Loxicha","San Agustín Tlacotepec","San Agustín Yatareni","San Agustín de las Juntas","San Andrés Cabecera Nueva","San Andrés Dinicuiti","San Andrés Huaxpaltepec","San Andrés Huayápam","San Andrés Ixtlahuaca","San Andrés Lagunas","San Andrés Nuxiño","San Andrés Paxtlán","San Andrés Sinaxtla","San Andrés Solaga","San Andrés Teotilálpam","San Andrés Tepetlapa","San Andrés Yaá","San Andrés Zabache","San Andrés Zautla","San Antonino Castillo Velasco","San Antonino Monte Verde","San Antonino el Alto","San Antonio Acutla","San Antonio Huitepec","San Antonio Nanahuatípam","San Antonio Sinicahua","San Antonio Tepetlapa","San Antonio de la Cal","San Baltazar Chichicápam","San Baltazar Loxicha","San Baltazar Yatzachi el Bajo","San Bartolo Coyotepec","San Bartolo Soyaltepec","San Bartolo Yautepec","San Bartolomé Ayautla","San Bartolomé Loxicha","San Bartolomé Quialana","San Bartolomé Yucuañe","San Bartolomé Zoogocho","San Bernardo Mixtepec","San Carlos Yautepec","San Cristóbal Amatlán","San Cristóbal Amoltepec","San Cristóbal Lachirioag","San Cristóbal Suchixtlahuaca","San Dionisio Ocotepec","San Dionisio Ocotlán","San Dionisio del Mar","San Esteban Atatlahuca","San Felipe Jalapa de Díaz","San Felipe Tejalápam","San Felipe Usila","San Francisco Cahuacuá","San Francisco Cajonos","San Francisco Chapulapa","San Francisco Chindúa","San Francisco Huehuetlán","San Francisco Ixhuatán","San Francisco Jaltepetongo","San Francisco Lachigoló","San Francisco Logueche","San Francisco Nuxaño","San Francisco Ozolotepec","San Francisco Sola","San Francisco Telixtlahuaca","San Francisco Teopan","San Francisco Tlapancingo","San Francisco del Mar","San Gabriel Mixtepec","San Ildefonso Amatlán","San Ildefonso Sola","San Ildefonso Villa Alta","San Jacinto Amilpas","San Jacinto Tlacotepec","San Jerónimo Coatlán","San Jerónimo Silacayoapilla","San Jerónimo Sosola","San Jerónimo Taviche","San Jerónimo Tecóatl","San Jerónimo Tlacochahuaya","San Jorge Nuchita","San José Ayuquila","San José Chiltepec","San José Estancia Grande","San José Independencia","San José Lachiguiri","San José Tenango","San José del Peñasco","San José del Progreso","San Juan Achiutla","San Juan Atepec","San Juan Bautista Atatlahuca","San Juan Bautista Coixtlahuaca","San Juan Bautista Cuicatlán","San Juan Bautista Guelache","San Juan Bautista Jayacatlán","San Juan Bautista Lo de Soto","San Juan Bautista Suchitepec","San Juan Bautista Tlachichilco","San Juan Bautista Tlacoatzintepec","San Juan Bautista Tuxtepec","San Juan Bautista Valle Nacional","San Juan Cacahuatepec","San Juan Chicomezúchil","San Juan Chilateca","San Juan Cieneguilla","San Juan Coatzóspam","San Juan Colorado","San Juan Comaltepec","San Juan Cotzocón","San Juan Diuxi","San Juan Evangelista Analco","San Juan Guelavía","San Juan Guichicovi","San Juan Ihualtepec","San Juan Juquila Mixes","San Juan Juquila Vijanos","San Juan Lachao","San Juan Lachigalla","San Juan Lajarcia","San Juan Lalana","San Juan Mazatlán","San Juan Mixtepec","San Juan Mixtepec","San Juan Ozolotepec","San Juan Petlapa","San Juan Quiahije","San Juan Quiotepec","San Juan Sayultepec","San Juan Tabaá","San Juan Tamazola","San Juan Teita","San Juan Teitipac","San Juan Tepeuxila","San Juan Teposcolula","San Juan Yaeé","San Juan Yatzona","San Juan Yucuita","San Juan de los Cués","San Juan del Estado","San Juan del Río","San Juan Ñumí","San Lorenzo","San Lorenzo Albarradas","San Lorenzo Cacaotepec","San Lorenzo Cuaunecuiltitla","San Lorenzo Texmelúcan","San Lorenzo Victoria","San Lucas Camotlán","San Lucas Ojitlán","San Lucas Quiaviní","San Lucas Zoquiápam","San Luis Amatlán","San Marcial Ozolotepec","San Marcos Arteaga","San Martín Huamelúlpam","San Martín Itunyoso","San Martín Lachilá","San Martín Peras","San Martín Tilcajete","San Martín Toxpalan","San Martín Zacatepec","San Mateo Cajonos","San Mateo Etlatongo","San Mateo Nejápam","San Mateo Peñasco","San Mateo Piñas","San Mateo Río Hondo","San Mateo Sindihui","San Mateo Tlapiltepec","San Mateo Yoloxochitlán","San Mateo Yucutindoo","San Mateo del Mar","San Melchor Betaza","San Miguel Achiutla","San Miguel Ahuehuetitlán","San Miguel Aloápam","San Miguel Amatitlán","San Miguel Amatlán","San Miguel Chicahua","San Miguel Chimalapa","San Miguel Coatlán","San Miguel Ejutla","San Miguel Huautla","San Miguel Mixtepec","San Miguel Panixtlahuaca","San Miguel Peras","San Miguel Piedras","San Miguel Quetzaltepec","San Miguel Santa Flor","San Miguel Soyaltepec","San Miguel Suchixtepec","San Miguel Tecomatlán","San Miguel Tenango","San Miguel Tequixtepec","San Miguel Tilquiápam","San Miguel Tlacamama","San Miguel Tlacotepec","San Miguel Tulancingo","San Miguel Yotao","San Miguel del Puerto","San Miguel del Río","San Miguel el Grande","San Nicolás","San Nicolás Hidalgo","San Pablo Coatlán","San Pablo Cuatro Venados","San Pablo Etla","San Pablo Huitzo","San Pablo Huixtepec","San Pablo Macuiltianguis","San Pablo Tijaltepec","San Pablo Villa de Mitla","San Pablo Yaganiza","San Pedro Amuzgos","San Pedro Apóstol","San Pedro Atoyac","San Pedro Cajonos","San Pedro Comitancillo","San Pedro Coxcaltepec Cántaros","San Pedro Huamelula","San Pedro Huilotepec","San Pedro Ixcatlán","San Pedro Ixtlahuaca","San Pedro Jaltepetongo","San Pedro Jicayán","San Pedro Jocotipac","San Pedro Juchatengo","San Pedro Mixtepec","San Pedro Mixtepec","San Pedro Molinos","San Pedro Mártir","San Pedro Mártir Quiechapa","San Pedro Mártir Yucuxaco","San Pedro Nopala","San Pedro Ocopetatillo","San Pedro Ocotepec","San Pedro Pochutla","San Pedro Quiatoni","San Pedro Sochiápam","San Pedro Tapanatepec","San Pedro Taviche","San Pedro Teozacoalco","San Pedro Teutila","San Pedro Tidaá","San Pedro Topiltepec","San Pedro Totolápam","San Pedro Yaneri","San Pedro Yucunama","San Pedro Yólox","San Pedro el Alto","San Pedro y San Pablo Ayutla","San Pedro y San Pablo Teposcolula","San Pedro y San Pablo Tequixtepec","San Raymundo Jalpan","San Sebastián Abasolo","San Sebastián Coatlán","San Sebastián Ixcapa","San Sebastián Nicananduta","San Sebastián Río Hondo","San Sebastián Tecomaxtlahuaca","San Sebastián Teitipac","San Sebastián Tutla","San Simón Almolongas","San Simón Zahuatlán","San Vicente Coatlán","San Vicente Lachixío","San Vicente Nuñú","Santa Ana","Santa Ana Ateixtlahuaca","Santa Ana Cuauhtémoc","Santa Ana Tavela","Santa Ana Tlapacoyan","Santa Ana Yareni","Santa Ana Zegache","Santa Ana del Valle","Santa Catalina Quierí","Santa Catarina Cuixtla","Santa Catarina Ixtepeji","Santa Catarina Juquila","Santa Catarina Lachatao","Santa Catarina Loxicha","Santa Catarina Mechoacán","Santa Catarina Minas","Santa Catarina Quiané","Santa Catarina Quioquitani","Santa Catarina Tayata","Santa Catarina Ticuá","Santa Catarina Yosonotú","Santa Catarina Zapoquila","Santa Cruz Acatepec","Santa Cruz Amilpas","Santa Cruz Itundujia","Santa Cruz Mixtepec","Santa Cruz Nundaco","Santa Cruz Papalutla","Santa Cruz Tacache de Mina","Santa Cruz Tacahua","Santa Cruz Tayata","Santa Cruz Xitla","Santa Cruz Xoxocotlán","Santa Cruz Zenzontepec","Santa Cruz de Bravo","Santa Gertrudis","Santa Inés Yatzeche","Santa Inés de Zaragoza","Santa Inés del Monte","Santa Lucía Miahuatlán","Santa Lucía Monteverde","Santa Lucía Ocotlán","Santa Lucía del Camino","Santa Magdalena Jicotlán","Santa María Alotepec","Santa María Apazco","Santa María Atzompa","Santa María Camotlán","Santa María Chachoápam","Santa María Chilchotla","Santa María Chimalapa","Santa María Colotepec","Santa María Cortijo","Santa María Coyotepec","Santa María Ecatepec","Santa María Guelacé","Santa María Guienagati","Santa María Huatulco","Santa María Huazolotitlán","Santa María Ipalapa","Santa María Ixcatlán","Santa María Jacatepec","Santa María Jalapa del Marqués","Santa María Jaltianguis","Santa María Lachixío","Santa María Mixtequilla","Santa María Nativitas","Santa María Nduayaco","Santa María Ozolotepec","Santa María Petapa","Santa María Peñoles","Santa María Pápalo","Santa María Quiegolani","Santa María Sola","Santa María Tataltepec","Santa María Tecomavaca","Santa María Temaxcalapa","Santa María Temaxcaltepec","Santa María Teopoxco","Santa María Tepantlali","Santa María Texcatitlán","Santa María Tlahuitoltepec","Santa María Tlalixtac","Santa María Tonameca","Santa María Totolapilla","Santa María Xadani","Santa María Yalina","Santa María Yavesía","Santa María Yolotepec","Santa María Yosoyúa","Santa María Yucuhiti","Santa María Zacatepec","Santa María Zaniza","Santa María Zoquitlán","Santa María del Rosario","Santa María del Tule","Santa María la Asunción","Santiago Amoltepec","Santiago Apoala","Santiago Apóstol","Santiago Astata","Santiago Atitlán","Santiago Ayuquililla","Santiago Cacaloxtepec","Santiago Camotlán","Santiago Choápam","Santiago Comaltepec","Santiago Huajolotitlán","Santiago Huauclilla","Santiago Ihuitlán Plumas","Santiago Ixcuintepec","Santiago Ixtayutla","Santiago Jamiltepec","Santiago Jocotepec","Santiago Juxtlahuaca","Santiago Lachiguiri","Santiago Lalopa","Santiago Laollaga","Santiago Laxopa","Santiago Llano Grande","Santiago Matatlán","Santiago Miltepec","Santiago Minas","Santiago Nacaltepec","Santiago Nejapilla","Santiago Niltepec","Santiago Nundiche","Santiago Nuyoó","Santiago Pinotepa Nacional","Santiago Suchilquitongo","Santiago Tamazola","Santiago Tapextla","Santiago Tenango","Santiago Tepetlapa","Santiago Tetepec","Santiago Texcalcingo","Santiago Textitlán","Santiago Tilantongo","Santiago Tillo","Santiago Tlazoyaltepec","Santiago Xanica","Santiago Xiacuí","Santiago Yaitepec","Santiago Yaveo","Santiago Yolomécatl","Santiago Yosondúa","Santiago Yucuyachi","Santiago Zacatepec","Santiago Zoochila","Santiago del Río","Santo Domingo Albarradas","Santo Domingo Armenta","Santo Domingo Chihuitán","Santo Domingo Ingenio","Santo Domingo Ixcatlán","Santo Domingo Nuxaá","Santo Domingo Ozolotepec","Santo Domingo Petapa","Santo Domingo Roayaga","Santo Domingo Tehuantepec","Santo Domingo Teojomulco","Santo Domingo Tepuxtepec","Santo Domingo Tlatayápam","Santo Domingo Tomaltepec","Santo Domingo Tonaltepec","Santo Domingo Tonalá","Santo Domingo Xagacía","Santo Domingo Yanhuitlán","Santo Domingo Yodohino","Santo Domingo Zanatepec","Santo Domingo de Morelos","Santo Tomás Jalieza","Santo Tomás Mazaltepec","Santo Tomás Ocotepec","Santo Tomás Tamazulapan","Santos Reyes Nopala","Santos Reyes Pápalo","Santos Reyes Tepejillo","Santos Reyes Yucuná","Silacayoápam","Sitio de Xitlapehua","Soledad Etla","Tamazulápam del Espíritu Santo","Tanetze de Zaragoza","Taniche","Tataltepec de Valdés","Teococuilco de Marcos Pérez","Teotitlán de Flores Magón","Teotitlán del Valle","Teotongo","Tepelmeme Villa de Morelos","Tlacolula de Matamoros","Tlacotepec Plumas","Tlalixtac de Cabrera","Totontepec Villa de Morelos","Trinidad Zaachila","Unión Hidalgo","Valerio Trujano","Villa Díaz Ordaz","Villa Hidalgo Yalálag","Villa Sola de Vega","Villa Talea de Castro","Villa Tejúpam de la Unión","Villa de Chilapa de Díaz","Villa de Etla","Villa de Santiago Chazumba","Villa de Tamazulápam del Progreso","Villa de Tututepec","Villa de Zaachila","Yaxe","Yogana","Yutanduchi de Guerrero","Zapotitlán Lagunas","Zapotitlán Palmas","Zimatlán de Álvarez","Ánimas Trujano"],"Puebla":["Acajete","Acateno","Acatlán","Acatzingo","Acteopan","Ahuacatlán","Ahuatlán","Ahuazotepec","Ahuehuetitla","Ajalpan","Albino Zertuche","Aljojuca","Altepexi","Amixtlán","Amozoc","Aquixtla","Atempan","Atexcal","Atlequizayan","Atlixco","Atoyatempan","Atzala","Atzitzihuacán","Atzitzintla","Axutla","Ayotoxco de Guerrero","Calpan","Caltepec","Camocuautla","Caxhuacan","Cañada Morelos","Chalchicomula de Sesma","Chapulco","Chiautla","Chiautzingo","Chichiquila","Chiconcuautla","Chietla","Chigmecatitlán","Chignahuapan","Chignautla","Chila","Chila de la Sal","Chilchotla","Chinantla","Coatepec","Coatzingo","Cohetzala","Cohuecan","Coronango","Coxcatlán","Coyomeapan","Coyotepec","Cuapiaxtla de Madero","Cuautempan","Cuautinchán","Cuautlancingo","Cuayuca de Andrade","Cuetzalan del Progreso","Cuyoaco","Domingo Arenas","Eloxochitlán","Epatlán","Esperanza","Francisco Z. Mena","General Felipe Ángeles","Guadalupe","Guadalupe Victoria","Hermenegildo Galeana","Honey","Huaquechula","Huatlatlauca","Huauchinango","Huehuetla","Huehuetlán el Chico","Huehuetlán el Grande","Huejotzingo","Hueyapan","Hueytamalco","Hueytlalpan","Huitzilan de Serdán","Huitziltepec","Ixcamilpa de Guerrero","Ixcaquixtla","Ixtacamaxtitlán","Ixtepec","Izúcar de Matamoros","Jalpan","Jolalpan","Jonotla","Jopala","Juan C. Bonilla","Juan Galindo","Juan N. Méndez","La Magdalena Tlatlauquitepec","Lafragua","Libres","Los Reyes de Juárez","Mazapiltepec de Juárez","Mixtla","Molcaxac","Naupan","Nauzontla","Nealtican","Nicolás Bravo","Nopalucan","Ocotepec","Ocoyucan","Olintla","Oriental","Pahuatlán","Palmar de Bravo","Pantepec","Petlalcingo","Piaxtla","Puebla","Quecholac","Quimixtlán","Rafael Lara Grajales","San Andrés Cholula","San Antonio Cañada","San Diego la Mesa Tochimiltzingo","San Felipe Teotlalcingo","San Felipe Tepatlán","San Gabriel Chilac","San Gregorio Atzompa","San Jerónimo Tecuanipan","San Jerónimo Xayacatlán","San José Chiapa","San José Miahuatlán","San Juan Atenco","San Juan Atzompa","San Martín Texmelucan","San Martín Totoltepec","San Matías Tlalancaleca","San Miguel Ixitlán","San Miguel Xoxtla","San Nicolás Buenos Aires","San Nicolás de los Ranchos","San Pablo Anicano","San Pedro Cholula","San Pedro Yeloixtlahuaca","San Salvador Huixcolotla","San Salvador el Seco","San Salvador el Verde","San Sebastián Tlacotepec","Santa Catarina Tlaltempan","Santa Inés Ahuatempan","Santa Isabel Cholula","Santiago Miahuatlán","Santo Tomás Hueyotlipan","Soltepec","Tecali de Herrera","Tecamachalco","Tecomatlán","Tehuacán","Tehuitzingo","Tenampulco","Teopantlán","Teotlalco","Tepanco de López","Tepango de Rodríguez","Tepatlaxco de Hidalgo","Tepeaca","Tepemaxalco","Tepeojuma","Tepetzintla","Tepexco","Tepexi de Rodríguez","Tepeyahualco","Tepeyahualco de Cuauhtémoc","Tetela de Ocampo","Teteles de Ávila Castillo","Teziutlán","Tianguismanalco","Tilapa","Tlachichuca","Tlacotepec de Benito Juárez","Tlacuilotepec","Tlahuapan","Tlaltenango","Tlanepantla","Tlaola","Tlapacoya","Tlapanalá","Tlatlauquitepec","Tlaxco","Tochimilco","Tochtepec","Totoltepec de Guerrero","Tulcingo","Tuzamapan de Galeana","Tzicatlacoyan","Venustiano Carranza","Vicente Guerrero","Xayacatlán de Bravo","Xicotepec","Xicotlán","Xiutetelco","Xochiapulco","Xochiltepec","Xochitlán Todos Santos","Xochitlán de Vicente Suárez","Yaonáhuac","Yehualtepec","Zacapala","Zacapoaxtla","Zacatlán","Zapotitlán","Zapotitlán de Méndez","Zaragoza","Zautla","Zihuateutla","Zinacatepec","Zongozotla","Zoquiapan","Zoquitlán"],"Querétaro":["Amealco de Bonfil","Arroyo Seco","Cadereyta de Montes","Colón","Corregidora","El Marqués","Ezequiel Montes","Huimilpan","Jalpan de Serra","Landa de Matamoros","Pedro Escobedo","Peñamiller","Pinal de Amoles","Querétaro","San Joaquín","San Juan del Río","Tequisquiapan","Tolimán"],"Quintana Roo":["Bacalar","Benito Juárez","Cozumel","Felipe Carrillo Puerto","Isla Mujeres","José María Morelos","Lázaro Cárdenas","Othón P. Blanco","Playa del Carmen","Puerto Morelos","Tulum"],"San Luis Potosí":["Ahualulco del Sonido 13","Alaquines","Aquismón","Armadillo de los Infante","Axtla de Terrazas","Catorce","Cedral","Cerritos","Cerro de San Pedro","Charcas","Ciudad Fernández","Ciudad Valles","Ciudad del Maíz","Coxcatlán","Cárdenas","Ebano","El Naranjo","Guadalcázar","Huehuetlán","Lagunillas","Matehuala","Matlapa","Mexquitic de Carmona","Moctezuma","Rayón","Rioverde","Salinas","San Antonio","San Ciro de Acosta","San Luis Potosí","San Martín Chalchicuautla","San Nicolás Tolentino","San Vicente Tancuayalab","Santa Catarina","Santa María del Río","Santo Domingo","Soledad de Graciano Sánchez","Tamasopo","Tamazunchale","Tampacán","Tampamolón Corona","Tamuín","Tancanhuitz","Tanlajás","Tanquián de Escobedo","Tierra Nueva","Vanegas","Venado","Villa Hidalgo","Villa Juárez","Villa de Arista","Villa de Arriaga","Villa de Guadalupe","Villa de Pozos","Villa de Ramos","Villa de Reyes","Villa de la Paz","Xilitla","Zaragoza"],"Sinaloa":["Ahome","Angostura","Badiraguato","Choix","Concordia","Cosalá","Culiacán","El Fuerte","Eldorado","Elota","Escuinapa","Guasave","Juan José Ríos","Mazatlán","Mocorito","Navolato","Rosario","Salvador Alvarado","San Ignacio","Sinaloa"],"Sonora":["Aconchi","Agua Prieta","Altar","Arivechi","Arizpe","Atil","Bacadéhuachi","Bacanora","Bacerac","Bacoachi","Banámichi","Bavispe","Baviácora","Benito Juárez","Benjamín Hill","Bácum","Caborca","Cajeme","Cananea","Carbó","Cucurpe","Cumpas","Divisaderos","Empalme","Etchojoa","Fronteras","General Plutarco Elías Calles","Granados","Guaymas","Hermosillo","Huachinera","Huatabampo","Huásabas","Huépac","Imuris","La Colorada","Magdalena","Mazatán","Moctezuma","Naco","Nacozari de García","Navojoa","Nogales","Nácori Chico","Opodepe","Oquitoa","Pitiquito","Puerto Peñasco","Quiriego","Rayón","Rosario","Sahuaripa","San Felipe de Jesús","San Ignacio Río Muerto","San Javier","San Luis Río Colorado","San Miguel de Horcasitas","San Pedro de la Cueva","Santa Ana","Santa Cruz","Soyopa","Suaqui Grande","Sáric","Tepache","Trincheras","Tubutama","Ures","Villa Hidalgo","Villa Pesqueira","Yécora","Álamos","Ónavas"],"Tabasco":["Balancán","Centla","Centro","Comalcalco","Cunduacán","Cárdenas","Emiliano Zapata","Huimanguillo","Jalapa","Jalpa de Méndez","Jonuta","Macuspana","Nacajuca","Paraíso","Tacotalpa","Teapa","Tenosique"],"Tamaulipas":["Abasolo","Aldama","Altamira","Antiguo Morelos","Burgos","Bustamante","Camargo","Casas","Ciudad Madero","Cruillas","El Mante","González","Guerrero","Gustavo Díaz Ordaz","Gómez Farías","Güémez","Hidalgo","Jaumave","Jiménez","Llera","Mainero","Matamoros","Mier","Miguel Alemán","Miquihuana","Méndez","Nuevo Laredo","Nuevo Morelos","Ocampo","Padilla","Palmillas","Reynosa","Río Bravo","San Carlos","San Fernando","San Nicolás","Soto la Marina","Tampico","Tula","Valle Hermoso","Victoria","Villagrán","Xicoténcatl"],"Tlaxcala":["Acuamanala de Miguel Hidalgo","Amaxac de Guerrero","Apetatitlán de Antonio Carvajal","Apizaco","Atlangatepec","Atltzayanca","Benito Juárez","Calpulalpan","Chiautempan","Contla de Juan Cuamatzi","Cuapiaxtla","Cuaxomulco","El Carmen Tequexquitla","Emiliano Zapata","Españita","Huamantla","Hueyotlipan","Ixtacuixtla de Mariano Matamoros","Ixtenco","La Magdalena Tlaltelulco","Lázaro Cárdenas","Mazatecochco de José María Morelos","Muñoz de Domingo Arenas","Nanacamilpa de Mariano Arista","Natívitas","Panotla","Papalotla de Xicohténcatl","San Damián Texóloc","San Francisco Tetlanohcan","San Jerónimo Zacualpan","San José Teacalco","San Juan Huactzinco","San Lorenzo Axocomanitla","San Lucas Tecopilco","San Pablo del Monte","Sanctórum de Lázaro Cárdenas","Santa Ana Nopalucan","Santa Apolonia Teacalco","Santa Catarina Ayometla","Santa Cruz Quilehtla","Santa Cruz Tlaxcala","Santa Isabel Xiloxoxtla","Tenancingo","Teolocholco","Tepetitla de Lardizábal","Tepeyanco","Terrenate","Tetla de la Solidaridad","Tetlatlahuca","Tlaxcala","Tlaxco","Tocatlán","Totolac","Tzompantepec","Xaloztoc","Xaltocan","Xicohtzinco","Yauhquemehcan","Zacatelco","Ziltlaltépec de Trinidad Sánchez Santos"],"Veracruz":["Acajete","Acatlán","Acayucan","Actopan","Acula","Acultzingo","Agua Dulce","Alpatláhuac","Alto Lucero de Gutiérrez Barrios","Altotonga","Alvarado","Amatitlán","Amatlán de los Reyes","Angel R. Cabada","Apazapan","Aquila","Astacinga","Atlahuilco","Atoyac","Atzacan","Atzalan","Ayahualulco","Banderilla","Benito Juárez","Boca del Río","Calcahualco","Camarón de Tejeda","Camerino Z. Mendoza","Carlos A. Carrillo","Carrillo Puerto","Castillo de Teayo","Catemaco","Cazones de Herrera","Cerro Azul","Chacaltianguis","Chalma","Chiconamel","Chiconquiaco","Chicontepec","Chinameca","Chinampa de Gorostiza","Chocamán","Chontla","Chumatlán","Citlaltépetl","Coacoatzintla","Coahuitlán","Coatepec","Coatzacoalcos","Coatzintla","Coetzala","Colipa","Comapa","Cosamaloapan de Carpio","Cosautlán de Carvajal","Coscomatepec","Cosoleacaque","Cotaxtla","Coxquihui","Coyutla","Cuichapa","Cuitláhuac","Córdoba","El Higo","Emiliano Zapata","Espinal","Filomeno Mata","Fortín","Gutiérrez Zamora","Hidalgotitlán","Huatusco","Huayacocotla","Hueyapan de Ocampo","Huiloapan de Cuauhtémoc","Ignacio de la Llave","Ilamatlán","Isla","Ixcatepec","Ixhuacán de los Reyes","Ixhuatlancillo","Ixhuatlán de Madero","Ixhuatlán del Café","Ixhuatlán del Sureste","Ixmatlahuacan","Ixtaczoquitlán","Jalacingo","Jalcomulco","Jamapa","Jesús Carranza","Jilotepec","José Azueta","Juan Rodríguez Clara","Juchique de Ferrer","Jáltipan","La Antigua","La Perla","Landero y Coss","Las Choapas","Las Minas","Las Vigas de Ramírez","Lerdo de Tejada","Los Reyes","Magdalena","Maltrata","Manlio Fabio Altamirano","Mariano Escobedo","Martínez de la Torre","Mecatlán","Mecayapan","Medellín de Bravo","Miahuatlán","Minatitlán","Misantla","Mixtla de Altamirano","Moloacán","Nanchital de Lázaro Cárdenas del Río","Naolinco","Naranjal","Naranjos Amatlán","Nautla","Nogales","Oluta","Omealca","Orizaba","Otatitlán","Oteapan","Ozuluama de Mascareñas","Pajapan","Papantla","Paso de Ovejas","Paso del Macho","Perote","Platón Sánchez","Playa Vicente","Poza Rica de Hidalgo","Pueblo Viejo","Puente Nacional","Pánuco","Rafael Delgado","Rafael Lucio","Río Blanco","Saltabarranca","San Andrés Tenejapan","San Andrés Tuxtla","San Juan Evangelista","San Rafael","Santiago Sochiapan","Santiago Tuxtla","Sayula de Alemán","Sochiapa","Soconusco","Soledad Atzompa","Soledad de Doblado","Soteapan","Tamalín","Tamiahua","Tampico Alto","Tancoco","Tantima","Tantoyuca","Tatahuicapan de Juárez","Tatatila","Tecolutla","Tehuipango","Tempoal","Tenampa","Tenochtitlán","Teocelo","Tepatlaxco","Tepetlán","Tepetzintla","Tequila","Texcatepec","Texhuacán","Texistepec","Tezonapa","Tierra Blanca","Tihuatlán","Tlachichilco","Tlacojalpan","Tlacolulan","Tlacotalpan","Tlacotepec de Mejía","Tlalixcoyan","Tlalnelhuayocan","Tlaltetela","Tlapacoyan","Tlaquilpa","Tlilapan","Tomatlán","Tonayán","Totutla","Tres Valles","Tuxpan","Tuxtilla","Ursulo Galván","Uxpanapa","Vega de Alatorre","Veracruz","Villa Aldama","Xalapa","Xico","Xoxocotla","Yanga","Yecuatla","Zacualpan","Zaragoza","Zentla","Zongolica","Zontecomatlán de López y Fuentes","Zozocolco de Hidalgo","Álamo Temapache"],"Yucatán":["Abalá","Acanceh","Akil","Baca","Bokobá","Buctzotz","Cacalchén","Calotmul","Cansahcab","Cantamayec","Celestún","Cenotillo","Chacsinkín","Chankom","Chapab","Chemax","Chichimilá","Chicxulub Pueblo","Chikindzonot","Chocholá","Chumayel","Conkal","Cuncunul","Cuzamá","Dzan","Dzemul","Dzidzantún","Dzilam González","Dzilam de Bravo","Dzitás","Dzoncauich","Espita","Halachó","Hocabá","Hoctún","Homún","Huhí","Hunucmá","Ixil","Izamal","Kanasín","Kantunil","Kaua","Kinchil","Kopomá","Mama","Maní","Maxcanú","Mayapán","Mocochá","Motul","Muna","Muxupip","Mérida","Opichén","Oxkutzcab","Panabá","Peto","Progreso","Quintana Roo","Río Lagartos","Sacalum","Samahil","San Felipe","Sanahcat","Santa Elena","Seyé","Sinanché","Sotuta","Sucilá","Sudzal","Suma","Tahdziú","Tahmek","Teabo","Tecoh","Tekal de Venegas","Tekantó","Tekax","Tekit","Tekom","Telchac Pueblo","Telchac Puerto","Temax","Temozón","Tepakán","Tetiz","Teya","Ticul","Timucuy","Tinum","Tixcacalcupul","Tixkokob","Tixméhuac","Tixpéhual","Tizimín","Tunkás","Tzucacab","Uayma","Ucú","Umán","Valladolid","Xocchel","Yaxcabá","Yaxkukul","Yobaín"],"Zacatecas":["Apozol","Apulco","Atolinga","Benito Juárez","Calera","Cañitas de Felipe Pescador","Chalchihuites","Concepción del Oro","Cuauhtémoc","El Plateado de Joaquín Amaro","El Salvador","Fresnillo","Genaro Codina","General Enrique Estrada","General Francisco R. Murguía","General Pánfilo Natera","Guadalupe","Huanusco","Jalpa","Jerez","Jiménez del Teul","Juan Aldama","Juchipila","Loreto","Luis Moya","Mazapil","Melchor Ocampo","Mezquital del Oro","Miguel Auza","Momax","Monte Escobedo","Morelos","Moyahua de Estrada","Nochistlán de Mejía","Noria de Ángeles","Ojocaliente","Pinos","Pánuco","Río Grande","Sain Alto","Santa María de la Paz","Sombrerete","Susticacán","Tabasco","Tepechitlán","Tepetongo","Teúl de González Ortega","Tlaltenango de Sánchez Román","Trancoso","Trinidad García de la Cadena","Valparaíso","Vetagrande","Villa García","Villa González Ortega","Villa Hidalgo","Villa de Cos","Villanueva","Zacatecas"]};
+var ESTADOS_MEXICO = Object.keys(ESTADOS_MUNICIPIOS);
+
+/* ============================================================
+ * Reactivos — muestra de 2 de las 6 dimensiones del IMES (12 de 36 ítems),
+ * reproducidos tal cual del instrumento completo. La versión completa suma
+ * las 6 dimensiones + 15 preguntas abiertas y la aplica un/a facilitador/a;
+ * esta muestra es solo autoevaluación rápida para conocer la herramienta.
+ * ============================================================ */
+var DIMENSIONES_MUESTRA = [
+  {
+    clave: 'I', nombre: 'Comunicación efectiva y escucha activa',
+    items: [
+      'Expreso mis ideas con claridad cuando hablo con otras personas.',
+      'Escucho a los demás sin interrumpirlos, aunque no esté de acuerdo.',
+      'Sé adaptar mi forma de hablar según con quién estoy (maestra/o, empleador/a, compañero/a).',
+      'Cuando no entiendo algo, pregunto o busco la manera de aclararlo.',
+      'En situaciones de conflicto, busco explicar mi punto de vista sin agresividad.',
+      'Puedo redactar un correo electrónico o mensaje formal de manera adecuada.'
+    ],
+    interpretacion: {
+      desarrollo: 'Es un área en la que todavía te cuesta sentirte con seguridad — comunicar tus ideas o sostener una conversación difícil. Es normal, y es justo el tipo de habilidad que se fortalece rápido con práctica y acompañamiento.',
+      proceso: 'Tienes bases sólidas de comunicación, aunque hay situaciones — como dar una opinión distinta o hablar con alguien con más autoridad — donde todavía dudas. Con algo de práctica dirigida, esta habilidad puede consolidarse pronto.',
+      consolidada: 'Te comunicas con claridad y sabes escuchar incluso cuando no estás de acuerdo — una de las habilidades que más valoran los equipos de trabajo.'
+    }
+  },
+  {
+    clave: 'V', nombre: 'Autogestión, responsabilidad y aprendizaje continuo',
+    items: [
+      'Organizo mi tiempo para cumplir con mis responsabilidades sin que nadie me lo recuerde.',
+      'Cuando me comprometo a hacer algo, lo cumplo aunque surjan contratiempos.',
+      'Identifico mis propias fortalezas y áreas de mejora sin necesitar que otros me lo digan.',
+      'Busco aprender algo nuevo por cuenta propia, aunque no sea obligatorio.',
+      'Cuando recibo una crítica, la tomo como una oportunidad de mejorar, no como un ataque personal.',
+      'Me fijo metas concretas y reviso si las estoy cumpliendo.'
+    ],
+    interpretacion: {
+      desarrollo: 'Organizar tu tiempo y sostener compromisos sin que alguien más te lo recuerde es algo en lo que todavía estás construyendo confianza — es un proceso, no un rasgo fijo con el que se nace o no.',
+      proceso: 'Ya cumples tus responsabilidades y buscas mejorar por cuenta propia; terminar de consolidar esto suele ser cuestión de práctica constante más que de aprender algo nuevo desde cero.',
+      consolidada: 'Te haces cargo de tu tiempo, tus compromisos y tu propio aprendizaje sin depender de que alguien más te lo indique — una habilidad clave en cualquier trayectoria laboral.'
+    }
+  }
+];
+
+function _bandaDimension(puntaje) {
+  if (puntaje <= 10) return { clave: 'desarrollo', etiqueta: 'En desarrollo', claseCss: 'banda-desarrollo' };
+  if (puntaje <= 20) return { clave: 'proceso', etiqueta: 'En proceso', claseCss: 'banda-proceso' };
+  return { clave: 'consolidada', etiqueta: 'Consolidada', claseCss: 'banda-consolidada' };
+}
+
+var state = { paso: 0, respuestas: {}, resultado: null };
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+
+function jsonp(action, params) {
+  return new Promise(function (resolve) {
+    var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+    var url = WEB_APP_URL + '?action=' + encodeURIComponent(action) + '&callback=' + cbName;
+    params = params || {};
+    for (var k in params) {
+      if (params[k] !== undefined && params[k] !== null) url += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+    }
+    var script = document.createElement('script');
+    var cleaned = false;
+    function cleanup() { if (cleaned) return; cleaned = true; delete window[cbName]; if (script.parentNode) script.parentNode.removeChild(script); }
+    window[cbName] = function (data) { cleanup(); resolve(data); };
+    script.onerror = function () { cleanup(); resolve({ ok: false, error: 'No se pudo conectar. Revisa tu conexión a internet e intenta de nuevo.' }); };
+    setTimeout(function () { if (!cleaned) { cleanup(); resolve({ ok: false, error: 'La plataforma tardó demasiado en responder. Intenta de nuevo.' }); } }, 25000);
+    script.src = url;
+    document.body.appendChild(script);
+  });
+}
+
+var app = document.getElementById('app');
+var TOTAL_PASOS = 4; // 0 intro · 1 preguntas · 2 datos · 3 resultado
+
+function progresoHtml() {
+  var html = '<div class="progreso">';
+  for (var i = 0; i < TOTAL_PASOS; i++) {
+    var cls = i < state.paso ? 'hecho' : (i === state.paso ? 'actual' : '');
+    html += '<div class="paso ' + cls + '"></div>';
+  }
+  return html + '</div>';
+}
+
+function render() {
+  if (state.paso === 0) return renderIntro();
+  if (state.paso === 1) return renderPreguntas();
+  if (state.paso === 2) return renderDatos();
+  return renderResultado();
+}
+
+function renderIntro() {
+  app.innerHTML =
+    '<h1>Prueba una muestra del IMES</h1>' +
+    '<p class="subtle">El <b>Instrumento de Medición de Empleabilidad Social (IMES)</b> evalúa 6 dimensiones de habilidades para el trabajo a través de 36 reactivos, aplicado normalmente con acompañamiento de un/a facilitador/a. Esta es una muestra breve y gratuita — 12 reactivos, 2 de las 6 dimensiones — para que conozcas cómo funciona.</p>' +
+    '<p class="subtle">Toma menos de 3 minutos. Al final verás tu resultado en ambas dimensiones.</p>' +
+    '<div class="fila-botones"><button class="primary" id="btnComenzar">Comenzar</button></div>';
+  document.getElementById('btnComenzar').onclick = function () { state.paso = 1; render(); };
+}
+
+function renderPreguntas() {
+  var etiquetasEscala = ['Totalmente en desacuerdo', '', '', '', 'Totalmente de acuerdo'];
+  var bloquesHtml = DIMENSIONES_MUESTRA.map(function (dim, di) {
+    var itemsHtml = dim.items.map(function (texto, ii) {
+      var name = 'd' + di + 'i' + ii;
+      var opcionesHtml = [1, 2, 3, 4, 5].map(function (v) {
+        var marcado = state.respuestas[name] === v;
+        return '<label class="likert-opcion">' +
+          '<input type="radio" name="' + name + '" value="' + v + '"' + (marcado ? ' checked' : '') + '>' +
+          '<span class="likert-circulo">' + v + '</span>' +
+          '<span class="likert-texto">' + etiquetasEscala[v - 1] + '</span>' +
+        '</label>';
+      }).join('');
+      return '<div class="likert" data-name="' + name + '">' +
+        '<div class="likert-pregunta">' + escapeHtml(texto) + '</div>' +
+        '<div class="likert-escala">' + opcionesHtml + '</div>' +
+      '</div>';
+    }).join('');
+    return '<div class="bloque-dimension">' +
+      '<div class="num-bloque">Bloque ' + (di + 1) + ' de ' + DIMENSIONES_MUESTRA.length + '</div>' +
+      '<div class="nombre-dimension">' + escapeHtml(dim.nombre) + '</div>' +
+      itemsHtml +
+    '</div>';
+  }).join('');
+
+  app.innerHTML =
+    progresoHtml() +
+    '<h2>Responde según qué tan de acuerdo estás</h2>' +
+    '<p class="subtle" style="margin-top:0">No hay respuestas correctas o incorrectas — responde con lo primero que pienses.</p>' +
+    '<div id="secMsg"></div>' +
+    bloquesHtml +
+    '<div class="fila-botones">' +
+      '<button class="secondary" id="btnAtras">Atrás</button>' +
+      '<button class="primary" id="btnSiguiente">Continuar</button>' +
+    '</div>';
+
+  Array.prototype.forEach.call(app.querySelectorAll('.likert-opcion input'), function (input) {
+    input.addEventListener('change', function () {
+      state.respuestas[input.name] = Number(input.value);
+    });
+  });
+
+  document.getElementById('btnAtras').onclick = function () { state.paso = 0; render(); };
+  document.getElementById('btnSiguiente').onclick = function () {
+    var totalItems = DIMENSIONES_MUESTRA.reduce(function (n, d) { return n + d.items.length; }, 0);
+    var respondidos = Object.keys(state.respuestas).length;
+    if (respondidos < totalItems) {
+      document.getElementById('secMsg').innerHTML = '<div class="msg error">Responde las ' + totalItems + ' preguntas antes de continuar (llevas ' + respondidos + ').</div>';
+      return;
+    }
+    state.paso = 2;
+    render();
+  };
+}
+
+function renderDatos() {
+  var opcionesEstado = '<option value="">Selecciona un estado</option>' +
+    ESTADOS_MEXICO.map(function (e) { return '<option value="' + escapeHtml(e) + '">' + escapeHtml(e) + '</option>'; }).join('');
+
+  app.innerHTML =
+    progresoHtml() +
+    '<h2>Ya casi — ¿a dónde te enviamos tu resultado?</h2>' +
+    '<p class="subtle" style="margin-top:0">Usamos estos datos únicamente para compartirte tu resultado y, si nos autorizas, para contarte sobre el IMES completo y otros instrumentos de Sintropía Social.</p>' +
+    '<div id="secMsg"></div>' +
+    '<form id="datosForm">' +
+      '<label>Nombre <span class="req">*</span></label><input type="text" id="dNombre">' +
+      '<label>Apellido</label><input type="text" id="dApellido">' +
+      '<div class="row" style="display:flex;gap:12px">' +
+        '<div style="flex:1"><label>Estado</label><select id="dEstado">' + opcionesEstado + '</select></div>' +
+        '<div style="flex:1"><label>Municipio</label><select id="dMunicipio"><option value="">Selecciona un estado primero</option></select></div>' +
+      '</div>' +
+      '<label>Edad</label><input type="number" id="dEdad" min="10" max="99">' +
+      '<label>Correo electrónico <span class="req">*</span></label><input type="email" id="dEmail" placeholder="nombre@correo.com">' +
+      '<label>Teléfono (opcional)</label><input type="text" id="dTelefono">' +
+      '<input type="text" id="dTrampa" class="campo-trampa" tabindex="-1" autocomplete="off">' +
+      '<div class="consentimiento">' +
+        '<input type="checkbox" id="dConsentimiento">' +
+        '<label for="dConsentimiento">Autorizo a Sintropía Social a contactarme para compartirme mi resultado y contarme sobre sus servicios. Puedo pedir que borren mis datos cuando quiera escribiendo a comunicacion@sintropiasocial.com.</label>' +
+      '</div>' +
+    '</form>' +
+    '<div class="fila-botones">' +
+      '<button class="secondary" id="btnAtras">Atrás</button>' +
+      '<button class="primary" id="btnVerResultado">Ver mi resultado</button>' +
+    '</div>';
+
+  document.getElementById('dEstado').onchange = function () {
+    var estado = document.getElementById('dEstado').value;
+    var selMunicipio = document.getElementById('dMunicipio');
+    if (!estado) { selMunicipio.innerHTML = '<option value="">Selecciona un estado primero</option>'; return; }
+    var municipios = ESTADOS_MUNICIPIOS[estado] || [];
+    selMunicipio.innerHTML = '<option value="">Selecciona un municipio</option>' +
+      municipios.map(function (m) { return '<option value="' + escapeHtml(m) + '">' + escapeHtml(m) + '</option>'; }).join('');
+  };
+
+  document.getElementById('btnAtras').onclick = function () { state.paso = 1; render(); };
+  document.getElementById('btnVerResultado').onclick = async function () {
+    var msgBox = document.getElementById('secMsg');
+    var nombre = document.getElementById('dNombre').value.trim();
+    var email = document.getElementById('dEmail').value.trim();
+    var consentimiento = document.getElementById('dConsentimiento').checked;
+    if (!nombre) { msgBox.innerHTML = '<div class="msg error">Escribe tu nombre.</div>'; return; }
+    if (!email || email.indexOf('@') === -1) { msgBox.innerHTML = '<div class="msg error">Escribe un correo electrónico válido.</div>'; return; }
+    if (!consentimiento) { msgBox.innerHTML = '<div class="msg error">Necesitamos tu autorización para poder contactarte con tu resultado.</div>'; return; }
+
+    var resultado = DIMENSIONES_MUESTRA.map(function (dim, di) {
+      var puntaje = dim.items.reduce(function (s, _t, ii) { return s + (state.respuestas['d' + di + 'i' + ii] || 0); }, 0);
+      var banda = _bandaDimension(puntaje);
+      return { nombre: dim.nombre, puntaje: puntaje, banda: banda, texto: dim.interpretacion[banda.clave] };
+    });
+    state.resultado = resultado;
+
+    var btn = document.getElementById('btnVerResultado');
+    btn.disabled = true; btn.textContent = 'Guardando...';
+    var resumenNotas = resultado.map(function (r) { return r.nombre + ': ' + r.puntaje + '/30 (' + r.banda.etiqueta + ')'; }).join(' — ');
+    await jsonp('capturarInteresadoMuestra', {
+      muestra: 'IMES',
+      nombre: nombre,
+      apellido: document.getElementById('dApellido').value.trim(),
+      estado: document.getElementById('dEstado').value,
+      municipio: document.getElementById('dMunicipio').value,
+      edad: document.getElementById('dEdad').value,
+      email: email,
+      telefono: document.getElementById('dTelefono').value.trim(),
+      consentimiento: 'Sí',
+      notas: resumenNotas,
+      sitioWebTrampa: document.getElementById('dTrampa').value
+    });
+    // El resultado se muestra siempre, incluso si el guardado del lead
+    // falla por algún motivo de red — no queremos que un problema de
+    // conexión le esconda a la persona lo que ya respondió.
+    state.paso = 3;
+    render();
+  };
+}
+
+function renderResultado() {
+  var bloquesHtml = state.resultado.map(function (r) {
+    return '<div class="resultado-dimension">' +
+      '<span class="banda ' + r.banda.claseCss + '">' + r.banda.etiqueta + '</span>' +
+      '<h3 style="margin:0 0 2px">' + escapeHtml(r.nombre) + '</h3>' +
+      '<p class="puntaje">' + r.puntaje + ' de 30 puntos</p>' +
+      '<p>' + escapeHtml(r.texto) + '</p>' +
+    '</div>';
+  }).join('');
+
+  app.innerHTML =
+    progresoHtml() +
+    '<div class="pantalla-centrada"><h1>Tu resultado</h1>' +
+    '<p class="subtle">Esto es solo una muestra — la aplicación completa del IMES (36 reactivos, 6 dimensiones, más preguntas abiertas) da un panorama mucho más completo, acompañado por el equipo de Sintropía Social.</p></div>' +
+    bloquesHtml +
+    '<div class="cta">' +
+      '<h2>¿Quieres el IMES completo para tu organización?</h2>' +
+      '<p>El IMES es uno de los 35 instrumentos del Banco Integral de Sintropía Social para investigación social, educación y reclutamiento. Escríbenos y te contamos cómo aplicarlo con tu equipo, grupo o comunidad.</p>' +
+      '<p><a href="mailto:comunicacion@sintropiasocial.com">comunicacion@sintropiasocial.com</a> · <a href="https://sintropiassociales-del.github.io/">sintropiassociales-del.github.io</a></p>' +
+    '</div>';
+}
+
+render();
+</script>
+</body>
+</html>
