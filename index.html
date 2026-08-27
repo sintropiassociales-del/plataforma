@@ -2176,6 +2176,7 @@ var state = {
   crmSeguimientosTodos: [], // todos los seguimientos de todos los clientes, para la columna "Último seguimiento"
   crmInteresados: [],
   crmFiltroEstatus: 'Todos',
+  crmFiltroEje: 'Todos',
   crmBusqueda: '',
   crmClientesSeleccion: [],    // códigos de clientes marcados para el mailing
   crmInteresadosSeleccion: [], // códigos de interesados marcados para el mailing
@@ -3547,7 +3548,13 @@ function renderCRMClientesTabla() {
             '<button class="secondary" id="btnExportarClientes">Exportar a Excel</button>' +
             '<button class="primary" id="btnEnviarCorreoClientes">Enviar correo</button>' +
           '</div>' +
-          '<input type="text" id="buscarCliente" placeholder="Buscar por organización, contacto o correo..." style="max-width:280px">' +
+          '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
+            '<select id="filtroEjeCliente">' +
+              '<option value="Todos">Todos los ejes de interés</option>' +
+              EJES_INTERES_CRM.map(function (e) { return '<option value="' + escapeHtml(e) + '">' + escapeHtml(e) + '</option>'; }).join('') +
+            '</select>' +
+            '<input type="text" id="buscarCliente" placeholder="Buscar por organización, contacto o correo..." style="max-width:280px">' +
+          '</div>' +
         '</div>' +
         '<div class="familias" id="crmChips" style="margin-top:10px">' + chips + '</div>' +
         '<div id="crmClientesResultados"></div>' +
@@ -3568,6 +3575,9 @@ function renderCRMClientesTabla() {
     var buscarInput = document.getElementById('buscarCliente');
     buscarInput.value = state.crmBusqueda;
     buscarInput.oninput = function () { state.crmBusqueda = buscarInput.value; _renderCRMClientesResultados(); };
+    var filtroEjeSel = document.getElementById('filtroEjeCliente');
+    filtroEjeSel.value = state.crmFiltroEje;
+    filtroEjeSel.onchange = function () { state.crmFiltroEje = filtroEjeSel.value; _renderCRMClientesResultados(); };
     Array.prototype.forEach.call(box.querySelectorAll('[data-filtro]'), function (b) {
       b.onclick = function () { state.crmFiltroEstatus = b.getAttribute('data-filtro'); _marcarChipCRMActivo(); _renderCRMClientesResultados(); };
     });
@@ -3588,9 +3598,11 @@ function _renderCRMClientesResultados() {
   var resBox = document.getElementById('crmClientesResultados');
   if (!resBox) return;
   var filtro = state.crmFiltroEstatus;
+  var filtroEje = state.crmFiltroEje;
   var busqueda = _normalizarTexto(state.crmBusqueda);
   var lista = state.crmClientes.filter(function (c) {
     if (filtro !== 'Todos' && c.estatus !== filtro) return false;
+    if (filtroEje !== 'Todos' && c.ejeInteres !== filtroEje) return false;
     if (!busqueda) return true;
     var campo = _normalizarTexto((c.organizacion || '') + ' ' + (c.nombreContacto || '') + ' ' + (c.correo || ''));
     return campo.indexOf(busqueda) !== -1;
