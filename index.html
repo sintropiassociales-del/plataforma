@@ -4390,6 +4390,15 @@ async function abrirModalEnviarCorreo(tipo, codigos) {
       state.crmInteresadosSeleccion = [];
       await cargarCRMInteresados();
     }
+
+    // Envío inmediato ya terminado (a diferencia de "programar", que se
+    // queda abierto por si se quiere programar otro) — se cierra solo tras
+    // una breve pausa para que la persona alcance a leer el resumen.
+    setTimeout(function () {
+      if (!modal.isConnected) return;
+      modal.remove();
+      if (esClientes) { renderCRMClientesTabla(); } else { renderCRMInteresadosTabla(); }
+    }, 1400);
   };
 }
 
