@@ -3215,6 +3215,37 @@ async function _subirFotoInstrumento(instrumento, campo, proyecto, codigo, file)
   }
 }
 
+/* ---------------- ADJUNTOS DE CORREO (mailing CRM) ----------------
+ * Mismo patrón que las fotos: POST directo al Web App (no jsonp, que manda
+ * todo por la URL) — ver doPost/apiSubirAdjuntoCorreo en WebApp.gs.
+ * ------------------------------------------------------------------- */
+async function _subirAdjuntoCorreo(file) {
+  if (!file) return { ok: false, error: 'Selecciona un archivo primero.' };
+  if (file.size > 15 * 1024 * 1024) return { ok: false, error: 'El archivo "' + file.name + '" es demasiado pesado (máximo 15MB).' };
+  var base64;
+  try { base64 = await _leerArchivoComoBase64(file); } catch (eLeer) { return { ok: false, error: eLeer.message }; }
+  try {
+    var resp = await fetch(WEB_APP_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({
+        action: 'subirAdjuntoCorreo', token: session ? session.token : '',
+        nombreArchivo: file.name, mimeType: file.type || 'application/octet-stream', archivoBase64: base64
+      })
+    });
+    return await resp.json();
+  } catch (eRed) {
+    return { ok: false, error: 'No se pudo conectar con la plataforma para subir "' + file.name + '" (revisa tu conexión a internet).' };
+  }
+}
+
+function _formatoTamano(bytes) {
+  if (!bytes) return '';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return Math.round(bytes / 1024) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
 function _wireFotosInstrumento(modal, cfg, tipo, proyectoCodigo, codigoFila) {
   Array.prototype.forEach.call(modal.querySelectorAll('.foto-slot'), function (slot) {
     var key = slot.getAttribute('data-foto-key');
@@ -4073,6 +4104,15 @@ async function abrirModalEnviarCorreo(tipo, codigos) {
       '<div id="correoCuerpo" contenteditable="true" style="border:1.5px solid #ddd;border-top:none;border-radius:0 0 8px 8px;min-height:150px;padding:10px 12px;font-size:14px;line-height:1.5" data-placeholder="Hola <<Nombre de contacto>>, te escribimos de Sintropía Social..."></div>' +
       '<p class="subtle" style="margin:8px 0 4px">Clic para insertar una etiqueta donde tengas el cursor — se reemplaza por el dato real de cada destinatario:</p>' +
       '<div>' + chipsHtml + '</div>' +
+      '<h3 style="margin-top:18px">Adjuntos</h3>' +
+      '<p class="subtle" style="margin:0 0 6px">Máximo 15MB por archivo — Gmail limita 25MB por correo entre todos los adjuntos.</p>' +
+      '<input type="file" id="correoArchivos" multiple>' +
+      '<div id="correoAdjuntosLista" style="margin-top:8px"></div>' +
+      '<div class="toolbar" style="justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:16px;align-items:center">' +
+        '<label style="margin:0;display:flex;align-items:center;gap:6px;font-weight:500"><input type="checkbox" id="correoProgramarChk" style="width:auto"> Programar para más tarde</label>' +
+        '<input type="datetime-local" id="correoFechaProgramada" style="display:none;width:auto">' +
+        '<button type="button" class="small secondary" id="btnVerProgramados" style="margin-left:auto">Ver correos programados</button>' +
+      '</div>' +
       '<div id="correoVistaPrevia" style="margin-top:14px"></div>' +
       '<div id="correoMsg"></div>' +
       '<div class="modal-actions">' +
@@ -4087,6 +4127,7 @@ async function abrirModalEnviarCorreo(tipo, codigos) {
   var cuerpoDiv = modal.querySelector('#correoCuerpo');
   var campoActivo = cuerpoDiv;
   var rangoGuardado = null;
+  var adjuntos = []; // { id, nombre, tamano } — ya subidos a Drive, listos para adjuntar
   asuntoInput.addEventListener('focus', function () { campoActivo = asuntoInput; });
   cuerpoDiv.addEventListener('focus', function () { campoActivo = cuerpoDiv; });
   cuerpoDiv.addEventListener('mouseup', guardarRango);
@@ -4119,6 +4160,79 @@ async function abrirModalEnviarCorreo(tipo, codigos) {
   asuntoInput.oninput = actualizarVistaPrevia;
   cuerpoDiv.oninput = actualizarVistaPrevia;
   actualizarVistaPrevia();
+
+  /* -------- Adjuntos: subir, listar, quitar -------- */
+  function pintarAdjuntos() {
+    var caja = modal.querySelector('#correoAdjuntosLista');
+    if (!adjuntos.length) { caja.innerHTML = ''; return; }
+    caja.innerHTML = adjuntos.map(function (a, i) {
+      return '<div class="toolbar" style="justify-content:space-between;gap:8px;padding:6px 10px;background:#faf8ff;border-radius:6px;margin-bottom:4px">' +
+        '<span style="font-size:13px">📎 ' + escapeHtml(a.nombre) + ' <span class="subtle">(' + _formatoTamano(a.tamano) + ')</span></span>' +
+        '<button type="button" class="small secondary btnQuitarAdjunto" data-idx="' + i + '">Quitar</button>' +
+      '</div>';
+    }).join('');
+    Array.prototype.forEach.call(caja.querySelectorAll('.btnQuitarAdjunto'), function (b) {
+      b.onclick = function () { adjuntos.splice(Number(b.getAttribute('data-idx')), 1); pintarAdjuntos(); };
+    });
+  }
+  modal.querySelector('#correoArchivos').onchange = async function (ev) {
+    var input = ev.target;
+    var archivos = Array.prototype.slice.call(input.files || []);
+    input.disabled = true;
+    for (var i = 0; i < archivos.length; i++) {
+      var r = await _subirAdjuntoCorreo(archivos[i]);
+      if (!r.ok) { modal.querySelector('#correoMsg').innerHTML = '<div class="msg error">' + escapeHtml(r.error || 'No se pudo subir "' + archivos[i].name + '".') + '</div>'; continue; }
+      adjuntos.push({ id: r.id, nombre: r.nombre, tamano: r.tamano });
+    }
+    input.disabled = false;
+    input.value = '';
+    pintarAdjuntos();
+  };
+
+  /* -------- Programar para más tarde -------- */
+  var programarChk = modal.querySelector('#correoProgramarChk');
+  var fechaInput = modal.querySelector('#correoFechaProgramada');
+  var btnEnviarRef = modal.querySelector('#correoEnviar');
+  programarChk.onchange = function () {
+    fechaInput.style.display = programarChk.checked ? 'inline-block' : 'none';
+    btnEnviarRef.textContent = programarChk.checked ? 'Programar correo' : 'Enviar correo';
+  };
+
+  /* -------- Ver / cancelar correos programados -------- */
+  modal.querySelector('#btnVerProgramados').onclick = async function () {
+    var r = await api('listarCorreosProgramados', {});
+    if (!r.ok) { alert(r.error || 'No se pudo cargar la lista.'); return; }
+    var filasHtml = r.data.length
+      ? r.data.map(function (c) {
+          return '<tr>' +
+            '<td>' + escapeHtml(c.fechaProgramada) + '</td>' +
+            '<td>' + escapeHtml(c.tipo) + '</td>' +
+            '<td>' + escapeHtml(c.asunto) + '</td>' +
+            '<td>' + (c.adjuntos || 0) + '</td>' +
+            '<td>' + escapeHtml(c.estatus) + (c.resultado ? ' <span class="subtle" title="' + escapeHtml(c.resultado) + '">ⓘ</span>' : '') + '</td>' +
+            '<td>' + (c.estatus === 'Pendiente' ? '<button type="button" class="small secondary btnCancelarProg" data-codigo="' + escapeHtml(c.codigo) + '">Cancelar</button>' : '') + '</td>' +
+          '</tr>';
+        }).join('')
+      : '<tr><td colspan="6" class="subtle">No hay correos programados.</td></tr>';
+    var modalProg = el(
+      '<div class="modal-bg"><div class="modal wide">' +
+        '<h2>Correos programados</h2>' +
+        '<div style="overflow-x:auto"><table><thead><tr><th>Fecha y hora</th><th>Tipo</th><th>Asunto</th><th>Adjuntos</th><th>Estatus</th><th></th></tr></thead><tbody>' + filasHtml + '</tbody></table></div>' +
+        '<div class="modal-actions"><button class="secondary" id="progCerrar">Cerrar</button></div>' +
+      '</div></div>'
+    );
+    document.body.appendChild(modalProg);
+    modalProg.querySelector('#progCerrar').onclick = function () { modalProg.remove(); };
+    Array.prototype.forEach.call(modalProg.querySelectorAll('.btnCancelarProg'), function (b) {
+      b.onclick = async function () {
+        if (!confirm('¿Cancelar este envío programado?')) return;
+        var rc = await api('cancelarCorreoProgramado', { codigo: b.getAttribute('data-codigo') });
+        if (!rc.ok) { alert(rc.error || 'No se pudo cancelar.'); return; }
+        modalProg.remove();
+        modal.querySelector('#btnVerProgramados').click();
+      };
+    });
+  };
 
   Array.prototype.forEach.call(modal.querySelectorAll('.tagchip'), function (chip) {
     chip.onclick = function () {
@@ -4232,17 +4346,36 @@ async function abrirModalEnviarCorreo(tipo, codigos) {
     var msgBox = modal.querySelector('#correoMsg');
     var asunto = asuntoInput.value.trim();
     var cuerpo = cuerpoDiv.innerHTML.trim();
+    var programar = programarChk.checked;
+    var fechaProgramada = fechaInput.value;
+    var adjuntosIds = adjuntos.map(function (a) { return a.id; }).join(',');
+
     if (!asunto) { msgBox.innerHTML = '<div class="msg error">Falta el asunto del correo.</div>'; return; }
     if (!cuerpo) { msgBox.innerHTML = '<div class="msg error">Falta el cuerpo del correo.</div>'; return; }
     if (!conCorreo.length) { msgBox.innerHTML = '<div class="msg error">Ninguno de los destinatarios seleccionados tiene correo registrado.</div>'; return; }
-    if (!confirm('¿Enviar este correo a ' + conCorreo.length + ' destinatario(s)? No se puede deshacer.')) return;
+    if (programar && !fechaProgramada) { msgBox.innerHTML = '<div class="msg error">Elige la fecha y hora para programar el envío.</div>'; return; }
+    if (programar && new Date(fechaProgramada).getTime() <= Date.now()) { msgBox.innerHTML = '<div class="msg error">Elige una fecha y hora en el futuro.</div>'; return; }
+
+    var confirmMsg = programar
+      ? '¿Programar este correo para ' + conCorreo.length + ' destinatario(s) el ' + fechaInput.value.replace('T', ' ') + '?'
+      : '¿Enviar este correo a ' + conCorreo.length + ' destinatario(s)? No se puede deshacer.';
+    if (!confirm(confirmMsg)) return;
 
     var btn = modal.querySelector('#correoEnviar');
-    btn.disabled = true; btn.textContent = 'Enviando...';
-    var r = await api('enviarCorreoCRM', { tipo: tipo, codigos: codigos, asunto: asunto, cuerpo: cuerpo });
-    btn.disabled = false; btn.textContent = 'Enviar correo';
+    btn.disabled = true; btn.textContent = programar ? 'Programando...' : 'Enviando...';
 
-    if (!r.ok) { msgBox.innerHTML = '<div class="msg error">' + escapeHtml(r.error || 'No se pudo enviar.') + '</div>'; return; }
+    var r = programar
+      ? await api('programarCorreoCRM', { tipo: tipo, codigos: codigos, asunto: asunto, cuerpo: cuerpo, fechaEnvio: fechaProgramada, adjuntosIds: adjuntosIds })
+      : await api('enviarCorreoCRM', { tipo: tipo, codigos: codigos, asunto: asunto, cuerpo: cuerpo, adjuntosIds: adjuntosIds });
+
+    btn.disabled = false; btn.textContent = programar ? 'Programar correo' : 'Enviar correo';
+
+    if (!r.ok) { msgBox.innerHTML = '<div class="msg error">' + escapeHtml(r.error || 'No se pudo procesar la solicitud.') + '</div>'; return; }
+
+    if (programar) {
+      msgBox.innerHTML = '<div class="msg ok">' + escapeHtml(r.msg || 'Correo programado.') + '</div>';
+      return; // nada se envió todavía — no hay seguimientos ni selección que limpiar
+    }
 
     var partes = ['Enviados: ' + r.enviados + '.'];
     if (r.sinCorreo && r.sinCorreo.length) partes.push('Sin correo registrado: ' + r.sinCorreo.length + '.');
