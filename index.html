@@ -1982,6 +1982,20 @@ var INSTRUMENTOS = {
       { key: 'total', label: 'Puntaje total' },
       { key: 'bandaTotal', label: 'Perfil' }
     ]
+  },
+  imesu: {
+    familia: 'EVA',
+    titulo: 'INS-IMES-U Empleabilidad Social Universitaria',
+    listar: 'listarIMESU', validar: 'validarIMESU', descargar: 'generarDescargableIMESU',
+    // Misma arquitectura de captura/vista propia que INS-IMES (ver arriba),
+    // adaptada a estudiantes universitarios / primer empleo profesional
+    // (renderInstrumentoIMESU / abrirModalIMESUParticipante).
+    columnas: [
+      { key: 'idParticipante', label: 'Participante' },
+      { key: 'fecha', label: 'Fecha' },
+      { key: 'total', label: 'Puntaje total' },
+      { key: 'bandaTotal', label: 'Perfil' }
+    ]
   }
 };
 
@@ -2092,6 +2106,109 @@ var IMES_CIERRE = [
   { clave: 'CF3', texto: '¿Hay algo importante sobre tu vida, tu contexto o tus aspiraciones que este instrumento no haya preguntado y que quisieras compartir?' }
 ];
 
+// Dimensiones e ítems fijos de INS-IMES-U — misma fuente que WebApp.gs
+// (sección 7.33). Autoevaluación análoga a INS-IMES pero dirigida a
+// estudiantes universitarios / primer empleo profesional; usa la misma
+// escala 1-5 (ESCALA_IMES) e ítem inverso en la posición 18.
+var IMESU_ITEM_INVERSO = 18;
+var IMESU_DIMENSIONES = [
+  {
+    clave: 'I', nombre: 'Comunicación profesional y persuasión',
+    items: [
+      { n: 1, texto: 'Puedo explicar una idea compleja de mi área de estudio a alguien que no es experto en el tema, usando un lenguaje claro.' },
+      { n: 2, texto: 'Adapto mi forma de comunicarme según el contexto (una clase, una entrevista de trabajo, un equipo de trabajo, una red profesional como LinkedIn).' },
+      { n: 3, texto: 'Sé estructurar un correo electrónico, informe o mensaje formal siguiendo las convenciones profesionales de mi campo.' },
+      { n: 4, texto: 'Cuando presento un trabajo o proyecto frente a un grupo, organizo mis ideas de manera que se entiendan con claridad.' },
+      { n: 5, texto: 'Sé argumentar mi punto de vista con datos o evidencia, no solo con opiniones, cuando discuto un tema con compañeros o profesores.' },
+      { n: 6, texto: 'Puedo dar y recibir retroalimentación sobre el trabajo de otras personas de manera constructiva.' }
+    ],
+    abiertas: [
+      { clave: 'Q1', texto: 'Cuéntanos de una situación reciente en la que tuviste que comunicar una idea difícil o dar una noticia complicada a un profesor, jefe o compañero de equipo. ¿Cómo lo hiciste y qué resultado tuvo?' },
+      { clave: 'Q2', texto: '¿En qué situaciones de comunicación profesional (entrevistas, presentaciones, negociaciones) sientes más inseguridad? ¿Por qué crees que ocurre?' }
+    ]
+  },
+  {
+    clave: 'II', nombre: 'Colaboración, trabajo en equipo y liderazgo situacional',
+    items: [
+      { n: 7, texto: 'Cuando trabajo en equipo, cumplo con la parte que me corresponde en los tiempos acordados.' },
+      { n: 8, texto: 'Puedo asumir un rol de coordinación en un equipo cuando la situación lo requiere, aunque no sea mi puesto formal.' },
+      { n: 9, texto: 'Reconozco mis errores frente al equipo sin culpar a otras personas cuando algo sale mal.' },
+      { n: 10, texto: 'Tomo en cuenta las ideas de compañeros con perspectivas o formaciones distintas a la mía, aunque al principio no esté de acuerdo.' },
+      { n: 11, texto: 'Cuando surge un conflicto dentro de un equipo de trabajo, busco una solución que beneficie al proyecto, no solo "ganar" la discusión.' },
+      { n: 12, texto: 'Puedo delegar tareas o pedir ayuda cuando reconozco que otra persona del equipo tiene más experiencia en algo específico.' }
+    ],
+    abiertas: [
+      { clave: 'Q3', texto: 'Describe la experiencia de trabajo en equipo (escolar, laboral, de voluntariado) que consideras más exitosa. ¿Qué papel jugaste tú y qué la hizo funcionar?' },
+      { clave: 'Q4', texto: '¿Qué es lo más difícil para ti al coordinar o liderar a un grupo de personas, sobre todo cuando no tienes autoridad formal sobre ellas?' }
+    ]
+  },
+  {
+    clave: 'III', nombre: 'Pensamiento crítico y decisiones basadas en evidencia',
+    items: [
+      { n: 13, texto: 'Antes de tomar una decisión importante, busco información de varias fuentes y las comparo entre sí.' },
+      { n: 14, texto: 'Puedo distinguir entre una fuente de información confiable y una que no lo es.' },
+      { n: 15, texto: 'Cuando enfrento un problema complejo, lo divido en partes más pequeñas para entenderlo mejor.' },
+      { n: 16, texto: 'Si mi primera solución a un problema no funciona, soy capaz de replantear mi estrategia en lugar de insistir en lo mismo.' },
+      { n: 17, texto: 'Reconozco cuándo un problema rebasa mis conocimientos y necesito consultar a un experto o a otra área.' },
+      { n: 18, texto: 'Me cuesta trabajo tomar una decisión cuando no cuento con toda la información que quisiera tener.', inverso: true }
+    ],
+    abiertas: [
+      { clave: 'Q5', texto: 'Describe un problema real y concreto (académico, laboral o personal) que hayas resuelto usando evidencia o información, no solo intuición. ¿Cómo lo abordaste?' },
+      { clave: 'Q6', texto: '¿Alguna vez cuestionaste una decisión, política o instrucción de una autoridad (profesor, jefe, institución) que te pareció injusta o mal fundamentada? ¿Qué hiciste?' }
+    ]
+  },
+  {
+    clave: 'IV', nombre: 'Adaptabilidad profesional y tolerancia a la incertidumbre',
+    items: [
+      { n: 19, texto: 'Cuando cambian las prioridades de un proyecto de un día para otro, puedo ajustarme sin que me paralice.' },
+      { n: 20, texto: 'Puedo aprender a usar una herramienta, software o proceso nuevo aunque nadie me lo explique paso a paso.' },
+      { n: 21, texto: 'Mantengo la calma cuando tengo varias entregas o responsabilidades encimadas en poco tiempo.' },
+      { n: 22, texto: 'Me siento razonablemente cómodo/a trabajando en situaciones donde las reglas o el resultado final no están completamente definidos.' },
+      { n: 23, texto: 'Cuando algo no me sale como esperaba, trato de entender qué pasó antes de volver a intentarlo.' },
+      { n: 24, texto: 'Ante un cambio inesperado (de equipo, de proyecto, de jefe), tiendo a buscar primero las oportunidades que trae, no solo los problemas.' }
+    ],
+    abiertas: [
+      { clave: 'Q7', texto: 'Cuéntanos sobre un cambio importante (de carrera, de trabajo, de ciudad, económico) que hayas vivido recientemente. ¿Cómo lo enfrentaste y qué aprendiste?' },
+      { clave: 'Q8', texto: '¿Qué tipo de incertidumbre te cuesta más manejar en tu vida académica o profesional: no saber qué esperan de ti, no saber si vas por buen camino, o no saber qué va a pasar después? ¿Por qué?' }
+    ]
+  },
+  {
+    clave: 'V', nombre: 'Autogestión de carrera y aprendizaje continuo',
+    items: [
+      { n: 25, texto: 'Organizo mi tiempo entre estudio, trabajo y otras responsabilidades sin que alguien más tenga que recordármelo.' },
+      { n: 26, texto: 'Tengo actualizado (o sé cómo actualizar) mi CV o portafolio con mis proyectos, prácticas y habilidades más recientes.' },
+      { n: 27, texto: 'Busco aprender algo nuevo relacionado con mi campo por mi cuenta (cursos, tutoriales, lecturas), aunque no sea obligatorio para la escuela.' },
+      { n: 28, texto: 'Cuando recibo una crítica sobre mi trabajo, la uso para mejorar en lugar de tomarla como un ataque personal.' },
+      { n: 29, texto: 'Me pongo metas concretas para mi desarrollo profesional y reviso periódicamente si las estoy cumpliendo.' },
+      { n: 30, texto: 'Busco activamente construir y mantener contactos profesionales (compañeros, profesores, personas del sector) que puedan apoyar mi desarrollo.' }
+    ],
+    abiertas: [
+      { clave: 'Q9', texto: '¿En qué área de tu formación o experiencia profesional sientes que has crecido más en el último año? ¿Qué hiciste específicamente para lograrlo?' },
+      { clave: 'Q10', texto: '¿Qué habilidad o conocimiento te gustaría desarrollar en los próximos dos años para tu carrera? ¿Qué te ha impedido avanzar en eso hasta ahora?' }
+    ]
+  },
+  {
+    clave: 'VI', nombre: 'Identidad profesional, ética laboral y conciencia del entorno',
+    items: [
+      { n: 31, texto: 'Tengo una idea razonablemente clara del tipo de trabajo o rol al que quiero acceder al terminar (o después de) mi formación universitaria.' },
+      { n: 32, texto: 'Conozco mis derechos laborales básicos (salario, prestaciones, tipo de contrato) para mi primer empleo profesional.' },
+      { n: 33, texto: 'Conozco cómo está el mercado laboral en mi área de estudio en la región donde busco trabajar.' },
+      { n: 34, texto: 'Considero que mis conocimientos y habilidades actuales son suficientes para acceder a un primer empleo profesional digno.' },
+      { n: 35, texto: 'Pienso en el impacto social o comunitario de mi trabajo futuro, no solo en el beneficio económico personal.' },
+      { n: 36, texto: 'Me siento preparado/a para enfrentar los retos éticos que puede presentar el mundo laboral (presión para hacer algo indebido, competencia desleal, trato injusto).' }
+    ],
+    abiertas: [
+      { clave: 'Q11', texto: '¿Qué significa para ti tener un empleo profesional digno? ¿Es lo mismo que tener un "buen trabajo"? ¿Por qué?' },
+      { clave: 'Q12', texto: '¿Has vivido o conocido de cerca situaciones de precariedad laboral, discriminación o trato injusto en un entorno de trabajo o prácticas profesionales? ¿Qué piensas al respecto?' }
+    ]
+  }
+];
+var IMESU_CIERRE = [
+  { clave: 'CF1', texto: 'De todo lo que respondiste hoy, ¿qué fue lo que más te hizo reflexionar sobre tu futuro profesional? ¿Por qué?' },
+  { clave: 'CF2', texto: 'Si pudieras cambiar una sola cosa de tu formación universitaria para prepararte mejor para el mundo laboral, ¿qué sería?' },
+  { clave: 'CF3', texto: '¿Hay algo importante sobre tu situación, tu contexto o tus aspiraciones profesionales que este instrumento no haya preguntado y que quisieras compartir?' }
+];
+
 // Instrumentos cuya pestaña de datos en el Sheet debe instalarse una sola
 // vez desde el panel de administración antes de poder usarse (PLA-01 y
 // PLA-02 ya vienen instalados desde el arranque del piloto).
@@ -2151,7 +2268,8 @@ var INSTRUMENTOS_INSTALABLES = [
   { clave: 'CUA01', nombre: 'INS-CUA-01 — Guía de entrevista semiestructurada (2 pestañas: Guía, Respuestas)', tipos: ['cua01_guia', 'cua01_respuestas'] },
   { clave: 'CUA02', nombre: 'INS-CUA-02 — Guía de grupo focal (2 pestañas: Guía, Aportaciones)', tipos: ['cua02_guia', 'cua02_aportaciones'] },
   { clave: 'CRM', nombre: 'CRM — Clientes / prospectos, seguimientos e interesados (3 pestañas, no ligadas a un proyecto)' },
-  { clave: 'IMES', nombre: 'INS-IMES — Instrumento de Medición de Empleabilidad Social (autoevaluación aplicada en papel)', especial: true }
+  { clave: 'IMES', nombre: 'INS-IMES — Instrumento de Medición de Empleabilidad Social (autoevaluación aplicada en papel)', especial: true },
+  { clave: 'IMESU', nombre: 'INS-IMES-U — Instrumento de Medición de Empleabilidad Social Universitaria (autoevaluación aplicada en papel)', especial: true }
 ];
 
 /* ============================================================
@@ -2205,6 +2323,7 @@ function _familiasConInstrumentos() {
 function _familiaDeInstalable(item) {
   if (item.clave === 'CRM') return 'CRM';
   if (item.clave === 'IMES') return 'EVA';
+  if (item.clave === 'IMESU') return 'EVA';
   if (item.tipos && item.tipos.length && INSTRUMENTOS[item.tipos[0]]) return INSTRUMENTOS[item.tipos[0]].familia;
   return 'OTRO';
 }
@@ -2605,6 +2724,7 @@ function renderInstrumento(tipo) {
   var box = document.getElementById('subContent');
   if (!box) return;
   if (tipo === 'imes') { renderInstrumentoIMES(); return; }
+  if (tipo === 'imesu') { renderInstrumentoIMESU(); return; }
   var cfg = INSTRUMENTOS[tipo];
   var filas = state.filas[tipo] || [];
 
@@ -2885,6 +3005,155 @@ function abrirModalIMESParticipante(fila) {
     if (!r.ok) { msgBox.innerHTML = '<div class="msg error">' + escapeHtml(r.error) + '</div>'; return; }
     modal.remove();
     await cargarInstrumento('imes');
+  };
+}
+
+/* ---------------- INS-IMES-U: captura y vista propias ---------------- */
+// Misma lógica que INS-IMES (arriba) — autoevaluación de 36 ítems Likert +
+// 15 preguntas abiertas por participante, con la escala y el patrón de
+// captura idénticos, adaptada a estudiantes universitarios.
+function renderInstrumentoIMESU() {
+  var box = document.getElementById('subContent');
+  var filas = state.filas.imesu || [];
+  var thead = '<tr><th>Participante</th><th>Fecha</th><th>Aplicador</th><th>Puntaje total</th><th>Perfil</th><th></th></tr>';
+  var trs = filas.map(function (f) {
+    return '<tr>' +
+      '<td>' + escapeHtml(f.idParticipante) + '</td>' +
+      '<td>' + escapeHtml(f.fecha || '—') + '</td>' +
+      '<td>' + escapeHtml(f.aplicador || '—') + '</td>' +
+      '<td>' + f.total + '/180</td>' +
+      '<td>' + escapeHtml(f.bandaTotal) + '</td>' +
+      '<td><button class="small edit" data-id="' + escapeHtml(f.idParticipante) + '">Editar</button> ' +
+      '<button class="small del" data-id="' + escapeHtml(f.idParticipante) + '">Eliminar</button></td></tr>';
+  }).join('');
+
+  var opcionesFormato = FORMATOS_DESCARGA.map(function (f) { return '<option value="' + f[0] + '">' + f[1] + '</option>'; }).join('');
+
+  box.innerHTML =
+    '<p class="subtle">Autoevaluación de 36 ítems (escala 1-5) + 15 preguntas abiertas, para estudiantes universitarios / primer empleo profesional, aplicada de forma individual en papel. Agrega un participante por cada folio ya aplicado para transcribir sus respuestas — la plataforma calcula el puntaje por dimensión y el puntaje total automáticamente.</p>' +
+    '<div class="toolbar" style="justify-content:space-between">' +
+      '<div style="display:flex;gap:8px;align-items:center">' +
+        '<button class="secondary" id="btnAgregarFila">+ Agregar participante</button>' +
+      '</div>' +
+      '<div style="display:flex;gap:8px;align-items:center">' +
+        '<button class="secondary" id="btnValidar">Validar</button>' +
+        '<select id="selFormato" style="width:auto">' + opcionesFormato + '</select>' +
+        '<button class="primary" id="btnGenerar" style="margin-top:0">Generar descargable</button>' +
+      '</div>' +
+    '</div>' +
+    '<div id="validacionBox"></div>' +
+    (filas.length === 0
+      ? '<p class="subtle">Todavía no hay participantes capturados. Usa "+ Agregar participante" para transcribir un folio ya aplicado en papel.</p>'
+      : '<table><thead>' + thead + '</thead><tbody>' + trs + '</tbody></table>');
+
+  document.getElementById('btnAgregarFila').onclick = function () { abrirModalIMESUParticipante(null); };
+  document.getElementById('btnValidar').onclick = function () { validarInstrumento('imesu'); };
+  document.getElementById('btnGenerar').onclick = function () { generarDescargable('imesu'); };
+  Array.prototype.forEach.call(box.querySelectorAll('button.edit'), function (b) {
+    b.onclick = function () {
+      var id = b.getAttribute('data-id');
+      var fila = filas.filter(function (f) { return f.idParticipante === id; })[0];
+      abrirModalIMESUParticipante(fila);
+    };
+  });
+  Array.prototype.forEach.call(box.querySelectorAll('button.del'), function (b) {
+    b.onclick = async function () {
+      if (!confirm('¿Eliminar todas las respuestas de este participante? No se puede deshacer.')) return;
+      var id = b.getAttribute('data-id');
+      var r = await api('eliminarParticipanteIMESU', { proyecto: state.proyectoActivo.codigo, idParticipante: id });
+      if (!r.ok) { alert(r.error); return; }
+      await cargarInstrumento('imesu');
+    };
+  });
+}
+
+function abrirModalIMESUParticipante(fila) {
+  var editando = !!fila;
+  var respuestasPrevias = fila ? fila.respuestas : {};
+
+  var opcionesEscala = function (valorActual) {
+    return '<option value="">Selecciona…</option>' + ESCALA_IMES.map(function (o) {
+      return '<option value="' + o.v + '"' + (String(valorActual) === o.v ? ' selected' : '') + '>' + o.t + '</option>';
+    }).join('');
+  };
+
+  var seccionesHtml = IMESU_DIMENSIONES.map(function (d) {
+    var itemsHtml = d.items.map(function (it) {
+      return '<label>' + it.n + '. ' + it.texto + (it.inverso ? ' <span class="subtle">(puntaje inverso)</span>' : '') + '</label>' +
+        '<select id="imesu_' + it.n + '">' + opcionesEscala(respuestasPrevias[String(it.n)]) + '</select>';
+    }).join('');
+    var abiertasHtml = d.abiertas.map(function (a) {
+      var val = respuestasPrevias[a.clave] || '';
+      return '<label>' + a.clave + '. ' + a.texto + '</label><textarea id="imesu_' + a.clave + '">' + escapeHtml(val) + '</textarea>';
+    }).join('');
+    return '<h3 style="color:var(--purple);margin:16px 0 4px">Sección ' + d.clave + ' — ' + d.nombre + '</h3>' + itemsHtml + abiertasHtml;
+  }).join('');
+
+  var cierreHtml = IMESU_CIERRE.map(function (c) {
+    var val = respuestasPrevias[c.clave] || '';
+    return '<label>' + c.clave + '. ' + c.texto + '</label><textarea id="imesu_' + c.clave + '">' + escapeHtml(val) + '</textarea>';
+  }).join('');
+
+  var modal = el(
+    '<div class="modal-bg"><div class="modal wide">' +
+      '<h2>' + (editando ? 'Editar participante ' + escapeHtml(fila.idParticipante) : 'Agregar participante') + '</h2>' +
+      '<p class="subtle">Transcribe aquí las respuestas de un formulario ya aplicado en papel (ver "Descargar instrumento vacío" en el área de Instrumentos para obtener el formulario en blanco).</p>' +
+      '<div class="row">' +
+        '<div><label>ID de participante (folio) *</label><input type="text" id="imesu_idParticipante" value="' + (fila ? escapeHtml(fila.idParticipante) : '') + '"' + (editando ? ' disabled' : '') + '></div>' +
+        '<div><label>Fecha de aplicación</label><input type="date" id="imesu_fecha" value="' + (fila && fila.fecha ? escapeHtml(fila.fecha) : '') + '"></div>' +
+      '</div>' +
+      '<label>Aplicador</label><input type="text" id="imesu_aplicador" value="' + (fila ? escapeHtml(fila.aplicador || '') : '') + '">' +
+      seccionesHtml +
+      '<h3 style="color:var(--purple);margin:16px 0 4px">Cierre y reflexión final</h3>' +
+      cierreHtml +
+      '<div id="imesuMsg"></div>' +
+      '<div class="modal-actions">' +
+        '<button class="secondary" id="imesuCancelar">Cancelar</button>' +
+        '<button class="primary" id="imesuGuardar">Guardar</button>' +
+      '</div>' +
+    '</div></div>'
+  );
+  document.body.appendChild(modal);
+  modal.querySelector('#imesuCancelar').onclick = function () { modal.remove(); };
+
+  modal.querySelector('#imesuGuardar').onclick = async function () {
+    var idParticipante = document.getElementById('imesu_idParticipante').value.trim();
+    var msgBox = document.getElementById('imesuMsg');
+    if (!idParticipante) { msgBox.innerHTML = '<div class="msg error">El ID de participante (folio) es obligatorio.</div>'; return; }
+
+    var respuestas = {};
+    var faltantes = [];
+    IMESU_DIMENSIONES.forEach(function (d) {
+      d.items.forEach(function (it) {
+        var v = document.getElementById('imesu_' + it.n).value;
+        respuestas[String(it.n)] = v;
+        if (!v) faltantes.push(it.n);
+      });
+      d.abiertas.forEach(function (a) {
+        respuestas[a.clave] = document.getElementById('imesu_' + a.clave).value;
+      });
+    });
+    IMESU_CIERRE.forEach(function (c) {
+      respuestas[c.clave] = document.getElementById('imesu_' + c.clave).value;
+    });
+    if (faltantes.length > 0) {
+      msgBox.innerHTML = '<div class="msg error">Faltan por responder ' + faltantes.length + ' ítem(s) de la escala cuantitativa (1-5).</div>';
+      return;
+    }
+
+    var btn = document.getElementById('imesuGuardar');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Guardando...';
+    var r = await api('guardarParticipanteIMESU', {
+      proyecto: state.proyectoActivo.codigo,
+      idParticipante: idParticipante,
+      fecha: document.getElementById('imesu_fecha').value,
+      aplicador: document.getElementById('imesu_aplicador').value,
+      respuestas: JSON.stringify(respuestas)
+    });
+    btn.disabled = false; btn.textContent = 'Guardar';
+    if (!r.ok) { msgBox.innerHTML = '<div class="msg error">' + escapeHtml(r.error) + '</div>'; return; }
+    modal.remove();
+    await cargarInstrumento('imesu');
   };
 }
 
@@ -4561,6 +4830,8 @@ async function exportarInstrumentoLlenado(clave, btn) {
   var r;
   if (item.especial && clave === 'IMES') {
     r = await api('exportarIMESLlenado', {});
+  } else if (item.especial && clave === 'IMESU') {
+    r = await api('exportarIMESULlenado', {});
   } else {
     var secciones = item.tipos.map(function (tipo) {
       var cfg = INSTRUMENTOS[tipo];
