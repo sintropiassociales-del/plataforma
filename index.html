@@ -2268,6 +2268,8 @@ var INSTRUMENTOS_INSTALABLES = [
   { clave: 'CUA01', nombre: 'INS-CUA-01 — Guía de entrevista semiestructurada (2 pestañas: Guía, Respuestas)', tipos: ['cua01_guia', 'cua01_respuestas'] },
   { clave: 'CUA02', nombre: 'INS-CUA-02 — Guía de grupo focal (2 pestañas: Guía, Aportaciones)', tipos: ['cua02_guia', 'cua02_aportaciones'] },
   { clave: 'CRM', nombre: 'CRM — Clientes / prospectos, seguimientos e interesados (3 pestañas, no ligadas a un proyecto)' },
+  { clave: 'CITASREPO', nombre: 'CitasRepo — Bandeja de citas propuestas desde "Buscador de citas en PDF" (no ligada a un proyecto)' },
+  { clave: 'MUESTRASWEB', nombre: 'Muestras web — Respuestas completas de las muestras públicas gratuitas (Diagnóstico, Semáforo SE, Territorio, IMES, IMES-U, Búsqueda de empleo, Diseño instruccional), no ligada a un proyecto' },
   { clave: 'IMES', nombre: 'INS-IMES — Instrumento de Medición de Empleabilidad Social (autoevaluación aplicada en papel)', especial: true },
   { clave: 'IMESU', nombre: 'INS-IMES-U — Instrumento de Medición de Empleabilidad Social Universitaria (autoevaluación aplicada en papel)', especial: true }
 ];
@@ -2322,6 +2324,8 @@ function _familiasConInstrumentos() {
 // CRM e IMES son casos especiales porque no siguen ese patrón genérico.
 function _familiaDeInstalable(item) {
   if (item.clave === 'CRM') return 'CRM';
+  if (item.clave === 'CITASREPO') return 'CRM';
+  if (item.clave === 'MUESTRASWEB') return 'CRM';
   if (item.clave === 'IMES') return 'EVA';
   if (item.clave === 'IMESU') return 'EVA';
   if (item.tipos && item.tipos.length && INSTRUMENTOS[item.tipos[0]]) return INSTRUMENTOS[item.tipos[0]].familia;
@@ -4771,6 +4775,8 @@ function renderInstrumentos() {
     var puedeExportar = i.especial || (i.tipos && i.tipos.length);
     var notaExtra = (i.clave === 'CRM')
       ? ' Una vez instalada, no se administra desde aquí ni desde "Proyectos": aparece en su propia pestaña "Clientes" en el menú superior (solo visible para Administrador).'
+      : (i.clave === 'CITASREPO')
+      ? ' Una vez instalada, esta bandeja no tiene vista propia dentro de esta plataforma — se revisa directamente en la pestaña "CitasRepo" del Sheet de Google. Cada fila que apruebes ahí se copia a mano al Repositorio Bibliográfico real (H_Citas), que vive en otro Sheet.'
       : '';
     return '<div class="card" style="margin-bottom:10px">' +
       '<div class="toolbar" style="justify-content:space-between">' +
