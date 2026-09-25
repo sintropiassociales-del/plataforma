@@ -367,7 +367,7 @@ function _cfgTipo(tipo) { return INSTRUMENTOS[tipo] || CRM_TIPOS[tipo]; }
 // orden de este arreglo define el orden de los botones de familia; cada
 // instrumento en INSTRUMENTOS declara a qué familia pertenece con
 // `familia: 'DIA'` (etc.) usando estas mismas claves.
-var FAMILIA_ORDEN = ['DIA', 'TER', 'PLA', 'IND', 'EVA', 'OPE', 'SAL', 'PED', 'EST', 'CUA', 'RS', 'ENT', 'SE'];
+var FAMILIA_ORDEN = ['DIA', 'TER', 'PLA', 'IND', 'EVA', 'OPE', 'SAL', 'PED', 'EDU', 'EST', 'CUA', 'RS', 'ENT', 'SE'];
 var FAMILIAS = {
   DIA: 'Diagnóstico',
   TER: 'Territorio',
@@ -377,6 +377,7 @@ var FAMILIAS = {
   OPE: 'Operación',
   SAL: 'Salida',
   PED: 'Pedagógico',
+  EDU: 'Educación',
   EST: 'Estratégico',
   CUA: 'Cuestionarios',
   RS: 'Reclutamiento y Selección',
@@ -1968,6 +1969,26 @@ var INSTRUMENTOS = {
       { key: 'facilitador', label: 'Facilitador', tipo: 'text' }
     ]
   },
+  edu01: {
+    familia: 'EDU',
+    titulo: 'INS-EDU-01 Simulador de empleabilidad',
+    soloTipoProyecto: 'Educación',
+    // Igual que INS-IMES/INS-IMES-U: tiene su propia vista (ver
+    // renderInstrumentoEDU01) en vez del patrón genérico de tabla, porque
+    // además de las filas de participantes maneja generación de ligas
+    // personalizadas y envío masivo escalonado. "campos" sí se define (y
+    // sigue el patrón genérico) porque el importador de CSV/Excel
+    // (abrirModalImportar) lo reutiliza para mapear columnas.
+    especial: true,
+    listar: 'listarEDUParticipantes', eliminar: 'eliminarParticipanteEDU',
+    campos: [
+      { key: 'nombre', label: 'Nombre *', tipo: 'text', requerido: true },
+      { key: 'apellido', label: 'Apellido', tipo: 'text' },
+      { key: 'correo', label: 'Correo *', tipo: 'text', requerido: true },
+      { key: 'telefono', label: 'Teléfono', tipo: 'text' },
+      { key: 'escuela', label: 'Escuela / institución', tipo: 'text' }
+    ]
+  },
   imes: {
     familia: 'EVA',
     titulo: 'INS-IMES Empleabilidad Social',
@@ -2271,7 +2292,8 @@ var INSTRUMENTOS_INSTALABLES = [
   { clave: 'CITASREPO', nombre: 'CitasRepo — Bandeja de citas propuestas desde "Buscador de citas en PDF" (no ligada a un proyecto)' },
   { clave: 'MUESTRASWEB', nombre: 'Muestras web — Respuestas completas de las muestras públicas gratuitas (Diagnóstico, Semáforo SE, Territorio, IMES, IMES-U, Búsqueda de empleo, Diseño instruccional), no ligada a un proyecto' },
   { clave: 'IMES', nombre: 'INS-IMES — Instrumento de Medición de Empleabilidad Social (autoevaluación aplicada en papel)', especial: true },
-  { clave: 'IMESU', nombre: 'INS-IMES-U — Instrumento de Medición de Empleabilidad Social Universitaria (autoevaluación aplicada en papel)', especial: true }
+  { clave: 'IMESU', nombre: 'INS-IMES-U — Instrumento de Medición de Empleabilidad Social Universitaria (autoevaluación aplicada en papel)', especial: true },
+  { clave: 'EDU01', nombre: 'INS-EDU-01 — Simulador de empleabilidad "Tres puertas al trabajo" (solo proyectos de tipo Educación)', tipos: ['edu01'] }
 ];
 
 /* ============================================================
@@ -2309,7 +2331,17 @@ var state = {
 // Claves de INSTRUMENTOS que pertenecen a una familia, en el mismo orden
 // en que aparecen dentro de INSTRUMENTOS.
 function _clavesDeFamilia(familia) {
-  return Object.keys(INSTRUMENTOS).filter(function (k) { return INSTRUMENTOS[k].familia === familia; });
+  var p = state.proyectoActivo;
+  return Object.keys(INSTRUMENTOS).filter(function (k) {
+    var cfg = INSTRUMENTOS[k];
+    if (cfg.familia !== familia) return false;
+    // Instrumentos que declaran "soloTipoProyecto" (como INS-EDU-01) solo
+    // aparecen dentro de un proyecto cuyo "Tipo de proyecto" coincida — así
+    // en plataforma un proyecto que no es de Educación nunca ve ni la
+    // familia ni la pestaña de este instrumento.
+    if (cfg.soloTipoProyecto && p && p.tipoProyecto !== cfg.soloTipoProyecto) return false;
+    return true;
+  });
 }
 
 // Solo las familias que ya tienen al menos un instrumento cargado en
@@ -2729,6 +2761,7 @@ function renderInstrumento(tipo) {
   if (!box) return;
   if (tipo === 'imes') { renderInstrumentoIMES(); return; }
   if (tipo === 'imesu') { renderInstrumentoIMESU(); return; }
+  if (tipo === 'edu01') { renderInstrumentoEDU01(); return; }
   var cfg = INSTRUMENTOS[tipo];
   var filas = state.filas[tipo] || [];
 
@@ -3775,6 +3808,125 @@ function abrirModalImportar(tipo, opts) {
     btn.textContent = 'Cerrar';
     btn.disabled = false;
     btn.onclick = async function () { modal.remove(); if (opts.alTerminar) { await opts.alTerminar(); } else { await cargarInstrumento(tipo); } };
+  };
+}
+
+/* ============================================================
+ * INS-EDU-01 — Simulador de empleabilidad "Tres puertas al trabajo"
+ * (solo proyectos de tipo Educación)
+ * ------------------------------------------------------------
+ * Vista propia (como IMES/IMES-U) en vez del patrón genérico de tabla:
+ * aquí se importan participantes (CSV/Excel, reutilizando
+ * abrirModalImportar), se generan sus ligas personalizadas al simulador
+ * y se programa el envío masivo escalonado (máx. 50/día) reutilizando la
+ * cola de "Correos Programados" del CRM.
+ * ============================================================ */
+
+// Misma idea que _urlCandidatoSE (SE-01): construir la URL pública a
+// partir de dónde vive este mismo index.html, para no depender de un
+// dominio fijo. juego-sintropia.html debe subirse junto a index.html en
+// el mismo GitHub Pages.
+function _urlBaseJuegoEDU() {
+  var base = location.href.replace(/index\.html(\?.*)?(#.*)?$/, '').replace(/\/?$/, '/');
+  return base + 'juego-sintropia.html';
+}
+
+async function renderInstrumentoEDU01() {
+  var box = document.getElementById('subContent');
+  if (!box) return;
+  box.innerHTML = '<p class="subtle">Cargando participantes...</p>';
+  var r = await api('listarEDUParticipantes', { proyecto: state.proyectoActivo.codigo });
+  var filas = r.ok ? r.data : [];
+  if (!r.ok) { box.innerHTML = '<div class="msg error">' + escapeHtml(r.error || 'No se pudo cargar.') + '</div>'; return; }
+
+  var pendientesConLiga = filas.filter(function (f) { return f.liga && f.estatusEnvio === 'Pendiente'; }).length;
+  var sinLiga = filas.filter(function (f) { return !f.liga; }).length;
+
+  var thead = '<tr><th>Nombre</th><th>Correo</th><th>Escuela</th><th>Liga</th><th>Envío</th><th>Juego</th><th></th></tr>';
+  var trs = filas.map(function (f) {
+    return '<tr>' +
+      '<td>' + escapeHtml((f.nombre || '') + ' ' + (f.apellido || '')) + '</td>' +
+      '<td>' + escapeHtml(f.correo || '') + '</td>' +
+      '<td>' + escapeHtml(f.escuela || '—') + '</td>' +
+      '<td>' + (f.liga ? '<button class="small secondary btnCopiarLigaEdu" data-liga="' + escapeHtml(f.liga) + '">Copiar liga</button>' : '<span class="subtle">Sin generar</span>') + '</td>' +
+      '<td>' + escapeHtml(f.estatusEnvio || '—') + '</td>' +
+      '<td>' + escapeHtml(f.estatusJuego || '—') + '</td>' +
+      '<td><button class="small del" data-codigo="' + f.codigo + '">Eliminar</button></td></tr>';
+  }).join('');
+
+  box.innerHTML =
+    '<p class="subtle">INS-EDU-01 solo aplica a proyectos de tipo "Educación": el simulador "Tres puertas al trabajo" se juega desde una liga personalizada por participante y su resultado se reporta directo aquí (la reflexión con voz + IA y el informe del proyecto se agregan en la siguiente entrega).</p>' +
+    '<div class="toolbar" style="justify-content:space-between;flex-wrap:wrap;gap:8px">' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+        '<button class="secondary" id="btnImportarEdu">Importar CSV / Excel</button>' +
+        '<button class="secondary" id="btnGenerarLigasEdu">Generar ligas' + (sinLiga ? ' (' + sinLiga + ' pendiente(s))' : '') + '</button>' +
+      '</div>' +
+      '<button class="primary" id="btnProgramarEnvioEdu" style="margin-top:0"' + (pendientesConLiga ? '' : ' disabled') + '>Programar envío (' + pendientesConLiga + ' listo(s))</button>' +
+    '</div>' +
+    '<div id="eduMsg"></div>' +
+    (filas.length === 0
+      ? '<p class="subtle">Todavía no hay participantes. Importa un CSV/Excel con columnas Nombre, Apellido, Correo, Teléfono y Escuela / institución — puedes copiar filas desde "Interesados" (CRM) a ese archivo antes de importarlo. Acepta de 1 a 1000 participantes por proyecto.</p>'
+      : '<div style="overflow-x:auto"><table><thead>' + thead + '</thead><tbody>' + trs + '</tbody></table></div>');
+
+  document.getElementById('btnImportarEdu').onclick = function () {
+    abrirModalImportar('edu01', { proyecto: state.proyectoActivo.codigo, alTerminar: renderInstrumentoEDU01 });
+  };
+  document.getElementById('btnGenerarLigasEdu').onclick = async function () {
+    var btn = this; btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Generando...';
+    var rr = await api('generarLigasEDU', { proyecto: state.proyectoActivo.codigo, baseUrl: _urlBaseJuegoEDU() });
+    var msgBox = document.getElementById('eduMsg');
+    if (msgBox) msgBox.innerHTML = rr.ok ? '<div class="msg ok">' + escapeHtml(rr.msg) + '</div>' : '<div class="msg error">' + escapeHtml(rr.error) + '</div>';
+    await renderInstrumentoEDU01();
+  };
+  document.getElementById('btnProgramarEnvioEdu').onclick = function () { abrirModalProgramarEnvioEDU(); };
+  Array.prototype.forEach.call(box.querySelectorAll('.btnCopiarLigaEdu'), function (b) {
+    b.onclick = function () {
+      navigator.clipboard.writeText(b.getAttribute('data-liga')).then(function () {
+        var t = b.textContent; b.textContent = 'Copiado ✓'; setTimeout(function () { b.textContent = t; }, 2000);
+      });
+    };
+  });
+  Array.prototype.forEach.call(box.querySelectorAll('button.del'), function (b) {
+    b.onclick = async function () {
+      if (!confirm('¿Eliminar este participante? No se puede deshacer.')) return;
+      var rr = await api('eliminarParticipanteEDU', { codigo: b.getAttribute('data-codigo') });
+      if (!rr.ok) { alert(rr.error); return; }
+      await renderInstrumentoEDU01();
+    };
+  });
+}
+
+function abrirModalProgramarEnvioEDU() {
+  var modal = el(
+    '<div class="modal-bg"><div class="modal wide">' +
+      '<h2>Programar envío de ligas — INS-EDU-01</h2>' +
+      '<p class="subtle">Se manda un correo con la liga personalizada a cada participante pendiente que ya tenga su liga generada. Para no arriesgar la cuenta de correo, el envío se reparte en tandas de máximo 50 destinatarios por día (empezando hoy), usando la misma cola de "Correos Programados" del CRM.</p>' +
+      '<label>Asunto</label><input type="text" id="eduAsunto" placeholder="Te invitamos a jugar: Tres puertas al trabajo">' +
+      '<label>Cuerpo (usa &lt;&lt;Nombre&gt;&gt;, &lt;&lt;Liga&gt;&gt;, &lt;&lt;Escuela&gt;&gt;)</label>' +
+      '<textarea id="eduCuerpo" rows="8" placeholder="Hola <<Nombre>>, te compartimos tu liga personalizada: <<Liga>>"></textarea>' +
+      '<div id="eduProgMsg"></div>' +
+      '<div class="modal-actions">' +
+        '<button class="secondary" id="eduProgCancelar">Cancelar</button>' +
+        '<button class="primary" id="eduProgConfirmar">Programar envío</button>' +
+      '</div>' +
+    '</div></div>'
+  );
+  document.body.appendChild(modal);
+  modal.querySelector('#eduProgCancelar').onclick = function () { modal.remove(); };
+  modal.querySelector('#eduProgConfirmar').onclick = async function () {
+    var asunto = modal.querySelector('#eduAsunto').value.trim();
+    var cuerpoTexto = modal.querySelector('#eduCuerpo').value.trim();
+    var msgBox = modal.querySelector('#eduProgMsg');
+    if (!asunto || !cuerpoTexto) { msgBox.innerHTML = '<div class="msg error">Completa asunto y cuerpo.</div>'; return; }
+    var btn = modal.querySelector('#eduProgConfirmar');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Programando...';
+    var cuerpoHtml = escapeHtml(cuerpoTexto).replace(/\n/g, '<br>')
+      .replace(/&lt;&lt;/g, '<<').replace(/&gt;&gt;/g, '>>');
+    var rr = await api('programarEnvioEDU', { proyecto: state.proyectoActivo.codigo, asunto: asunto, cuerpo: cuerpoHtml });
+    btn.disabled = false; btn.textContent = 'Programar envío';
+    if (!rr.ok) { msgBox.innerHTML = '<div class="msg error">' + escapeHtml(rr.error) + '</div>'; return; }
+    msgBox.innerHTML = '<div class="msg ok">' + escapeHtml(rr.msg) + '</div>';
+    setTimeout(function () { modal.remove(); renderInstrumentoEDU01(); }, 1500);
   };
 }
 
