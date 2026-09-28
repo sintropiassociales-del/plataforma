@@ -2611,8 +2611,17 @@ function abrirProyecto(codigo) {
   state.proyectoActivo = p;
   state.subtab = Object.keys(INSTRUMENTOS)[0];
   state.familiaActiva = INSTRUMENTOS[state.subtab].familia;
+  // Antes, aquí mismo se precargaban los 65 instrumentos del catálogo a la
+  // vez (Object.keys(INSTRUMENTOS).forEach(cargarInstrumento)) — 65
+  // solicitudes simultáneas al Web App cada vez que se abría CUALQUIER
+  // proyecto, casi todas de pestañas que la persona ni siquiera iba a ver
+  // todavía. Eso es lo que hacía sentir lenta la plataforma al cambiar de
+  // herramienta. Ahora solo se limpia la caché de instrumentos (para no
+  // arrastrar datos de otro proyecto) y cada pestaña se carga sola, una
+  // sola vez, la primera vez que se visita — ver _asegurarInstrumentoCargado,
+  // llamado desde renderProyectoDetalle().
+  state.filas = {};
   renderMain();
-  Object.keys(INSTRUMENTOS).forEach(function (tipo) { cargarInstrumento(tipo); });
 }
 
 async function abrirModalNuevoProyecto() {
@@ -2746,22 +2755,41 @@ function renderProyectoDetalle() {
     b.onclick = function () { state.subtab = b.getAttribute('data-sub'); renderProyectoDetalle(); };
   });
 
+  _asegurarInstrumentoCargado(state.subtab);
   renderInstrumento(state.subtab);
+}
+
+// 'edu01' tiene su propio fetch dentro de renderInstrumentoEDU01 (no usa
+// state.filas/cargarInstrumento — ver ahí), así que no se gestiona aquí.
+var INSTRUMENTOS_CARGA_PROPIA = ['edu01'];
+
+// Carga los datos de una pestaña de instrumento la primera vez que se
+// visita dentro del proyecto activo, y no antes — ver el comentario en
+// abrirProyecto() sobre por qué se quitó la precarga de los 65 a la vez.
+// state.filas[tipo] === undefined -> nunca se pidió para este proyecto.
+// state.filas[tipo] === null      -> ya se pidió, todavía sin respuesta.
+// state.filas[tipo] es un arreglo -> ya cargó (o falló y quedó vacío).
+function _asegurarInstrumentoCargado(tipo) {
+  if (INSTRUMENTOS_CARGA_PROPIA.indexOf(tipo) !== -1) return;
+  if (state.filas[tipo] !== undefined) return;
+  state.filas[tipo] = null;
+  cargarInstrumento(tipo);
 }
 
 async function cargarInstrumento(tipo) {
   var cfg = INSTRUMENTOS[tipo];
   var r = await api(cfg.listar, { proyecto: state.proyectoActivo.codigo });
-  if (r.ok) state.filas[tipo] = r.data;
+  state.filas[tipo] = r.ok ? r.data : [];
   if (state.view === 'proyectos' && state.proyectoActivo && state.subtab === tipo) renderInstrumento(tipo);
 }
 
 function renderInstrumento(tipo) {
   var box = document.getElementById('subContent');
   if (!box) return;
+  if (tipo === 'edu01') { renderInstrumentoEDU01(); return; }
+  if (state.filas[tipo] === null || state.filas[tipo] === undefined) { box.innerHTML = '<p class="subtle">Cargando…</p>'; return; }
   if (tipo === 'imes') { renderInstrumentoIMES(); return; }
   if (tipo === 'imesu') { renderInstrumentoIMESU(); return; }
-  if (tipo === 'edu01') { renderInstrumentoEDU01(); return; }
   var cfg = INSTRUMENTOS[tipo];
   var filas = state.filas[tipo] || [];
 
