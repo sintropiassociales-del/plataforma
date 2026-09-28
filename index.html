@@ -281,6 +281,12 @@ var FUENTES_CRM = ['LinkedIn', 'Directorio OSC / CLUNI', 'Directorio público / 
 var SINO_CRM = ['Sí', 'No'];
 var ESTATUS_CRM = ['Nuevo', 'Contactado', 'En conversación', 'Propuesta enviada', 'En pausa', 'Venta', 'Finalizado', 'Descartado'];
 var TIPOS_CONTACTO_CRM = ['Llamada', 'Correo', 'Reunión presencial', 'Videollamada', 'WhatsApp', 'Otro'];
+// Con el filtro de estatus en "Todos" (la vista por defecto de Clientes /
+// prospectos), estos dos estatus quedan fuera de la lista — David: que no
+// aparezcan en la base a menos que se busquen explícitamente con su propio
+// chip de filtro ("Finalizado" o "Descartado").
+var ESTATUS_OCULTOS_POR_DEFECTO_CRM = ['Finalizado', 'Descartado'];
+var CRM_CLIENTES_POR_PAGINA = 25;
 
 var COLORES_ESTATUS_CRM = {
   'Nuevo': { bg: '#EFEAFB', fg: '#5B3DBB' },
@@ -2320,6 +2326,7 @@ var state = {
   crmFiltroEstatus: 'Todos',
   crmFiltroEje: 'Todos',
   crmBusqueda: '',
+  crmPaginaClientes: 1, // página actual de la tabla de Clientes / prospectos (25 por página)
   crmClientesSeleccion: [],    // códigos de clientes marcados para el mailing
   crmInteresadosSeleccion: [], // códigos de interesados marcados para el mailing
   crmBusquedaInteresados: '',
@@ -4058,12 +4065,12 @@ function renderCRMClientesTabla() {
     };
     var buscarInput = document.getElementById('buscarCliente');
     buscarInput.value = state.crmBusqueda;
-    buscarInput.oninput = function () { state.crmBusqueda = buscarInput.value; _renderCRMClientesResultados(); };
+    buscarInput.oninput = function () { state.crmBusqueda = buscarInput.value; state.crmPaginaClientes = 1; _renderCRMClientesResultados(); };
     var filtroEjeSel = document.getElementById('filtroEjeCliente');
     filtroEjeSel.value = state.crmFiltroEje;
-    filtroEjeSel.onchange = function () { state.crmFiltroEje = filtroEjeSel.value; _renderCRMClientesResultados(); };
+    filtroEjeSel.onchange = function () { state.crmFiltroEje = filtroEjeSel.value; state.crmPaginaClientes = 1; _renderCRMClientesResultados(); };
     Array.prototype.forEach.call(box.querySelectorAll('[data-filtro]'), function (b) {
-      b.onclick = function () { state.crmFiltroEstatus = b.getAttribute('data-filtro'); _marcarChipCRMActivo(); _renderCRMClientesResultados(); };
+      b.onclick = function () { state.crmFiltroEstatus = b.getAttribute('data-filtro'); state.crmPaginaClientes = 1; _marcarChipCRMActivo(); _renderCRMClientesResultados(); };
     });
   }
   _marcarChipCRMActivo();
@@ -4085,17 +4092,38 @@ function _renderCRMClientesResultados() {
   var filtroEje = state.crmFiltroEje;
   var busqueda = _normalizarTexto(state.crmBusqueda);
   var lista = state.crmClientes.filter(function (c) {
-    if (filtro !== 'Todos' && c.estatus !== filtro) return false;
+    if (filtro === 'Todos') {
+      // Vista por defecto: "Finalizado" y "Descartado" quedan fuera de
+      // "Todos" — solo aparecen si se elige explícitamente su propio chip
+      // de filtro (ver el click de [data-filtro] más arriba).
+      if (ESTATUS_OCULTOS_POR_DEFECTO_CRM.indexOf(c.estatus) !== -1) return false;
+    } else if (c.estatus !== filtro) {
+      return false;
+    }
     if (filtroEje !== 'Todos' && c.ejeInteres !== filtroEje) return false;
     if (!busqueda) return true;
     var campo = _normalizarTexto((c.organizacion || '') + ' ' + (c.nombreContacto || '') + ' ' + (c.correo || ''));
     return campo.indexOf(busqueda) !== -1;
   });
 
+  // Paginación: 25 por página (David: con 174 prospectos, todo en una sola
+  // lista era muy larga). state.crmPaginaClientes se resetea a 1 cada vez
+  // que cambia la búsqueda/filtro/eje (ver esos handlers arriba) — aquí solo
+  // se corrige si, tras filtrar, la página guardada ya no existe.
+  var totalPaginas = Math.max(1, Math.ceil(lista.length / CRM_CLIENTES_POR_PAGINA));
+  if (state.crmPaginaClientes > totalPaginas) state.crmPaginaClientes = totalPaginas;
+  if (state.crmPaginaClientes < 1) state.crmPaginaClientes = 1;
+  var inicio = (state.crmPaginaClientes - 1) * CRM_CLIENTES_POR_PAGINA;
+  var listaPagina = lista.slice(inicio, inicio + CRM_CLIENTES_POR_PAGINA);
+
+  // El checkbox "seleccionar todos" y el contador de seleccionados operan
+  // sobre TODO lo filtrado (lista), no solo la página visible — para poder
+  // seleccionar, por ejemplo, los 174 prospectos filtrados y mandarles un
+  // correo, sin tener que ir página por página.
   var todosMarcados = lista.length > 0 && lista.every(function (c) { return state.crmClientesSeleccion.indexOf(c.codigo) !== -1; });
   var thead = '<tr><th style="width:28px"><input type="checkbox" id="crmSelAllClientes"' + (todosMarcados ? ' checked' : '') + '></th>' +
     '<th>Organización</th><th>Categoría</th><th>Contacto</th><th>Estatus</th><th>Último seguimiento</th><th></th></tr>';
-  var trs = lista.map(function (c) {
+  var trs = listaPagina.map(function (c) {
     var ultimo = _ultimoSeguimientoDe(c.codigo);
     var celdaUltimo;
     if (!ultimo) {
@@ -4118,12 +4146,31 @@ function _renderCRMClientesResultados() {
     '</tr>';
   }).join('');
 
+  var ocultosPorDefecto = filtro === 'Todos'
+    ? state.crmClientes.filter(function (c) { return ESTATUS_OCULTOS_POR_DEFECTO_CRM.indexOf(c.estatus) !== -1; }).length
+    : 0;
+
+  var pagerHtml = '';
+  if (lista.length > CRM_CLIENTES_POR_PAGINA) {
+    pagerHtml = '<div class="toolbar" style="justify-content:center;gap:10px;margin-top:10px">' +
+      '<button class="small secondary" id="crmClientesPagAnterior"' + (state.crmPaginaClientes <= 1 ? ' disabled' : '') + '>&larr; Anterior</button>' +
+      '<span class="subtle">Página ' + state.crmPaginaClientes + ' de ' + totalPaginas + '</span>' +
+      '<button class="small secondary" id="crmClientesPagSiguiente"' + (state.crmPaginaClientes >= totalPaginas ? ' disabled' : '') + '>Siguiente &rarr;</button>' +
+    '</div>';
+  }
+
   resBox.innerHTML =
-    '<p class="subtle">' + lista.length + ' de ' + state.crmClientes.length + ' cliente(s)/prospecto(s).' +
+    '<p class="subtle">' + lista.length + ' de ' + state.crmClientes.length + ' cliente(s)/prospecto(s)' +
+      (ocultosPorDefecto ? ' — no se muestran ' + ocultosPorDefecto + ' finalizado(s)/descartado(s) (usa su chip arriba para verlos)' : '') + '.' +
       (state.crmClientesSeleccion.length ? ' · ' + state.crmClientesSeleccion.length + ' seleccionado(s) para correo.' : '') + '</p>' +
     (lista.length === 0
       ? '<p class="subtle">No hay clientes que coincidan. Puedes agregarlos uno por uno, o usar "Importar archivo" para cargar varios desde un CSV/Excel.</p>'
-      : '<div style="overflow-x:auto"><table><thead>' + thead + '</thead><tbody>' + trs + '</tbody></table></div>');
+      : '<div style="overflow-x:auto"><table><thead>' + thead + '</thead><tbody>' + trs + '</tbody></table></div>' + pagerHtml);
+
+  var elPagAnterior = resBox.querySelector('#crmClientesPagAnterior');
+  if (elPagAnterior) elPagAnterior.onclick = function () { state.crmPaginaClientes--; _renderCRMClientesResultados(); };
+  var elPagSiguiente = resBox.querySelector('#crmClientesPagSiguiente');
+  if (elPagSiguiente) elPagSiguiente.onclick = function () { state.crmPaginaClientes++; _renderCRMClientesResultados(); };
 
   var elSelAll = resBox.querySelector('#crmSelAllClientes');
   if (elSelAll) {
