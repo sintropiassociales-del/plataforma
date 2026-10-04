@@ -150,6 +150,9 @@ var SINO_DIA02 = ['Sí', 'No'];
 var MODULOS_DIA03 = ['Laboral (INV)', 'Comunitario (COM)', 'Ambos'];
 var TIPOS_ACTOR_TER01 = ['Actor institucional', 'Actor comunitario', 'Actor privado / empresa', 'Recurso físico', 'Recurso financiero', 'Recurso humano / especialista'];
 var NIVELES_TER01 = ['Alta', 'Media', 'Baja', 'No aplica'];
+var FUENTES_MER01 = ['Entrevista', 'Observación directa', 'Encuesta / cuestionario', 'Documento interno del cliente',
+  'Dato secundario / fuente pública', 'Grupo focal', 'Otro'];
+var RELEVANCIA_MER01 = ['Alta', 'Media', 'Baja'];
 var COMPONENTES_PLA04 = ['Precondición', 'Intervención', 'Resultado intermedio', 'Resultado a largo plazo', 'Supuesto'];
 var MODULOS_EVA01 = ['Curricular por competencias', 'Impacto de programa'];
 var ESCALAS_EVA01 = ['Rúbrica de niveles de logro', 'Escala Likert (1-5)', 'Cuantitativa (%)', 'Sí/No cumple'];
@@ -373,10 +376,11 @@ function _cfgTipo(tipo) { return INSTRUMENTOS[tipo] || CRM_TIPOS[tipo]; }
 // orden de este arreglo define el orden de los botones de familia; cada
 // instrumento en INSTRUMENTOS declara a qué familia pertenece con
 // `familia: 'DIA'` (etc.) usando estas mismas claves.
-var FAMILIA_ORDEN = ['DIA', 'TER', 'PLA', 'IND', 'EVA', 'OPE', 'SAL', 'PED', 'EDU', 'EST', 'CUA', 'RS', 'ENT', 'SE'];
+var FAMILIA_ORDEN = ['DIA', 'TER', 'MER', 'PLA', 'IND', 'EVA', 'OPE', 'SAL', 'PED', 'EDU', 'EST', 'CUA', 'RS', 'ENT', 'SE'];
 var FAMILIAS = {
   DIA: 'Diagnóstico',
   TER: 'Territorio',
+  MER: 'Investigación de Mercado',
   PLA: 'Planeación',
   IND: 'Indicadores',
   EVA: 'Evaluación',
@@ -1376,6 +1380,30 @@ var INSTRUMENTOS = {
       { key: 'notas', label: 'Notas / estrategia de involucramiento', tipo: 'textarea' }
     ]
   },
+  mer01: {
+    familia: 'MER',
+    titulo: 'INS-MER-01 Ficha de prácticas de mercado',
+    listar: 'listarMER01', guardar: 'guardarFilaMER01', eliminar: 'eliminarFilaMER01',
+    validar: 'validarMER01', descargar: 'generarDescargableMER01',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'actor', label: 'Actor / segmento' },
+      { key: 'practica', label: 'Práctica observada' },
+      { key: 'relevancia', label: 'Relevancia' },
+      { key: 'incognita', label: 'Incógnita' }
+    ],
+    campos: [
+      { key: 'actor', label: 'Actor / segmento observado *', tipo: 'text', requerido: true, placeholder: 'ej. Encargadas de compras — PyMEs de abarrotes' },
+      { key: 'practica', label: 'Práctica o rutina observada *', tipo: 'textarea', requerido: true },
+      { key: 'fuente', label: 'Fuente del dato', tipo: 'select', opciones: FUENTES_MER01 },
+      { key: 'sentido', label: 'Sentido que el actor le da (su propia lógica)', tipo: 'textarea' },
+      { key: 'contradiccion', label: 'Contradicción / tensión detectada', tipo: 'textarea' },
+      { key: 'ausencia', label: 'Quién está ausente de este hallazgo', tipo: 'textarea' },
+      { key: 'relevancia', label: 'Relevancia estratégica', tipo: 'select', opciones: RELEVANCIA_MER01 },
+      { key: 'incognita', label: 'Pregunta abierta / incógnita', tipo: 'textarea' },
+      { key: 'notas', label: 'Notas', tipo: 'textarea' }
+    ]
+  },
   pla04: {
     familia: 'PLA',
     titulo: 'INS-PLA-04 Teoría de cambio',
@@ -2274,6 +2302,7 @@ var INSTRUMENTOS_INSTALABLES = [
   { clave: 'PLA01', nombre: 'INS-PLA-01 — Árbol de problemas', tipos: ['pla01'] },
   { clave: 'PLA02', nombre: 'INS-PLA-02 — Árbol de objetivos', tipos: ['pla02'] },
   { clave: 'TER01', nombre: 'INS-TER-01 — Mapa de actores y recursos', tipos: ['ter01'] },
+  { clave: 'MER01', nombre: 'INS-MER-01 — Ficha de prácticas de mercado (metodología de Práctica Social)', tipos: ['mer01'] },
   { clave: 'PLA04', nombre: 'INS-PLA-04 — Teoría / Matriz de cambio', tipos: ['pla04'] },
   { clave: 'EVA01', nombre: 'INS-EVA-01 — Matriz de evaluación', tipos: ['eva01'] },
   { clave: 'EVA03', nombre: 'INS-EVA-03 — Evaluación pre/post', tipos: ['eva03'] },
@@ -3992,6 +4021,20 @@ function _ultimoSeguimientoDe(clienteCodigo) {
   return deEsteCliente[0];
 }
 
+// La fecha más reciente entre "cuándo se dio de alta" y "su último
+// seguimiento" (que incluye los automáticos por volver a completar una
+// muestra) — usada para ordenar Clientes/prospectos por actividad reciente.
+// Cadena vacía si no se conoce ninguna de las dos (clientes de antes de que
+// existiera la columna "Fecha de alta" y que nunca tuvieron un
+// seguimiento) — un string vacío siempre ordena al final frente a
+// cualquier fecha real (comparación lexicográfica ISO).
+function _fechaActividadCliente(c) {
+  var ultimo = _ultimoSeguimientoDe(c.codigo);
+  var fechaAlta = c.fechaAlta || '';
+  var fechaSeguimiento = ultimo ? (ultimo.fechaOrden || '') : '';
+  return fechaSeguimiento > fechaAlta ? fechaSeguimiento : fechaAlta;
+}
+
 async function cargarCRMInteresados() {
   var r = await api('listarCRMInteresados', {});
   if (r.ok) state.crmInteresados = r.data;
@@ -4105,6 +4148,19 @@ function _renderCRMClientesResultados() {
     var campo = _normalizarTexto((c.organizacion || '') + ' ' + (c.nombreContacto || '') + ' ' + (c.correo || ''));
     return campo.indexOf(busqueda) !== -1;
   });
+
+  // Orden por defecto: lo más reciente primero (David: que se note arriba
+  // cuando una empresa acaba de usar una muestra o es un cliente nuevo).
+  // "Más reciente" = lo que pase después entre: cuándo se dio de alta el
+  // cliente (fechaAlta, columna nueva — ver _leerCRMClientes en WebApp.gs,
+  // solo se llena al crear una fila) y su último seguimiento (que incluye
+  // los automáticos que se agregan cuando alguien vuelve a completar una
+  // muestra — ver _agregarSeguimientoAutomatico). Clientes que no tienen
+  // ninguna de las dos fechas (la mayoría de los 174 ya capturados antes de
+  // este cambio, que nunca tuvieron un seguimiento) se quedan al final, en
+  // su orden original — según haya actividad nueva o se creen clientes
+  // nuevos, van subiendo solos.
+  lista.sort(function (a, b) { return _fechaActividadCliente(b).localeCompare(_fechaActividadCliente(a)); });
 
   // Paginación: 25 por página (David: con 174 prospectos, todo en una sola
   // lista era muy larga). state.crmPaginaClientes se resetea a 1 cada vez
