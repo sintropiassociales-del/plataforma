@@ -257,6 +257,16 @@ const SCEN = {
       {name:"Raúl",g:"m",age:43,skin:"#D9A47A",hair:"rapado",hc:"#4A4A4A",shirt:"#16877A",glasses:true,line:"Doce años en una fábrica que cerró."},
       {name:"Cris",g:"x",age:28,skin:"#B97D55",hair:"rizado",hc:"#4A2E1F",shirt:"#FF6B1A",glasses:false,line:"Cuatro empleos temporales en tres años."}]}
 };
+/* Cada puerta es para un rango de edad de quien juega (no del avatar que
+   arma): quien entra "conforme a la edad que tiene" — se valida en la
+   pantalla de intake (pantallaIntake), antes de dejarla pasar a jugar. */
+const PUERTA_EDAD={prepa:{min:17,max:20},uni:{min:21,max:35},empleo:{min:36,max:null}};
+function puertaPorEdad(edad){
+  if(edad<PUERTA_EDAD.prepa.min)return null;
+  if(edad<=PUERTA_EDAD.prepa.max)return"prepa";
+  if(edad<=PUERTA_EDAD.uni.max)return"uni";
+  return"empleo";
+}
 
 const AREAS = [
  {id:"com",nom:"Comercio y servicios",co:"Comercial del Valle",st:1.1,
@@ -619,7 +629,7 @@ function pantallaIntake(alSiguiente){
     <div class="campo"><label for="inNombre">Nombre <span class="req">*</span></label><input id="inNombre" type="text" maxlength="120" autocomplete="given-name" required></div>
     <div class="doscol">
      <div class="campo"><label for="inApellido">Apellido</label><input id="inApellido" type="text" maxlength="120" autocomplete="family-name"></div>
-     <div class="campo"><label for="inEdad">Edad</label><input id="inEdad" type="text" inputmode="numeric" maxlength="3" autocomplete="off"></div>
+     <div class="campo"><label for="inEdad">Edad <span class="req">*</span></label><input id="inEdad" type="text" inputmode="numeric" maxlength="3" autocomplete="off" required></div>
     </div>
     <div class="doscol">
      <div class="campo"><label for="inCorreo">Correo electrónico <span class="req">*</span></label><input id="inCorreo" type="email" maxlength="160" autocomplete="email" required></div>
@@ -644,6 +654,16 @@ function pantallaIntake(alSiguiente){
     const errEl=document.getElementById("intakeErr");
     const mostrarErr=m=>{errEl.textContent=m;errEl.style.display="block"};
     if(!nombre)return mostrarErr("Escribe tu nombre.");
+    const edadNum=parseInt(edad,10);
+    if(!edad||isNaN(edadNum)||edadNum<=0)return mostrarErr("Escribe tu edad — cada puerta es para un rango distinto.");
+    const rango=PUERTA_EDAD[S.scen];
+    if(rango&&(edadNum<rango.min||(rango.max!=null&&edadNum>rango.max))){
+      const correcta=puertaPorEdad(edadNum);
+      if(correcta&&correcta!==S.scen){
+        return mostrarErr(`Esta puerta ("${SCEN[S.scen].nom}") es para quienes tienen entre ${rango.min} y ${rango.max||"más"} años. Por tu edad, la puerta que te corresponde es "${SCEN[correcta].nom}" — pulsa "Volver" y elígela.`);
+      }
+      return mostrarErr("Esta simulación está pensada para personas de 17 años en adelante.");
+    }
     if(!correo||!EMAIL_RE.test(correo))return mostrarErr("Escribe un correo electrónico válido.");
     if(!consent)return mostrarErr("Necesitamos tu autorización para poder enviarte el resultado.");
     S.lead={nombre,apellido,edad,correo,telefono,trampa,consent:true};
@@ -654,36 +674,78 @@ function pantallaIntake(alSiguiente){
     alSiguiente();
   });
 }
-/* Envía el resultado de un módulo (entrevista o habilidades) por el mismo
-   pipeline genérico de Muestras. No bloquea la pantalla de resultado: se
-   dispara al mostrarla y sigue en segundo plano (igual que el resto del
-   sitio) — si falla, la persona ya vio su resultado en pantalla igual. */
-function enviarResultadoSimulacion(opts){
+/* El resultado de un módulo (entrevista o habilidades) ya NO se manda de
+   inmediato al terminarlo: se acumula aquí (uno por tipo de módulo — si
+   vuelve a jugar el mismo, sustituye al anterior) y el envío real — un solo
+   correo con lo que se haya jugado, uno o los dos módulos — se dispara UNA
+   sola vez, al cerrar la ventana (ver _mandarResultadoFinalSimulacion). Así
+   "si hace ambos, un reporte completo; si solo hace uno, solo ese módulo". */
+function registrarResultadoModulo(opts){
   if(!S.lead||!S.lead.correo)return; /* juego con token de proyecto, o sin intake: no se manda a Muestras */
-  const ar=AREAS.find(a=>a.id===S.area);
-  const resultados=[{nombre:opts.nombreModulo,puntaje:opts.puntaje,max:opts.max}];
-  const secciones=(opts.secciones||[]).slice(0,12);
-  const paramsIA={muestra:"Simulacion",email:S.lead.correo,nombre:S.lead.nombre,
-    resultados:JSON.stringify(resultados),area:ar?ar.nom:"",dificultad:S.diff,
-    resumenDecisiones:(opts.resumenDecisiones||"").slice(0,600),sitioWebTrampa:S.lead.trampa};
-  /* GET (jsonp): solo alimenta la ampliación con IA en pantalla, mismo
-     patrón que _iniciarCadenaIACorreo en muestra_imes.html — no bloquea. */
-  jsonp("generarInterpretacionMuestra",paramsIA);
-  /* POST (jsonpPost): valida y ENCOLA el envío del correo — el servidor
-     genera su propia interpretación con IA en segundo plano a partir de
-     paramsInterpretacionIA, así el correo sale completo aunque la persona
-     cierre la ventana antes de que la llamada de arriba responda. */
-  jsonpPost("enviarResultadoMuestra",{tipoMuestra:"Simulacion",correo:S.lead.correo,nombre:S.lead.nombre,
-    tituloResultado:opts.tituloResultado,resumenTexto:opts.resumenTexto,
-    secciones:JSON.stringify(secciones),paramsInterpretacionIA:JSON.stringify(paramsIA),
-    sitioWebTrampa:S.lead.trampa});
+  S.resultadosJugados=S.resultadosJugados||{};
+  S.resultadosJugados[S.game]=opts;
 }
+function _combinarResultadosSimulacion(mapa){
+  const entradas=Object.keys(mapa).map(k=>mapa[k]);
+  if(entradas.length===1){
+    const o=entradas[0];
+    return{tituloResultado:o.tituloResultado,resumenTexto:o.resumenTexto,
+      secciones:(o.secciones||[]).slice(0,12),
+      resultados:[{nombre:o.nombreModulo,puntaje:o.puntaje,max:o.max}],
+      resumenDecisiones:(o.resumenDecisiones||"").slice(0,600)};
+  }
+  return{
+    tituloResultado:"Tu paso por «Tres puertas al trabajo»",
+    resumenTexto:entradas.map(o=>o.resumenTexto).join(" "),
+    secciones:entradas.reduce((a,o)=>a.concat(o.secciones||[]),[]).slice(0,12),
+    resultados:entradas.map(o=>({nombre:o.nombreModulo,puntaje:o.puntaje,max:o.max})),
+    resumenDecisiones:entradas.map(o=>o.resumenDecisiones||"").filter(Boolean).join(" / ").slice(0,600)
+  };
+}
+/* Dispara el único envío real, combinando lo acumulado. Se cuelga de
+   "pagehide" (se dispara al cerrar la pestaña/ventana o al navegar fuera),
+   no de "visibilitychange" (ese también se dispara solo al cambiar de
+   pestaña, sin haber cerrado nada). Usa navigator.sendBeacon en vez de
+   fetch porque la ventana se está cerrando — un fetch normal puede
+   cancelarse a medias, sendBeacon está hecho para exactamente este caso
+   (mismo Content-Type que ya usa jsonpPost, para no disparar preflight de
+   CORS). Mejor esfuerzo: si el navegador no entrega el beacon (crash,
+   cierre forzado), no hay forma de reintentar — igual que el resto de
+   envíos de Muestras en este sitio, que ya asumen que pueden fallar por
+   red sin bloquear a la persona. */
+function _mandarResultadoFinalSimulacion(){
+  if(S._finalEnviado)return;
+  if(!S.lead||!S.lead.correo)return;
+  if(!S.resultadosJugados||!Object.keys(S.resultadosJugados).length)return;
+  S._finalEnviado=true;
+  const c=_combinarResultadosSimulacion(S.resultadosJugados);
+  const ar=AREAS.find(a=>a.id===S.area);
+  const paramsIA={muestra:"Simulacion",email:S.lead.correo,nombre:S.lead.nombre,
+    resultados:JSON.stringify(c.resultados),area:ar?ar.nom:"",dificultad:S.diff,
+    resumenDecisiones:c.resumenDecisiones,sitioWebTrampa:S.lead.trampa};
+  const params={tipoMuestra:"Simulacion",correo:S.lead.correo,nombre:S.lead.nombre,
+    tituloResultado:c.tituloResultado,resumenTexto:c.resumenTexto,
+    secciones:JSON.stringify(c.secciones),paramsInterpretacionIA:JSON.stringify(paramsIA),
+    sitioWebTrampa:S.lead.trampa};
+  try{
+    if(navigator.sendBeacon){
+      navigator.sendBeacon(WEB_APP_URL,new Blob([JSON.stringify(Object.assign({action:"enviarResultadoMuestra"},params))],{type:"text/plain;charset=utf-8"}));
+    }else{
+      jsonpPost("enviarResultadoMuestra",params);
+    }
+  }catch(e){ /* mejor esfuerzo */ }
+}
+window.addEventListener("pagehide",_mandarResultadoFinalSimulacion);
 
 function miga(){
   const p=[];
   if(S.scen)p.push(SCEN[S.scen].nom);
   if(S.game)p.push(S.game==="ent"?"La entrevista":"Habilidades");
-  $("#miga").innerHTML=p.length?escH(p.join(" / "))+' <button class="btn lnk" data-act="home">Inicio</button>':"";
+  /* Una vez capturados los datos (S.lead) la persona ya entró a su puerta
+     según su edad: no puede volver a elegir otra, así que a partir de ahí
+     "Inicio" deja de mostrarse como botón. */
+  const puedeVolver=!S.lead;
+  $("#miga").innerHTML=p.length?escH(p.join(" / "))+(puedeVolver?' <button class="btn lnk" data-act="home">Inicio</button>':""):"";
 }
 function paint(html,focus=true){app.innerHTML=html;miga();if(focus){window.scrollTo(0,0);const h=app.querySelector("h1,h2");if(h){h.setAttribute("tabindex","-1");h.focus({preventScroll:true})}}}
 
@@ -875,7 +937,7 @@ function finEnt(perdio){
    ${salarioHTML(p>=85&&!perdio)}
    ${malas.length?`<h3 style="margin-top:18px">Para practicar</h3><ul>${malas.map(m=>`<li><strong>${m.q}</strong> ${m.tip}</li>`).join("")}</ul>`:""}
   </div>${cta()}`);
-  enviarResultadoSimulacion({
+  registrarResultadoModulo({
     nombreModulo:"Entrevista de trabajo",puntaje:p,max:100,
     tituloResultado:v,
     resumenTexto:`${v}. ${t} Respondió ${ex} de ${I.log.length} preguntas con la mejor opción.`,
@@ -1100,7 +1162,7 @@ function finHab(fin){
     <li>Tomaste ${buenas} de ${main.length} buenas decisiones${rects.length?` y rectificaste ${rectOk} de ${rects.length} veces`:""}; te equivocaste ${B.err} ${B.err===1?"vez":"veces"}.</li>
    </ul>
   </div>${cta()}`);
-  enviarResultadoSimulacion({
+  registrarResultadoModulo({
     nombreModulo:"Manejo de habilidades y estrés en el puesto",puntaje:ind,max:100,
     tituloResultado:T[0],
     resumenTexto:`${T[0]}. ${T[1]} Tomó ${buenas} de ${main.length} buenas decisiones y se equivocó ${B.err} ${B.err===1?"vez":"veces"}.`,
@@ -1121,6 +1183,10 @@ function salarioHTML(gano){
 function cta(){
   const sc=SCEN[S.scen];
   const otro=S.game==="ent"?"hab":"ent";
+  /* Ya no hay botón para "Elegir otra puerta": una vez que la persona
+     entró a su puerta (según su edad, ver pantallaIntake) solo puede
+     reintentar el mismo módulo o probar el otro módulo de ESA puerta —
+     no puede volver a las tres puertas. */
   return `<section class="prueba"><h2>Ahora, la prueba real</h2>
    <p>${sc.instTxt} Toma unos minutos y al terminar recibes tu resultado.</p>
    <div class="fila"><a class="btn" href="${sc.url}" target="_blank" rel="noopener">Hacer la prueba: ${sc.inst}</a></div>
@@ -1128,7 +1194,6 @@ function cta(){
   <div class="fila" style="margin-top:18px">
    <button class="btn sec" data-act="again">Jugar de nuevo</button>
    <button class="btn sec" data-act="game" data-v="${otro}">${otro==="ent"?"Probar la entrevista":"Probar el juego de habilidades"}</button>
-   <button class="btn lnk" data-act="home">Elegir otra puerta</button>
   </div>`;
 }
 
