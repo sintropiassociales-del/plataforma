@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tres puertas al trabajo | Sintropía Social</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --morado:#6B21F5; --naranja:#FF6B1A; --papel:#FAF8FF; --tarjeta:#FFFFFF;
+  --tinta:#1E1633; --suave:#5C5572; --linea:#E3DDF3; --lila:#F0E9FF; --durazno:#FFEFE4;
+  --ok:#17875A; --mal:#C8322A; --sobre-morado:#FFFFFF;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --morado:#9A6BFF; --naranja:#FF8A45; --papel:#130E22; --tarjeta:#1C1530;
+    --tinta:#EFEBFA; --suave:#B3ABCB; --linea:#302650; --lila:#241A40; --durazno:#33201A;
+    --ok:#4CC792; --mal:#FF7A70; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --morado:#9A6BFF; --naranja:#FF8A45; --papel:#130E22; --tarjeta:#1C1530;
+  --tinta:#EFEBFA; --suave:#B3ABCB; --linea:#302650; --lila:#241A40; --durazno:#33201A;
+  --ok:#4CC792; --mal:#FF7A70; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px);-webkit-text-size-adjust:100%}
+body{margin:0;min-height:100%;background:var(--papel);color:var(--tinta);
+  font-family:"Open Sans",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:16px;line-height:1.55}
+h1,h2,h3{font-family:Montserrat,"Open Sans",system-ui,sans-serif;line-height:1.12;margin:0;letter-spacing:-.01em}
+h1{font-size:clamp(2rem,6vw,3.4rem);font-weight:900}
+h2{font-size:clamp(1.45rem,3.6vw,2rem);font-weight:800}
+h3{font-size:1.1rem;font-weight:700}
+p{margin:0}
+button{font:inherit;color:inherit}
+a{color:var(--morado)}
+:focus-visible{outline:3px solid var(--naranja);outline-offset:3px;border-radius:6px}
+.wrap{max-width:900px;margin:0 auto;padding:18px 18px 64px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:6px 0 18px}
+.marca{font-family:Montserrat,sans-serif;font-weight:800;font-size:.95rem;color:var(--morado);display:flex;align-items:center;gap:8px}
+.marca i{display:inline-block;width:18px;height:18px;border-radius:50%;border:3px solid var(--morado);border-right-color:var(--naranja)}
+.miga{font-size:.85rem;color:var(--suave);text-align:right}
+.acento{display:flex;align-items:center;gap:6px;margin:14px 0 18px}
+.acento span{height:4px;width:34px;border-radius:2px;background:var(--morado)}
+.acento b{width:7px;height:7px;border-radius:50%;background:var(--naranja)}
+.lede{font-size:1.08rem;color:var(--suave);max-width:60ch}
+.stack>*+*{margin-top:14px}
+.btn{appearance:none;border:0;border-radius:12px;padding:13px 20px;font-weight:700;cursor:pointer;
+  background:var(--naranja);color:#fff;font-family:Montserrat,sans-serif;font-size:.98rem;min-height:48px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.sec{background:transparent;color:var(--morado);box-shadow:inset 0 0 0 2px var(--morado)}
+.btn.lnk{background:transparent;color:var(--suave);padding:10px 4px;min-height:auto;font-weight:600}
+.fila{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.volver{margin-bottom:6px}
+
+/* Puertas */
+.doors{display:grid;gap:16px;grid-template-columns:1fr;margin-top:28px;perspective:1200px}
+@media(min-width:720px){.doors{grid-template-columns:repeat(3,1fr)}}
+.door{position:relative;border:0;cursor:pointer;text-align:left;color:#fff;background:var(--morado);
+  border-radius:170px 170px 14px 14px;min-height:300px;padding:80px 24px 24px;display:flex;flex-direction:column;justify-content:flex-end;gap:8px;
+  transform-origin:left center;transition:transform .45s cubic-bezier(.2,.8,.2,1),box-shadow .45s}
+.door::before{content:"";position:absolute;inset:14px;border-radius:156px 156px 8px 8px;border:1.5px solid rgba(255,255,255,.28);pointer-events:none}
+.door::after{content:"";position:absolute;right:24px;top:52%;width:12px;height:12px;border-radius:50%;background:var(--naranja)}
+.door.d2{background:#4A12B8}
+.door.d3{background:var(--naranja)}
+.door.d3::after{background:#fff}
+.door h3{font-size:1.35rem;font-weight:800;color:#fff}
+.door p{font-size:.95rem;opacity:.92;max-width:26ch}
+.door small{font-weight:700;font-size:.8rem;opacity:.85}
+.door:hover,.door:focus-visible{transform:rotateY(-14deg);box-shadow:18px 0 0 -6px var(--linea)}
+@media(max-width:719px){.door{min-height:190px;border-radius:120px 120px 14px 14px;padding-top:56px}.door::before{border-radius:106px 106px 8px 8px}}
+
+/* Tarjetas de elección */
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}
+.card{appearance:none;text-align:left;border:0;background:var(--tarjeta);border-radius:16px;padding:16px;cursor:pointer;
+  box-shadow:inset 0 0 0 1.5px var(--linea);display:flex;flex-direction:column;gap:6px}
+.card:hover{box-shadow:inset 0 0 0 2px var(--morado)}
+.card[aria-pressed="true"]{box-shadow:inset 0 0 0 3px var(--morado);background:var(--lila)}
+.card .av{width:100%;max-width:130px;align-self:center}
+.card h3{margin-top:4px}
+.card p{font-size:.9rem;color:var(--suave)}
+.card.crear{background:transparent;box-shadow:inset 0 0 0 2px var(--naranja);border-style:dashed;justify-content:center;align-items:center;text-align:center;min-height:220px}
+.card.crear h3{color:var(--naranja)}
+.juego{padding:22px;border-radius:20px}
+.juego h3{font-size:1.25rem}
+.juego.j2{background:var(--durazno);box-shadow:none}
+.juego.j1{background:var(--lila);box-shadow:none}
+.juego:hover{box-shadow:inset 0 0 0 2px var(--morado)}
+
+.seg{display:inline-flex;background:var(--lila);border-radius:12px;padding:4px;gap:4px}
+.seg button{border:0;background:transparent;padding:10px 18px;border-radius:9px;cursor:pointer;font-weight:700;font-family:Montserrat,sans-serif;min-height:44px}
+.seg button[aria-pressed="true"]{background:var(--morado);color:#fff}
+.nota{font-size:.9rem;color:var(--suave)}
+.bloque{margin-top:26px}
+
+.empleo .sal{font-family:Montserrat,sans-serif;font-weight:800;font-size:1.25rem;color:var(--tinta)}
+.empleo .sal small{font-size:.75rem;font-weight:600;color:var(--suave)}
+.empleo.alto .sal{color:var(--ok)}
+
+/* Editor de avatar */
+.editor{display:grid;gap:22px;grid-template-columns:1fr}
+@media(min-width:720px){.editor{grid-template-columns:260px 1fr}}
+.preview{background:var(--lila);border-radius:20px;padding:18px;display:flex;justify-content:center}
+.preview svg{width:100%;max-width:220px}
+.campo{margin-bottom:16px}
+.campo>label,.campo>.et{display:block;font-weight:700;margin-bottom:8px;font-size:.95rem}
+.campo input[type=text]{width:100%;max-width:340px;padding:12px 14px;border-radius:10px;border:2px solid var(--linea);background:var(--tarjeta);color:var(--tinta);font:inherit}
+.sw{display:flex;flex-wrap:wrap;gap:8px}
+.sw button{width:40px;height:40px;border-radius:50%;border:0;cursor:pointer;box-shadow:inset 0 0 0 2px rgba(0,0,0,.12)}
+.sw button[aria-pressed="true"]{box-shadow:0 0 0 3px var(--papel),0 0 0 6px var(--morado)}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:0;background:var(--tarjeta);box-shadow:inset 0 0 0 1.5px var(--linea);border-radius:999px;padding:9px 14px;cursor:pointer;font-weight:600;font-size:.92rem;min-height:40px}
+.chip[aria-pressed="true"]{background:var(--morado);color:#fff;box-shadow:none}
+
+/* Entrevista */
+.hud{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.hud div{background:var(--tarjeta);border-radius:14px;padding:10px 12px;box-shadow:inset 0 0 0 1.5px var(--linea)}
+.hud small{display:block;color:var(--suave);font-size:.78rem;font-weight:600}
+.hud strong{font-family:Montserrat,sans-serif;font-size:1.3rem;font-weight:800}
+.barra{height:8px;border-radius:4px;background:var(--linea);overflow:hidden;margin-top:6px}
+.barra i{display:block;height:100%;border-radius:4px;transition:width .5s,background .5s}
+.escena{position:relative;background:var(--lila);border-radius:22px;padding:18px 14px 0;overflow:hidden}
+.escena .personas{display:grid;grid-template-columns:1fr 1fr;align-items:end;gap:8px;position:relative;z-index:1}
+.escena .persona{text-align:center}
+.escena .persona svg{width:100%;max-width:170px;display:block;margin:0 auto}
+.escena .persona span{display:block;font-size:.82rem;font-weight:700;padding:6px 0 10px;color:var(--suave)}
+.escena .escritorio{height:26px;background:var(--morado);margin:0 -14px;position:relative;z-index:2}
+.globo{position:relative;background:var(--tarjeta);border-radius:18px;padding:16px 18px;margin-bottom:16px;box-shadow:inset 0 0 0 1.5px var(--linea);z-index:1}
+.globo::after{content:"";position:absolute;left:22%;bottom:-10px;width:20px;height:20px;background:var(--tarjeta);transform:rotate(45deg);box-shadow:1.5px 1.5px 0 0 var(--linea)}
+.globo .reac{font-size:.92rem;color:var(--suave);font-style:italic;margin-bottom:6px}
+.globo .preg{font-family:Montserrat,sans-serif;font-weight:700;font-size:1.12rem}
+.escena.enojo .escritorio{background:var(--mal)}
+.opciones{display:grid;gap:10px;margin-top:18px}
+.op{appearance:none;border:0;text-align:left;background:var(--tarjeta);border-radius:14px;padding:14px 16px;cursor:pointer;box-shadow:inset 0 0 0 1.5px var(--linea);font-size:.98rem;min-height:48px}
+.op:hover{box-shadow:inset 0 0 0 2px var(--morado)}
+.op.elegida{box-shadow:inset 0 0 0 3px var(--morado)}
+.op.mejor{box-shadow:inset 0 0 0 3px var(--ok)}
+.op[disabled]{cursor:default}
+.retro{margin-top:16px;border-radius:16px;padding:16px 18px;background:var(--tarjeta);box-shadow:inset 0 0 0 1.5px var(--linea)}
+.retro .cal{font-family:Montserrat,sans-serif;font-weight:800}
+.retro .cal.g4,.retro .cal.g3{color:var(--ok)}
+.retro .cal.g0,.retro .cal.g1{color:var(--mal)}
+.retro .tip{margin-top:6px;color:var(--suave);font-size:.94rem}
+.calmar{margin-top:16px;border-radius:16px;padding:16px;background:var(--durazno)}
+.calmar h3{margin-bottom:10px}
+@keyframes vibra{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.vibra{animation:vibra .25s 2}
+
+/* Habilidades */
+.tabs{display:flex;gap:6px;border-bottom:2px solid var(--linea);margin:18px 0 14px;overflow-x:auto}
+.tabs button{border:0;background:transparent;padding:12px 14px;cursor:pointer;font-weight:700;font-family:Montserrat,sans-serif;border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;color:var(--suave)}
+.tabs button[aria-selected="true"]{color:var(--morado);border-bottom-color:var(--morado)}
+.tabs em{font-style:normal;font-weight:600;font-size:.85rem;margin-left:4px}
+.lista{display:flex;flex-wrap:wrap;gap:8px}
+.lista .chip small{font-weight:600;opacity:.7;margin-left:6px;font-size:.78rem}
+.pie{position:sticky;bottom:0;background:var(--papel);padding:14px 0 calc(14px + env(safe-area-inset-bottom,0px));margin-top:22px;border-top:1.5px solid var(--linea);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+
+/* Burnout */
+.sim{display:grid;gap:18px;grid-template-columns:1fr}
+@media(min-width:720px){.sim{grid-template-columns:230px 1fr}}
+.sim .retrato{background:var(--lila);border-radius:20px;padding:16px;text-align:center}
+.sim .retrato svg{width:100%;max-width:190px}
+.medidor{margin-top:10px;text-align:left}
+.medidor small{display:flex;justify-content:space-between;font-weight:700;font-size:.82rem}
+.situ{background:var(--tarjeta);border-radius:18px;padding:18px;box-shadow:inset 0 0 0 1.5px var(--linea)}
+.situ .mes{font-family:Montserrat,sans-serif;font-weight:800;color:var(--naranja);font-size:.95rem}
+.situ h3{margin:6px 0 8px;font-size:1.25rem}
+
+.ruta{list-style:none;margin:12px 0 0;padding:0;font-size:.76rem;display:flex;flex-wrap:wrap;gap:4px;justify-content:center}
+.ruta li{padding:3px 8px;border-radius:999px;color:var(--suave);box-shadow:inset 0 0 0 1px var(--linea)}
+.ruta li.hecha{color:var(--ok);box-shadow:inset 0 0 0 1.5px var(--ok)}
+.ruta li.actual{color:#fff;background:var(--morado);box-shadow:none;font-weight:700}
+.salario{margin-top:18px;border-radius:16px;padding:16px 18px;background:var(--durazno)}
+.salario small{display:block;font-weight:700;color:var(--suave);font-size:.85rem}
+.salario strong{display:block;font-family:Montserrat,sans-serif;font-weight:800;font-size:1.5rem;margin:2px 0 4px}
+.salario p{font-size:.9rem;color:var(--suave)}
+.tray{margin:8px 0 0;padding-left:22px}.tray li+li{margin-top:4px}
+.vidas{display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-top:10px;justify-content:center}
+.vidas span{width:14px;height:14px;border-radius:50%;background:var(--ok)}
+.vidas span.usada{background:var(--mal);opacity:.35}
+.vidas em{font-style:normal;font-size:.8rem;font-weight:700;color:var(--suave);width:100%;text-align:center}
+.estragos{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:5px;justify-content:center}
+.estragos li{font-size:.76rem;font-weight:700;padding:3px 9px;border-radius:999px;background:var(--durazno);color:var(--mal)}
+.huella{margin-top:12px;border-radius:12px;padding:12px 14px;background:var(--durazno);font-size:.93rem}
+.huella strong{color:var(--mal)}
+.situ.rect{box-shadow:inset 0 0 0 2px var(--naranja)}
+.situ.rect .mes{color:var(--morado)}
+.tray li.r{color:var(--suave);font-size:.93rem;list-style:circle}
+/* Resultado */
+.final{border-radius:22px;padding:24px;background:var(--tarjeta);box-shadow:inset 0 0 0 1.5px var(--linea)}
+.final .cifra{font-family:Montserrat,sans-serif;font-weight:900;font-size:clamp(3rem,10vw,5rem);line-height:1;color:var(--morado)}
+.final .cifra small{font-size:.35em;color:var(--suave);font-weight:700}
+.final ul{margin:10px 0 0;padding-left:20px}
+.final li+li{margin-top:6px}
+.prueba{margin-top:20px;border-radius:22px;padding:24px;background:var(--morado);color:#fff}
+.prueba h2{color:#fff}
+.prueba p{opacity:.95;margin-top:8px;max-width:60ch}
+.prueba .btn{margin-top:16px;display:inline-flex;align-items:center;text-decoration:none}
+.prueba .btn.sec{color:#fff;box-shadow:inset 0 0 0 2px #fff}
+.av svg{display:block}
+/* Intake público (captura de datos antes de jugar, sin token de proyecto) */
+.intake{background:var(--tarjeta);border-radius:22px;padding:24px;box-shadow:inset 0 0 0 1.5px var(--linea)}
+.intake .campo input[type=text],.intake .campo input[type=email],.intake .campo input[type=tel],.intake .campo select{
+  width:100%;max-width:420px;padding:12px 14px;border-radius:10px;border:2px solid var(--linea);background:var(--tarjeta);color:var(--tinta);font:inherit}
+.intake .campo{margin-bottom:14px}
+.intake .campo label{display:block;font-weight:700;margin-bottom:6px;font-size:.92rem}
+.intake .campo .req{color:var(--naranja)}
+.intake .doscol{display:grid;gap:14px;grid-template-columns:1fr}
+@media(min-width:600px){.intake .doscol{grid-template-columns:1fr 1fr}}
+.intake .consent{display:flex;gap:10px;align-items:flex-start;font-size:.92rem;color:var(--suave)}
+.intake .consent input{margin-top:3px}
+.intake .err{color:var(--mal);font-size:.9rem;margin-top:10px}
+.trampa{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.enviando{font-size:.92rem;color:var(--suave);margin-top:10px}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="marca"><i aria-hidden="true"></i>Sintropía Social</div>
+    <div class="miga" id="miga"></div>
+  </header>
+  <main id="app" tabindex="-1"></main>
+</div>
+<script>
+/* ============ DATOS ============ */
+const SCEN = {
+  prepa:{nom:"Orientación vocacional",para:"Para estudiantes de preparatoria que piensan en su primer empleo",inst:"IMES Preparatoria",
+    url:"https://sintropiassociales-del.github.io/panel/muestra_imes.html",
+    instTxt:"El Instrumento de Medición de Empleabilidad Social (IMES) para preparatoria te ayuda a ver qué tan preparado está tu perfil para el mundo laboral y qué conviene fortalecer.",
+    tok:{esc:"la prepa",form:"a clases de la prepa",yo:"Estoy terminando la prepa y en proyectos escolares aprendí a organizarme y a trabajar con otras personas"},
+    avs:[
+      {name:"Ximena",g:"f",age:17,skin:"#D9A47A",hair:"largo",hc:"#1F1A17",shirt:"#FF6B1A",glasses:false,line:"Le gusta dibujar y ayuda en la tienda de su tía."},
+      {name:"Mateo",g:"m",age:18,skin:"#8D5A3B",hair:"rizado",hc:"#1F1A17",shirt:"#6B21F5",glasses:false,line:"Juega futbol y arregla celulares de sus vecinos."},
+      {name:"Alex",g:"x",age:17,skin:"#F1C9A5",hair:"corto",hc:"#8B5A2B",shirt:"#16877A",glasses:true,line:"Hace videos y organiza eventos en su escuela."}]},
+  uni:{nom:"Orientación profesional",para:"Para quienes estudian la universidad o acaban de egresar",inst:"IMES Universidad",
+    url:"https://sintropiassociales-del.github.io/panel/muestra_imes_universidad.html",
+    instTxt:"El IMES Universidad mide tu empleabilidad social en la transición de la escuela al trabajo profesional y te muestra en qué áreas enfocarte.",
+    tok:{esc:"la universidad",form:"a clases de la universidad",yo:"Estoy por egresar de la universidad y en mis prácticas aprendí a organizarme y a trabajar con otras personas"},
+    avs:[
+      {name:"Valeria",g:"f",age:21,skin:"#B97D55",hair:"chongo",hc:"#2A1A12",shirt:"#16877A",glasses:true,line:"Estudia Psicología y hace su servicio social."},
+      {name:"Iván",g:"m",age:22,skin:"#F1C9A5",hair:"corto",hc:"#1F1A17",shirt:"#FF6B1A",glasses:false,line:"Estudia Ingeniería y trabaja medio tiempo."},
+      {name:"Sam",g:"x",age:21,skin:"#5E3B26",hair:"rapado",hc:"#1F1A17",shirt:"#6B21F5",glasses:false,line:"Estudia Comunicación y hace fotografía."}]},
+  empleo:{nom:"Perfiles de trabajo",para:"Para quienes buscan empleo ahora: ¿qué tan listo está tu perfil?",inst:"Perfil de candidato",
+    url:"https://sintropiassociales-del.github.io/panel/muestra_candidato.html",
+    instTxt:"La muestra de perfil de candidato evalúa qué tan preparado estás para la búsqueda de empleo y te da un resultado con recomendaciones.",
+    tok:{esc:"tu formación",form:"al curso que tomabas",yo:"Tengo varios años de experiencia y en mis trabajos anteriores aprendí a organizarme y a resolver problemas con otras personas"},
+    avs:[
+      {name:"Guadalupe",g:"f",age:36,skin:"#8D5A3B",hair:"largo",hc:"#2A1A12",shirt:"#6B21F5",glasses:false,line:"Tiene dos hijos y busca volver al trabajo formal."},
+      {name:"Raúl",g:"m",age:43,skin:"#D9A47A",hair:"rapado",hc:"#4A4A4A",shirt:"#16877A",glasses:true,line:"Doce años en una fábrica que cerró."},
+      {name:"Cris",g:"x",age:28,skin:"#B97D55",hair:"rizado",hc:"#4A2E1F",shirt:"#FF6B1A",glasses:false,line:"Cuatro empleos temporales en tres años."}]}
+};
+
+const AREAS = [
+ {id:"com",nom:"Comercio y servicios",co:"Comercial del Valle",st:1.1,
+  jobs:{
+   prepa:"Cajero/a de autoservicio:9800;Mesero/a:9700;Promotor/a de ventas en tienda:10200;Repartidor/a en aplicación:10500;Barista:9900;Auxiliar de almacén en tienda:10300;Recepcionista de hotel:11000;Asesor/a de venta de autos:19000;Ejecutivo/a de venta de seguros:18000;Supervisor/a de tienda:17500",
+   uni:"Ejecutivo/a de call center:11500;Asistente administrativo/a:12000;Auxiliar de mercadotecnia:12500;Vendedor/a de piso en tienda departamental:10500;Becario/a de ventas:7500;Asistente de recursos humanos:12800;Capturista:10800;Analista de inteligencia comercial:28000;Gerente/a de cuentas clave junior:32000;Gerente/a de sucursal en formación:26000",
+   empleo:"Vendedor/a de mostrador:10000;Cajero/a bancario/a:12000;Encargado/a de turno en tienda de conveniencia:11000;Telemarketing:10800;Promotor/a de degustación:9800;Chofer repartidor/a:12500;Auxiliar de limpieza en centro comercial:9700;Gerente/a de tienda:30000;Coordinador/a regional de ventas:38000;Comprador/a corporativo/a:33000"},
+  sk:{h:"Atención al cliente/3/0/b;Manejo de caja y terminal/3/0/d;Técnicas de venta/3/0/d;Control de inventarios/3/0/d;Cierre y cobranza/3/0/d",
+      c:"Orientación al servicio/3/0;Persuasión ética/3/0;Manejo de objeciones/3/0;Visión comercial/3/0;Trato con clientes difíciles/3/1",
+      a:"Carisma/3/0;Memoria para productos y precios/3/0;Rapidez con números/3/0;Energía para jornadas de pie/3/0;Presentación personal/2/0"}},
+ {id:"salud",nom:"Salud y cuidados",co:"Red Salud Integral",st:1.2,
+  jobs:{
+   prepa:"Auxiliar de limpieza en hospital:9700;Cuidador/a de personas mayores:10000;Recepcionista de consultorio:9900;Auxiliar de farmacia:10200;Camillero/a:10500;Asistente en guardería:9800;Auxiliar de cocina en hospital:9800;Técnico/a en urgencias médicas certificado/a:17000;Visitador/a médico/a:20000;Técnico/a en radiología:16500",
+   uni:"Enfermero/a general en clínica privada:12500;Nutriólogo/a en consultorio:11500;Psicólogo/a en línea de atención:12000;Terapeuta en centro de rehabilitación:12800;Químico/a en laboratorio de análisis:13000;Médico/a en consultorio de farmacia:11000;Trabajador/a social en asociación civil:11500;Ingeniero/a biomédico/a:30000;Gerente/a de calidad en farmacéutica:42000;Especialista en investigación clínica:35000",
+   empleo:"Auxiliar de enfermería:11000;Cuidador/a a domicilio:10500;Recepcionista de hospital:10500;Chofer de ambulancia:12000;Despachador/a de farmacia:10000;Asistente dental:10800;Afanador/a:9700;Enfermero/a especialista:24000;Representante médico/a senior:32000;Coordinador/a de hospital:36000"},
+  sk:{h:"Toma de signos vitales/3/0/d;Protocolos de higiene/3/0/d;Movilización segura de pacientes/3/1/d;Registro clínico/3/0/d;Trato empático/3/0/b",
+      c:"Vocación de cuidado/3/0;Trabajo interdisciplinario/3/0;Manejo de crisis/3/0;Responsabilidad clínica/3/0;Contención emocional/3/1",
+      a:"Temple ante emergencias/3/0;Resistencia física/3/0;Observación clínica/3/0;Cuidado de la propia salud/2/2;Discreción/3/0"}},
+ {id:"tec",nom:"Tecnología y digital",co:"Nodo Digital",st:1.0,
+  jobs:{
+   prepa:"Técnico/a en reparación de celulares:10500;Soporte técnico en tienda:9900;Community manager independiente:9800;Capturista de datos:9800;Moderador/a de contenido:11000;Instalador/a de internet:11500;Vendedor/a de tecnología:10500;Desarrollador/a web junior autodidacta:18000;Técnico/a en redes certificado/a:17000;Diseñador/a de experiencia de usuario junior:17500",
+   uni:"Soporte técnico nivel 1:13000;Tester manual de software:13500;Becario/a de sistemas:8000;Community manager:12000;Capturista de datos:10500;Diseñador/a gráfico/a junior:12500;Técnico/a de mesa de ayuda:12800;Desarrollador/a de software:38000;Científico/a de datos:42000;Especialista en ciberseguridad:45000",
+   empleo:"Técnico/a de soporte:12500;Operador/a de monitoreo:11500;Instalador/a de cámaras de seguridad:11800;Capturista:10500;Técnico/a en reparación de equipo:11500;Agente de soporte en call center:12000;Moderador/a de contenido:11500;Administrador/a de sistemas:32000;Gerente/a de TI:48000;Desarrollador/a senior:55000"},
+  sk:{h:"Programación básica/3/0/d;Diagnóstico de fallas/3/0/d;Ciberseguridad básica/3/0/d;Análisis de datos/3/0/d;Documentación técnica/3/0/d",
+      c:"Pensamiento lógico/3/0;Autoaprendizaje técnico/3/0;Atención al detalle/3/0;Disciplina para el trabajo remoto/3/1;Resolución de incidentes/3/0",
+      a:"Concentración prolongada/3/0;Razonamiento abstracto/3/0;Precisión/3/0;Tolerancia a la ambigüedad/3/0;Curiosidad tecnológica/3/0"}},
+ {id:"ind",nom:"Industria, construcción y logística",co:"Industrias Anáhuac",st:1.15,
+  jobs:{
+   prepa:"Operario/a de producción:9800;Ayudante de albañil:10500;Montacarguista:11500;Auxiliar de almacén:10200;Empacador/a en maquiladora:9700;Ayudante de mecánico:9900;Guardia de seguridad:10300;Electricista industrial certificado/a:17500;Soldador/a certificado/a:19000;Técnico/a en mantenimiento de maquinaria:17000",
+   uni:"Supervisor/a de línea junior:13500;Auxiliar de logística:12500;Residente de obra junior:13000;Inspector/a de calidad:12800;Dibujante CAD:12000;Auxiliar de compras:12200;Analista de inventarios:13000;Ingeniero/a de procesos:32000;Gerente/a de proyectos de construcción:40000;Ingeniero/a en energías renovables:36000",
+   empleo:"Chofer de carga:13000;Operador/a de máquina:10500;Albañil:12500;Guardia de seguridad:10500;Estibador/a:10300;Pintor/a de obra:11500;Jardinero/a:9800;Supervisor/a de planta:28000;Maestro/a de obra:24000;Jefe/a de mantenimiento:30000"},
+  sk:{h:"Lectura de planos/3/0/d;Normas de seguridad industrial/3/1/d;Operación de maquinaria/3/0/d;Control de calidad/3/0/d;Mantenimiento preventivo/3/0/d",
+      c:"Disciplina operativa/3/0;Seguridad como hábito/3/1;Trabajo por metas/3/0;Coordinación de cuadrillas/3/0;Mejora continua/3/0",
+      a:"Destreza manual/3/0;Resistencia física/3/0;Orientación espacial/3/0;Atención sostenida/3/0;Cuidado del propio cuerpo/2/2"}},
+ {id:"edu",nom:"Educación, arte y comunicación",co:"Colectivo Aula Abierta",st:1.05,
+  jobs:{
+   prepa:"Asistente educativo/a en guardería:9700;Asesor/a de regularización:9800;Animador/a de fiestas:9900;Auxiliar de biblioteca:9700;Fotógrafo/a de eventos:11000;Ayudante de producción audiovisual:10500;Tallerista de arte comunitario:9800;Creador/a de contenido con marcas:20000;Instructor/a de idiomas certificado/a:16500;Editor/a de video independiente:17500",
+   uni:"Docente de secundaria privada por horas:11000;Maestro/a de inglés:12000;Asistente de investigación:11500;Redactor/a de contenidos:12000;Fotógrafo/a:11500;Diseñador/a editorial junior:12500;Gestor/a cultural:11000;Diseñador/a instruccional:28000;Especialista en comunicación corporativa:32000;Productor/a audiovisual:30000",
+   empleo:"Maestro/a por horas:11000;Tallerista:10000;Locutor/a de radio local:11000;Asistente de producción:11500;Fotógrafo/a de estudio:11000;Operador/a de imprenta:10500;Guía de museo:10200;Director/a de escuela:30000;Coordinador/a de comunicación:32000;Consultor/a en capacitación:34000"},
+  sk:{h:"Planeación didáctica/3/0/d;Diseño y edición/3/0/d;Narrativa y storytelling/3/0/d;Manejo de grupo/3/0/b;Producción audiovisual/3/0/d",
+      c:"Creatividad/3/0;Empatía pedagógica/3/0;Comunicación pública/3/0;Gestión de proyectos culturales/3/0;Sensibilidad estética/3/0",
+      a:"Expresividad/3/0;Imaginación/3/0;Sensibilidad social/3/0;Paciencia con procesos lentos/3/1;Observación/3/0"}}
+];
+
+/* Preguntas generales: [alcance, pregunta, [mejor..peor], consejo]  alcance: F primera, L última, pu solo prepa/uni, e solo empleo.
+   Todas las opciones son plausibles: la diferencia está en los detalles. */
+const QG = [
+ ["F","Cuéntame un poco de ti.",["{yo}. Busco un lugar donde aplicar eso en {a} y seguir aprendiendo.","Me considero una persona responsable, puntual y con ganas de aprender; me adapto rápido a equipos nuevos.","Vengo de una familia muy trabajadora; desde la infancia me enseñaron el valor del esfuerzo y nunca me rindo.","Todo viene en mi CV, pero con gusto le cuento mi trayectoria completa desde la secundaria, punto por punto.","Soy una persona intensa: cuando algo me gusta le dedico todo mi tiempo, aunque a veces me estreso de más."],"Buscan un resumen breve que conecte tu historia con el puesto: quién eres, qué sabes hacer y por qué estás ahí. Una historia personal emotiva o un repaso de toda tu vida no responde eso."],
+ ["","¿Por qué quieres trabajar como {p}?",["Revisé las funciones del puesto: combina cosas que ya hago bien con otras que quiero aprender, y me da ruta de crecimiento en {a}.","Me interesa el área de {a} y creo que aquí puedo aprender mucho de personas con más experiencia.","Porque la empresa tiene buena reputación y me han dicho que el ambiente de trabajo es muy bueno.","Porque el horario me acomoda y el lugar me queda cerca; así puedo llegar siempre a tiempo.","Honestamente estoy aplicando a varias vacantes; esta me llamó la atención y quise intentarlo."],"Muestra que investigaste el puesto y que encaja con lo que sabes hacer. La cercanía o la reputación son motivos reales, pero hablan de ti, no del puesto."],
+ ["","¿Cuál dirías que es tu mayor debilidad?",["Me cuesta delegar; ahora reparto tareas desde el inicio y reviso avances en lugar de hacerlo todo por mi cuenta.","Hablar en público me cuesta; me inscribí a un taller y practico cada vez que tengo oportunidad.","Soy muy perfeccionista: reviso todo varias veces para que quede impecable, aunque me tarde un poco más.","Soy exigente con los demás; si alguien no trabaja a mi ritmo, prefiero hacer yo su parte.","Me cuesta la puntualidad por el transporte, pero siempre compenso quedándome más tarde."],"Una debilidad real, acompañada de lo que ya haces para corregirla, vale más que un cliché como «soy perfeccionista». Evita mencionar algo que choque con lo básico del puesto."],
+ ["","Cuéntame de una vez que tuviste un conflicto con alguien de tu equipo.",["Un compañero no entregaba su parte; hablé en privado, supe que tenía otro trabajo, reacomodamos tareas y entregamos a tiempo.","Tuvimos diferencias sobre cómo hacer un proyecto; votamos en equipo y seguimos la opción de la mayoría.","Cuando alguien no cumplía, le avisaba al profesor o al jefe para que él tomara la decisión.","Para evitar problemas, terminé haciendo yo la parte que faltaba; prefiero cargar más que pelear.","La verdad me llevo bien con todo el mundo; no recuerdo haber tenido algún conflicto."],"Usa el método STAR: situación, tarea, acción y resultado. Decir que nunca has tenido conflictos, o que siempre los escalas, muestra que no sabes resolverlos."],
+ ["","¿Cómo reaccionas cuando trabajas bajo presión?",["Hago una lista, separo lo urgente de lo importante y, si algo no alcanzará, aviso con tiempo para renegociar.","Mantengo la calma, me concentro en una tarea a la vez y pido apoyo si lo necesito.","Me quedo el tiempo que haga falta hasta terminar; no me voy hasta dejar todo listo.","Trabajo mejor bajo presión; por eso a veces dejo las cosas para el final, me activa.","Me estreso, pero no lo demuestro; prefiero no molestar a nadie y resolverlo sin decir nada."],"Quieren conocer tu método, no si «aguantas». Quedarse siempre hasta tarde o callar el estrés suena a compromiso, pero anticipa desgaste."],
+ ["","¿Dónde te ves en cinco años?",["Dominando las funciones de este puesto, con más formación en {a} y con más responsabilidades dentro del equipo.","Creciendo profesionalmente, con estabilidad y aprendiendo todo lo que pueda del área.","Me gustaría estar ya en un puesto de gerencia, idealmente aquí mismo.","Con mi propio negocio; este trabajo me ayudaría a ahorrar y a aprender cómo funciona el giro.","Prefiero no hacer planes tan largos; con la situación del país es difícil saber qué pasará."],"Un plan realista que incluya a la empresa muestra compromiso. Una meta demasiado alta o un plan de salida hacen dudar a quien te entrevista."],
+ ["","¿Qué sabes de {e}?",["Revisé su sitio y sus redes: sé qué ofrecen, a quién atienden y que abrieron vacantes porque están creciendo en {a}.","Sé que se dedican a {a} y que tienen buena reputación entre sus clientes.","Un conocido trabajó aquí y me dijo que pagan puntual y que el ambiente es bueno.","Vi la vacante en una bolsa de trabajo y me pareció que cumplía con los requisitos.","Todavía no investigué mucho; preferí venir sin ideas previas para conocerlos directamente."],"Diez minutos de investigación antes de la entrevista marcan la diferencia. Lo que te contó un conocido no sustituye conocer a la empresa."],
+ ["","¿Cuánto esperas ganar?",["Investigué el rango para este puesto en la zona; antes de dar una cifra me gustaría conocer el tabulador y las prestaciones completas.","Me gustaría saber qué rango manejan para el puesto y, a partir de ahí, platicarlo.","Lo que ustedes consideren justo; para mí lo importante ahora es la experiencia.","Tengo una cifra en mente según mis gastos: renta, transporte y lo que aporto en casa.","Lo mismo que gana un amigo en un puesto parecido; a él le pagan bastante bien."],"Llega con un rango investigado y pregunta por las prestaciones: IMSS, aguinaldo y vacaciones. Tus gastos personales o el sueldo de un amigo no son argumentos para negociar."],
+ ["pu","¿Tienes experiencia laboral?",["No formal, pero ayudé en el negocio de mi familia: atendía clientes, cobraba y cuadraba la caja al final del día.","No, pero participé en proyectos escolares donde tuve que organizar al equipo y cumplir fechas.","No, este sería mi primer trabajo, pero aprendo rápido y tengo muchas ganas.","Sí, he hecho algunos trabajos por mi cuenta, aunque no recuerdo bien las fechas.","No, por eso busco un lugar donde me enseñen todo desde cero y sin mucha presión."],"La experiencia no formal cuenta: negocio familiar, voluntariado, proyectos escolares. Nómbrala con tareas concretas y no inventes experiencia que no puedas sostener."],
+ ["e","Veo un periodo de un año sin empleo en tu CV. ¿Qué pasó?",["Cuidé a un familiar; en ese tiempo tomé un curso en línea relacionado con {a} y hoy tengo disponibilidad completa.","Estuve buscando trabajo y tomé algunos proyectos temporales para no perder el ritmo.","Decidí tomarme un tiempo para pensar con calma qué quería hacer con mi carrera.","Tuve algunos temas personales; prefiero no entrar en detalles, pero ya están resueltos.","Tuve un problema con mi jefe anterior y me costó encontrar otro trabajo después de eso."],"Los huecos en el CV son comunes. Explícalos con honestidad, di qué aprendiste y deja claro que hoy tienes disponibilidad."],
+ ["","Los primeros tres meses aquí son sin contrato y sin seguro. ¿Te parece bien?",["Me interesa el puesto. ¿Podemos dejar el periodo de prueba por escrito? Entiendo que el alta en el IMSS aplica desde el primer día.","¿Después de los tres meses sí se firma contrato con todas las prestaciones?","Está bien, entiendo que es para conocerme; confío en que después se formalice.","Sí, no hay problema; ya he trabajado así antes y nunca pasó nada.","Sí, de hecho prefiero cobrar sin descuentos del seguro; así me llega más dinero."],"En México el alta en el IMSS es obligatoria desde el primer día y, en la mayoría de los puestos, el periodo de prueba no puede pasar de 30 días (LFT, art. 39-A). Defender tus derechos con respeto también es una buena respuesta."],
+ ["","¿Tienes disponibilidad para quedarte horas extra?",["Sí, cuando están planeadas y se pagan como marca la ley. ¿Con qué frecuencia suelen pedirlas?","Sí, dependiendo de mis otros compromisos; me gustaría saber con cuánta anticipación avisan.","Sí, las que se necesiten; quiero demostrar mi compromiso desde el primer día.","Sí, aunque preferiría que se compensen con días libres en lugar de pagarlas.","Prefiero no hacerlas; tengo otras actividades y me gusta salir a mi hora todos los días."],"Las horas extra se pagan al doble y, pasando de nueve a la semana, al triple (LFT, arts. 67 y 68). Disposición con condiciones claras es lo ideal; ofrecer «las que se necesiten» abre la puerta al abuso."],
+ ["","¿Planeas tener hijos o estás esperando un bebé?",["Esa información no forma parte de los requisitos del puesto; con gusto le platico cómo organizaré mi tiempo para cumplir.","Prefiero no responder, pero le aseguro que tengo mucho compromiso con el puesto.","Por ahora no está en mis planes, así que no debería ser un problema.","No, y si lo necesitan puedo traer un certificado médico que lo compruebe.","Si eso afecta la decisión, puedo firmar una carta comprometiéndome a no hacerlo."],"Condicionar un empleo al embarazo o pedir certificados de no embarazo es discriminación en México (LFT, art. 133). Responder la pregunta ya normaliza la práctica: redirige con firmeza y cortesía."],
+ ["","¿Cómo manejas las críticas de tu jefe o jefa?",["Escucho, pido un ejemplo concreto de qué mejorar y después doy seguimiento para confirmar que se nota el cambio.","Las acepto y trato de aplicarlas de inmediato en mi trabajo.","Las escucho, aunque si no estoy de acuerdo prefiero explicar mis razones en ese momento.","Me las tomo muy en serio; a veces me afectan, pero me esfuerzo el doble para compensar.","Prefiero que me las den por escrito; en persona me cuesta concentrarme en lo que me dicen."],"Recibir retroalimentación sin ponerse a la defensiva, y darle seguimiento, es de lo más valorado."],
+ ["","¿Qué harías si alguien te trata mal en el trabajo?",["Mantengo la calma, escucho, busco una solución y, si hay agresión, pido apoyo a supervisión y lo reporto.","Trato de entender qué le molesta y respondo con respeto aunque la otra persona no lo haga.","Lo dejo pasar; cada quien tiene sus días y no vale la pena hacerlo más grande.","Le pido a un compañero que atienda él la situación para no involucrarme.","Aguanto lo que sea; es parte del trabajo y no quiero dar problemas."],"Se valora la calma y saber cuándo escalar. Nadie tiene que tolerar agresiones: pedir apoyo y reportar es lo correcto."],
+ ["pu","¿Cómo combinarías el trabajo con {esc}?",["Ya revisé mis horarios: puedo cubrir los turnos propuestos y en temporada de exámenes aviso con dos semanas de anticipación.","Me organizo bien; ya he combinado varias actividades antes y sé priorizar.","Si hay choque de horarios, le doy prioridad al trabajo; los estudios pueden esperar un poco.","Puedo pedir a mis compañeros que me pasen apuntes cuando tenga que faltar.","Si el trabajo va bien, pienso dejar {esc} un tiempo para concentrarme."],"Quieren ver un plan realista. Dejar tus estudios reduce tus opciones a futuro: defiéndelos."],
+ ["e","¿Por qué dejaste tu último empleo?",["Buscaba crecer; aprendí mucho, pero en esa empresa ya no había posibilidades de avance.","Terminó mi contrato temporal y no hubo plazas fijas disponibles.","El sueldo ya no me alcanzaba y vi que en el mercado pagan mejor.","Hubo cambios de jefes y el ambiente cambió mucho; ya no me sentía a gusto.","Mi jefe tenía favoritos y no me valoraba; varios compañeros también se fueron."],"Habla del futuro, no del pasado. Criticar a empleadores anteriores, aunque sea con razón, hace dudar a quien te entrevista."],
+ ["","Cuéntame de un logro del que te sientas orgulloso u orgullosa.",["Coordiné un proyecto con cinco personas, cumplimos la meta dos semanas antes y aprendí a planear por etapas.","Salir adelante en un periodo difícil sin descuidar mis responsabilidades.","Me dieron un reconocimiento por buen desempeño, aunque en realidad fue trabajo de todo el equipo.","Terminar mis estudios, que no fue fácil con todo lo que tenía que hacer.","Me cuesta elegir uno; creo que todo lo que hago lo hago bien."],"Elige un logro concreto y medible: qué hiciste tú, qué resultado hubo y qué aprendiste."],
+ ["","Si tu jefe o jefa te pide algo que va contra las reglas de la empresa, ¿qué haces?",["Pregunto el motivo, explico el riesgo que veo y propongo otra forma de lograr lo que necesita.","Le digo con respeto que prefiero no hacerlo y pido que lo revisemos con alguien más.","Lo hago si me lo pide por escrito; así la responsabilidad queda de su lado.","Lo hago, pero lo comento con mis compañeros para que sepan lo que está pasando.","Lo hago; es quien dirige y yo todavía no conozco todas las reglas."],"La ética profesional incluye decir que no con argumentos y alternativas. «Por escrito» no te libra de responsabilidad."],
+ ["","Descríbeme una ocasión en que te equivocaste.",["Envié un pedido con datos incorrectos; lo reporté en cuanto lo noté, lo corregimos y ahora uso una lista de verificación.","Me equivoqué en una entrega, pedí disculpas y desde entonces cuido más los detalles.","Una vez me equivoqué, pero fue porque no me explicaron bien lo que tenía que hacer.","Casi no me equivoco porque reviso todo muchas veces antes de entregar.","No recuerdo alguna importante; trato de no darle vueltas a los errores."],"Reconocer un error concreto, lo que hiciste para corregirlo y el cambio que adoptaste demuestra madurez."],
+ ["","¿Por qué deberíamos contratarte a ti y no a otra persona?",["Cubro los requisitos del puesto, ya hice tareas parecidas y puedo aportar desde la primera semana.","Porque soy responsable, aprendo rápido y tengo verdadera disposición.","Porque de verdad necesito este trabajo y voy a dar todo para no perderlo.","Porque puedo empezar hoy mismo y acepto las condiciones que me ofrezcan.","Porque seguramente soy la persona con más ganas de todas las que entrevistaron."],"Resume en una frase por qué encajas con el puesto. Aceptar cualquier condición o hablar de necesidad te pone en desventaja."],
+ ["L","¿Tienes alguna pregunta para nosotros?",["Sí: ¿cómo es un día normal en este puesto y cómo evalúan el desempeño en los primeros meses?","¿Cuál es el horario y qué prestaciones incluye?","¿Cuándo me darían una respuesta?","No, creo que todo quedó muy claro, gracias.","¿Cada cuánto hay aumentos y en cuánto tiempo puedo ascender?"],"Hacer preguntas sobre el trabajo demuestra interés genuino. Preguntar primero por aumentos o ascensos da la impresión de que el puesto es solo un trámite."]
+];
+
+/* Preguntas por área: [pregunta, [mejor..peor], consejo] */
+const AQ = {
+ com:[
+  ["Si al hacer tu corte de caja te faltan 200 pesos, ¿qué haces?",["Reviso tickets y movimientos del turno y, si no aparece, lo reporto de inmediato explicando lo que revisé.","Cuento otra vez con un compañero como testigo antes de avisar.","Espero al corte del día siguiente; a veces el faltante aparece solo.","Lo pongo de mi dinero para no tener problemas; son solo 200 pesos.","Lo registro como error de la terminal; suele pasar y casi nadie lo revisa."],"Transparencia ante todo: reportar a tiempo, con lo que ya revisaste, protege tu confianza y tu empleo. Pagarlo de tu bolsa esconde un problema que se repetirá."],
+  ["Hay una fila larga y un cliente exige que lo atiendas primero. ¿Qué haces?",["Le explico con amabilidad que respeto el turno de todos y le ofrezco otra caja o un tiempo estimado.","Le pido amablemente que espere su turno y sigo atendiendo lo más rápido posible.","Llamo a mi supervisor para que él decida qué hacer con el cliente.","Lo atiendo primero para evitar que se haga un problema mayor.","Le pido a otro cliente de la fila que le ceda su lugar."],"Firmeza amable: sostener la regla y ofrecer una alternativa, sin trasladar el problema a otras personas."],
+  ["¿Cómo convencerías a alguien de comprar un producto?",["Le pregunto para qué lo necesita y le recomiendo lo que de verdad le sirve, aunque sea lo más barato.","Le explico los beneficios y le muestro dos opciones para que compare.","Le recomiendo el producto con mejor comisión; también es de buena calidad.","Le digo que la promoción termina hoy para que decida rápido.","Le agrego la garantía extendida desde el inicio; así ya va incluida en el precio."],"Vender es escuchar. La confianza del cliente vale más que una venta forzada o con presión."],
+  ["Faltan cinco días para cerrar el mes y vas al 60% de tu meta de ventas. ¿Qué haces?",["Reviso qué productos y horarios venden más, pido ideas a quien sí va en meta y enfoco ahí mis esfuerzos.","Le pregunto a mi supervisor qué estrategia me recomienda para esos días.","Me quedo horas extra esos días para atender a más clientes.","Ofrezco descuentos por mi cuenta para cerrar más ventas.","Registro como mías algunas ventas que ayudé a cerrar con compañeros."],"Analizar datos y aprender de quien lo hace bien es más efectivo que trabajar más horas o improvisar descuentos."]],
+ salud:[
+  ["Una persona a tu cargo se niega a tomar su medicamento. ¿Qué haces?",["Escucho por qué no quiere, le explico con calma, aviso al personal responsable y lo dejo registrado.","Le explico la importancia del medicamento e intento de nuevo en unos minutos.","Le pido a un familiar que la convenza; a ellos suele hacerles más caso.","Lo dejo para el siguiente turno para no forzarla.","Lo mezclo con su comida para que se lo tome sin darse cuenta."],"Respeto, comunicación y registro. Nunca decidas a solas sobre la salud de otra persona ni la engañes."],
+  ["¿Cómo cuidas la información de las personas que atiendes?",["Solo la comparto con el equipo que la necesita para su atención y nunca fuera del trabajo.","Evito comentarla, aunque a veces reviso expedientes de otros casos para aprender.","La platico con compañeros en el comedor, pero sin decir nombres.","Si un familiar me pregunta por teléfono, le doy la información para tranquilizarlo.","Comparto casos interesantes en mis redes, siempre sin fotos ni nombres."],"La confidencialidad es un deber profesional y legal. Revisar expedientes sin necesidad o dar datos por teléfono también la rompe."],
+  ["Llevas un turno de 12 horas y ya no puedes más. ¿Qué haces?",["Aviso a mi responsable, pido relevo o apoyo y no pongo en riesgo a nadie por el cansancio.","Tomo un descanso breve, me hidrato y sigo con doble cuidado.","Le pido a un compañero que revise mis registros antes de entregarlos.","Me tomo una bebida energética y continúo hasta terminar.","Sigo como pueda; si me voy, el equipo se queda con menos gente."],"El cansancio causa errores. Reconocer tus límites también protege a quienes atiendes."],
+  ["Notas que un compañero registró mal la dosis de un paciente. ¿Qué haces?",["Lo aviso de inmediato al responsable del turno para corregirlo antes de que afecte al paciente.","Se lo digo a mi compañero en privado para que lo corrija enseguida.","Lo corrijo yo en el registro para que no haya problema.","Espero a confirmarlo con el médico en su siguiente ronda.","No digo nada; no me corresponde revisar el trabajo de otros."],"En salud, la seguridad del paciente va primero: avisar al responsable de inmediato. Corregir por tu cuenta o esperar puede causar daño."]],
+ tec:[
+  ["Si no sabes resolver un problema técnico, ¿qué haces?",["Reviso la documentación, pruebo opciones y, si en un tiempo razonable no avanzo, pido ayuda explicando lo que ya intenté.","Busco en foros y tutoriales hasta encontrar la solución, aunque me lleve toda la tarde.","Le pregunto de inmediato a alguien con más experiencia para no perder tiempo.","Aplico una solución temporal para que funcione y la reviso cuando tenga tiempo.","Lo marco como resuelto y lo retomo si el cliente vuelve a reportarlo."],"Autonomía con límite de tiempo, y saber pedir ayuda con contexto: eso busca un equipo técnico."],
+  ["¿Cómo te mantienes al día en tecnología?",["Hago proyectos propios, tomo cursos en línea y comparto lo que aprendo en comunidades.","Tomo cursos cuando el trabajo lo requiere y leo documentación oficial.","Veo tutoriales en video cuando necesito algo específico.","Sigo a creadores de contenido de tecnología en redes sociales.","Me enfoco en dominar bien lo que ya sé; las modas cambian muy rápido."],"En tecnología, lo que aprendiste hace dos años puede ya no servir. Muestra un hábito de aprendizaje constante y práctico."],
+  ["Un cliente pide un cambio urgente que no estaba en lo acordado. ¿Qué haces?",["Le explico el impacto en tiempos, propongo priorizarlo frente a otras tareas y lo dejo por escrito.","Lo hago, pero aviso que puede retrasar otras entregas.","Lo consulto con mi jefe antes de responderle al cliente.","Lo hago en la noche para no retrasar nada ni discutir.","Le digo que sí y lo agrego a la lista de pendientes, sin fecha."],"Gestionar el alcance es tan importante como programar. Todo cambio tiene un costo que debe quedar claro."],
+  ["Un compañero te pide tu contraseña para terminar algo urgente mientras sales. ¿Qué haces?",["No la comparto; le ayudo a pedir un acceso temporal o lo resuelvo yo al regresar.","Le digo que no puedo y le sugiero que hable con el supervisor.","Se la doy, pero la cambio en cuanto regreso.","Dejo mi sesión abierta para que termine sin conocer la contraseña.","Se la paso por chat; es de confianza y es urgente."],"Las credenciales son personales. Dejar la sesión abierta es igual de riesgoso que compartir la contraseña."]],
+ ind:[
+  ["Ves que un compañero no usa su equipo de protección. ¿Qué haces?",["Se lo digo con respeto y, si sigue igual, lo reporto: la seguridad es de todos.","Le traigo el equipo del almacén para que se lo ponga en ese momento.","Le hago una seña; es adulto y sabe lo que hace.","Lo comento con el supervisor al final del turno.","No digo nada; si le pasa algo, es su responsabilidad."],"En la industria, un accidente puede cambiar una vida. La seguridad se atiende en el momento, no al final del turno."],
+  ["La máquina empieza a hacer un ruido extraño a mitad del turno. ¿Qué haces?",["La detengo según el protocolo y aviso a mantenimiento y a mi supervisor.","Aviso a mi supervisor y espero su indicación antes de seguir.","Le bajo la velocidad y sigo hasta terminar el lote.","Reviso por mi cuenta dónde está el problema para no parar la línea.","Sigo trabajando; el ruido no siempre significa que haya falla."],"Parar a tiempo es más barato que una reparación mayor o un accidente. Reparar sin capacitación es un riesgo."],
+  ["Te piden cumplir la meta aunque haya que saltarse un paso de calidad. ¿Qué haces?",["Explico el riesgo, propongo una alternativa para cumplir y no me salto el paso sin autorización por escrito.","Pregunto quién se hace responsable si el producto sale mal.","Lo hago esta vez porque es emergencia, y lo anoto en la bitácora.","Lo hago y reviso las piezas después, si queda tiempo.","Lo hago; si el supervisor lo pide, la responsabilidad es suya."],"La calidad y la seguridad no se negocian. Proponer soluciones te distingue."],
+  ["Casi ocurre un accidente en tu área, pero nadie salió lastimado. ¿Qué haces?",["Lo reporto como incidente para que se revise la causa, aunque no haya habido lesionados.","Se lo comento a mi supervisor al final del turno.","Aviso a mis compañeros para que tengan más cuidado.","No lo reporto; si no pasó nada, no vale la pena el papeleo.","Lo dejo pasar para que no afecte el bono de días sin accidentes."],"Los «casi accidentes» son avisos. Reportarlos evita el accidente real."]],
+ edu:[
+  ["Un grupo no te hace caso durante una actividad. ¿Qué haces?",["Cambio la dinámica, acuerdo reglas claras con el grupo e involucro a quienes están más distraídos.","Hago una pausa, espero en silencio a que se calmen y retomo.","Subo la voz para recuperar la atención y sigo con la actividad.","Sigo con quienes sí ponen atención; los demás se pondrán al corriente.","Les dejo trabajo extra para la siguiente sesión como consecuencia."],"Gestionar grupos es central en educación y cultura: dinámicas y acuerdos antes que castigos."],
+  ["Un cliente critica con dureza tu trabajo creativo. ¿Qué haces?",["Pregunto qué no le funciona en relación con su objetivo y propongo ajustes concretos.","Hago los cambios que pide lo más rápido posible.","Le explico mis decisiones de diseño para que entienda mi propuesta.","Le pido referencias de lo que sí le gusta y empiezo de cero.","Le ofrezco un descuento para compensar que no le gustó."],"Separar tu obra de tu persona te permite mejorar el trabajo sin romper la relación."],
+  ["Te piden una entrega en un plazo imposible. ¿Qué haces?",["Negocio qué se puede entregar en ese plazo y qué quedaría después, y lo confirmo por escrito.","Aviso que está complicado, pero me comprometo a intentarlo.","Pido ayuda a un colega y dividimos el trabajo sin avisar al cliente.","Me desvelo los días que haga falta para cumplir.","Acepto y entrego lo que alcance, aunque no esté completo."],"Negociar el alcance es una habilidad profesional. Desvelarse como costumbre lleva al desgaste."],
+  ["Usan una idea tuya en un proyecto y no te dan crédito. ¿Qué haces?",["Lo hablo en privado con la persona responsable y propongo que se reconozca a quienes participaron.","Guardo evidencia de mi trabajo y la muestro si se vuelve a presentar.","Lo dejo pasar esta vez; lo importante es que el proyecto salió bien.","Lo comento con mis compañeros para que sepan que fue mi idea.","Lo publico en redes para que todos sepan quién la tuvo."],"Defender tu trabajo en privado y con propuestas cuida la relación y tu reputación."]]
+};
+
+/* Frases para calmar: [correcta, ni correcta ni incorrecta, incorrecta]. Todas suenan corteses. */
+const CALM = [
+ ["Tiene razón, no me expliqué bien. ¿Me permite darle un ejemplo concreto?","Perdón, son los nervios; normalmente me expreso mejor.","Le aseguro que soy mucho mejor de lo que parece en esta entrevista."],
+ ["Gracias por la observación; déjeme reformular mi respuesta con lo que hice en realidad.","Entiendo, tomaré en cuenta su comentario.","Seguramente otras personas respondieron algo parecido, ¿no?"],
+ ["Entiendo lo que necesita para este puesto; permítame mostrarle cómo lo cubriría.","Disculpe, sigamos con la siguiente pregunta.","Quizá la pregunta no fue muy clara; ¿me la podría repetir?"],
+ ["Agradezco su paciencia. Este puesto me interesa y quiero demostrarlo con hechos.","Sí, perdón, intentaré concentrarme más.","No se preocupe, en el trabajo real me desenvuelvo mucho mejor."]
+];
+
+/* Habilidades generales */
+const SKG = {
+ h:"Comunicación oral/2/1/b;Escucha activa/2/1/b;Manejo de hojas de cálculo/2/0/d;Redacción clara/2/0/d;Inglés intermedio/2/0/d;Manejo de redes sociales/1/0/d;Negociación/2/1/b;Establecer límites sanos/1/2/b;Pedir ayuda a tiempo/1/2/b;Gestión del tiempo/2/2/b;Decir que sí a todo/1/-2/b;Multitarea constante/1/-1/b;Herramientas digitales de oficina/2/0/d;Primeros auxilios básicos/1/0/d;Manejo de conflictos/2/1/b",
+ c:"Trabajo en equipo/2/1;Orientación a resultados/2/0;Adaptabilidad/2/1;Pensamiento crítico/2/0;Resolución de problemas/2/0;Liderazgo/1/0;Autocuidado y manejo del estrés/1/2;Inteligencia emocional/2/2;Aprendizaje continuo/2/1;Ética profesional/2/0;Planeación y organización/2/1;Toma de decisiones/2/0;Disponibilidad total 24/7/1/-2;Competitividad extrema/1/-2;Conocimiento de tus derechos laborales/1/2",
+ a:"Paciencia/2/1;Puntualidad/2/0;Iniciativa/2/0;Resiliencia/2/1;Curiosidad/1/1;Tolerancia a la frustración/2/1;Responsabilidad/2/0;Optimismo realista/1/1;Constancia/2/0;Capacidad de descansar y desconectar/1/2;Humildad para aprender/2/1;Perfeccionismo/1/-2;Necesidad de aprobación/0/-2;Autoexigencia sin pausas/1/-2;Sentido del humor/1/1"
+};
+const EJES = {h:"Habilidades",c:"Competencias",a:"Aptitudes"};
+
+/* Carrera en cinco etapas. Cada situación: st = etapas donde puede aparecer, ar = área (si es propia de un área),
+   o = [correcta, a medias, incorrecta], f = retroalimentación, e = qué pierde la incorrecta (b bienestar / d desempeño),
+   sk = habilidades elegibles que amortiguan el golpe. */
+const ETAPAS=["3 meses","11 meses","1 año y medio","2 años y medio","4 años"];
+const SIT = {
+ extra:{st:[1],t:"Horas de más",d:"Llevas semanas saliendo dos horas tarde y duermes cinco horas por noche.",e:"b",sk:["Gestión del tiempo","Establecer límites sanos","Negociación"],
+  o:["Pedir una reunión con tu jefatura para acordar prioridades y que las horas extra sean excepcionales y pagadas.","Organizarte mejor con listas y alarmas para terminar a tiempo, sin comentarlo con nadie.","Aceptar el ritmo mientras dura la temporada alta; después seguramente todo se normaliza."],
+  f:["Hacer visible la carga permite repartirla, y las horas extra deben pagarse al doble (LFT, art. 67).","Organizarte ayuda, pero una carga excesiva no se resuelve con listas.","La «temporada alta» se volvió permanente y tu cuerpo lo resiente."]},
+ msj:{st:[1],t:"El celular no se apaga",d:"Te escriben del trabajo a las 11 de la noche y siempre contestas.",e:"b",sk:["Establecer límites sanos","Capacidad de descansar y desconectar"],
+  o:["Acordar con tu equipo un horario de respuesta y dejar un canal solo para emergencias reales.","Contestar solo lo urgente, pero seguir revisando el chat por si acaso.","Responder rápido para que vean tu compromiso; en unos meses ya no será necesario."],
+  f:["Poner reglas claras protege tu descanso sin descuidar el trabajo.","Revisar «por si acaso» mantiene tu mente en el trabajo aunque no contestes.","La costumbre se volvió expectativa y tu descanso desapareció."]},
+ dolor:{st:[1,4],t:"El cuerpo avisa",d:"Desde hace semanas te duele la espalda o la cabeza todos los días.",e:"b",sk:["Autocuidado y manejo del estrés","Cuidado de la propia salud","Cuidado del propio cuerpo"],
+  o:["Ir a tu clínica del IMSS y pedir ajustes en tu puesto, como pausas o cambios de postura.","Comprar un cojín ergonómico y tomar analgésicos cuando el dolor aumente.","Esperar al periodo vacacional para descansar y ver si se quita solo."],
+  f:["Atender la causa a tiempo evita que el problema se vuelva crónico.","Alivias el síntoma, pero la causa sigue ahí.","El dolor se volvió constante y ya afecta tu rendimiento y tu ánimo."]},
+ error:{st:[1],t:"Un error por cansancio",d:"Por el cansancio cometiste un error que tu jefe o jefa notó.",e:"d",sk:["Responsabilidad","Ética profesional","Humildad para aprender"],
+  o:["Reconocerlo, corregirlo y explicar qué cambiarás en tu forma de trabajar para que no se repita.","Corregirlo de inmediato y esforzarte el doble para que no vuelva a pasar.","Explicar que el error vino de información incompleta que te pasaron."],
+  f:["Reconocer y proponer un cambio concreto genera confianza.","Corregir está bien, pero esforzarte el doble sobre un cuerpo cansado aumenta el riesgo de otro error.","Desviar la responsabilidad hizo que tu equipo dejara de confiar en ti."]},
+ trato:{st:[1,3],t:"Trato difícil",d:"Una persona del trabajo te habla a gritos casi a diario y lo sigues pensando en casa.",e:"d",sk:["Manejo de conflictos","Inteligencia emocional","Pedir ayuda a tiempo"],
+  o:["Documentar lo que pasa, reportarlo a supervisión o Recursos Humanos y apoyarte en alguien de confianza.","Evitar a esa persona lo más posible y desahogarte con tus amistades al salir.","Responderle con firmeza frente al equipo la próxima vez que grite, para que no se repita."],
+  f:["Nadie tiene que tolerar agresiones. Documentar y escalar reduce la carga y te protege.","Evitarla reduce el roce, pero el problema sigue y tú cargas con él.","Confrontar en público escaló el conflicto y ahora tu conducta también está en duda."]},
+ vac:{st:[2],t:"Vacaciones que nunca llegan",d:"Estás por cumplir un año y no has tomado ni un día libre; te dicen que «no es buen momento».",e:"b",sk:["Conocimiento de tus derechos laborales","Establecer límites sanos"],
+  o:["Solicitar por escrito tus días de vacaciones y acordar las fechas con tu jefatura.","Pedir que te paguen esos días en lugar de tomarlos; te vendría bien el dinero.","Esperar a que baje el trabajo; pedirlas ahora podría verse mal."],
+  f:["Al cumplir un año tienes derecho a por lo menos 12 días de vacaciones pagadas (LFT, art. 76).","Te alivia el bolsillo, pero no recupera tu energía, y la ley no permite cambiar vacaciones por dinero mientras sigues en el empleo (LFT, art. 79).","El «buen momento» nunca llegó y el cansancio de un año entero se acumuló."]},
+ desc:{st:[2],t:"Sin día libre",d:"Usas tu día de descanso para un segundo trabajo porque el dinero no alcanza.",e:"b",sk:["Capacidad de descansar y desconectar","Planeación y organización"],
+  o:["Proteger al menos un día completo de descanso y revisar tu presupuesto con calma.","Trabajar medio día en el segundo empleo y descansar la otra mitad.","Mantener los dos trabajos unos meses más hasta juntar un ahorro."],
+  f:["El descanso semanal es un derecho y una necesidad; con un presupuesto claro aparecen otras salidas.","Medio día ayuda, pero no alcanza para recuperarte de la semana.","Los «meses más» se alargaron y tu energía se agotó."]},
+ aisl:{st:[2,4],t:"Solo trabajo y cama",d:"Ya casi no ves a tus amistades ni a tu familia; cancelas planes por cansancio.",e:"b",sk:["Inteligencia emocional","Autocuidado y manejo del estrés"],
+  o:["Agendar tiempo con tu gente como si fuera una cita de trabajo, y cumplirlo.","Mantener el contacto por mensajes y videollamadas cortas entre semana.","Dejar la vida social para cuando el trabajo se estabilice."],
+  f:["Las redes de apoyo son de los mayores protectores contra el desgaste.","Los mensajes mantienen el vínculo, pero no te recargan como un encuentro real.","El aislamiento aumentó el agotamiento emocional."]},
+ form:{st:[2],t:"Tu formación en pausa",d:"Estás faltando {form} porque el trabajo no te deja tiempo.",e:"d",sk:["Aprendizaje continuo","Negociación"],
+  o:["Negociar con tu jefatura un horario compatible y retomar tus estudios.","Pasarte a modalidad en línea, aunque avances más lento.","Pausar los estudios un año; ya tienes trabajo y puedes retomarlos después."],
+  f:["Seguir formándote amplía tus opciones y te da un horizonte más allá de este puesto.","Avanzas, pero sin tiempo real para estudiar aprendes poco.","La pausa se volvió permanente y tu perfil dejó de crecer."]},
+ carga:{st:[3],t:"Doble chamba, mismo sueldo",d:"Te asignaron las tareas de alguien que renunció, sin aumento ni fecha para cubrir la vacante.",e:"b",sk:["Negociación","Establecer límites sanos","Pedir ayuda a tiempo"],
+  o:["Pedir una reunión para priorizar, fijar un plazo para cubrir la vacante y hablar de compensación.","Hacer las tareas nuevas a medias para que se note que falta personal.","Asumirlo sin quejarte; es la oportunidad de demostrar que mereces un ascenso."],
+  f:["Hacer visible la carga permite repartirla o compensarla.","Bajar la calidad sin hablarlo genera malentendidos sobre tu desempeño.","Cubrir dos puestos sin plazo ni pago te llevó directo al agotamiento."]},
+ ascenso:{st:[3],t:"Un ascenso con letra chica",d:"Te ofrecen coordinar a tu equipo con 10% más de sueldo, pero con horario abierto.",e:"b",sk:["Negociación","Conocimiento de tus derechos laborales","Toma de decisiones"],
+  o:["Aceptar si se definen por escrito el horario, las funciones y una revisión salarial en seis meses.","Aceptar ya y ver sobre la marcha cómo se acomodan los horarios.","Aceptar y seguir haciendo también tus tareas anteriores para que nadie te extrañe."],
+  f:["Negociar condiciones claras convierte un ascenso en crecimiento, no en desgaste.","Sin reglas claras, el horario abierto creció cada semana.","Hacer dos trabajos en uno te llevó al límite."]},
+ eval:{st:[3],t:"Evaluación de desempeño",d:"En tu evaluación te señalan que te falta dominar «{gap}», algo clave para tu puesto.",e:"d",sk:["Humildad para aprender","Aprendizaje continuo"],
+  o:["Pedir un plan de capacitación con fechas y buscar a alguien del equipo que te enseñe.","Tomar un curso en línea por tu cuenta los fines de semana, sin comentarlo.","Explicar que nadie te capacitó en eso y que no era parte de lo que te pidieron."],
+  f:["Un plan acordado convierte la crítica en aprendizaje y muestra compromiso.","Aprendes algo, pero a costa de tu descanso y sin que la empresa lo sepa.","Aunque tengas algo de razón, sonó a excusa y tu evaluación empeoró."]},
+ equipo:{st:[3],t:"Conflicto en el equipo",d:"Dos compañeros no se hablan y el trabajo se está atorando en tu área.",e:"d",sk:["Manejo de conflictos","Trabajo en equipo","Liderazgo"],
+  o:["Proponer una reunión con reglas claras para acordar cómo se reparten y entregan las tareas.","Hacer de intermediario y pasar los mensajes entre uno y otro.","Tomar partido por quien tiene más razón para que el asunto se resuelva rápido."],
+  f:["Acordar reglas entre todos destraba el trabajo sin cargar a nadie.","Funciona un tiempo, pero ahora cargas con un conflicto que no es tuyo.","Tomar partido dividió al equipo y los resultados del área cayeron."]},
+ estanc:{st:[4],t:"Sueldo estancado",d:"Llevas dos años y medio sin aumento real y los precios siguen subiendo.",e:"b",sk:["Negociación","Orientación a resultados"],
+  o:["Reunir evidencia de tus logros y pedir una reunión formal para revisar tu salario.","Actualizar tu CV en silencio y postularte a otras vacantes por si acaso.","Esperar a que la empresa lo note sola; pedirlo podría parecer ambición."],
+  f:["Pedir con evidencia es la forma más efectiva de negociar un aumento.","Explorar opciones es sano, pero sin hablarlo nada cambia donde estás.","La espera se alargó y la presión económica te empezó a pasar factura."]},
+ imss:{st:[4],t:"Registrado con menos",d:"Al tramitar un crédito descubres que te registraron en el IMSS con un salario menor al real.",e:"b",sk:["Conocimiento de tus derechos laborales"],
+  o:["Pedir la corrección por escrito a Recursos Humanos y, si no se corrige, acudir a la PROFEDET.","Comentarlo con compañeros para ver si les pasa lo mismo antes de hacer algo.","No decir nada; al menos sí tienes seguro y no quieres problemas."],
+  f:["La PROFEDET asesora gratis. Un registro correcto protege tu pensión, tus créditos y tus incapacidades.","Informarte con otras personas ayuda, pero nada cambia si no actúas.","Tu pensión, tu crédito de vivienda y tus incapacidades se calculan con un salario menor al real."]},
+ auto:{st:[4],t:"Llega la automatización",d:"La empresa implementará un sistema nuevo que hará parte de tus tareas.",e:"d",sk:["Adaptabilidad","Aprendizaje continuo","Curiosidad"],
+  o:["Pedir estar en la capacitación desde el inicio y ofrecerte como apoyo para tu equipo.","Esperar a ver cómo funciona antes de aprenderlo; muchos sistemas no duran.","Demostrar con resultados que el método anterior era mejor."],
+  f:["Adelantarte al cambio te vuelve una pieza clave en la transición.","Te pones al día tarde y otras personas toman la delantera.","Resistirte al cambio te dejó fuera cuando el sistema se quedó."]},
+ oferta:{st:[4,5],t:"Otra oferta",d:"Otra empresa te ofrece 20% más de sueldo, pero sin prestaciones de ley.",e:"b",sk:["Conocimiento de tus derechos laborales","Toma de decisiones","Pensamiento crítico"],
+  o:["Comparar el paquete completo (IMSS, aguinaldo, vacaciones, estabilidad) y negociar con ambas antes de decidir.","Aceptar solo si te dan contrato, aunque sea por honorarios.","Aceptar de inmediato; un 20% más es mucho dinero."],
+  f:["Las prestaciones pueden valer más que el aumento; comparar todo te da poder de negociación.","Por honorarios no tienes IMSS ni aguinaldo: ganas en sueldo y pierdes en seguridad.","Sin IMSS ni aguinaldo, el primer problema de salud se comió el aumento."]},
+ recorte:{st:[5],t:"Recorte de personal",d:"La empresa anuncia recortes y tu área está en la lista.",e:"d",sk:["Conocimiento de tus derechos laborales","Resiliencia","Adaptabilidad"],
+  o:["Revisar tus derechos de indemnización, activar tu red de contactos y hablar con tu jefatura sobre tu lugar.","Trabajar más horas para demostrar que eres indispensable.","Renunciar antes de que te despidan para no dañar tu historial."],
+  f:["Informarte y moverte a tiempo te da control; un despido injustificado implica indemnización (LFT, arts. 48 y 50).","Más horas no garantizan que te quedes y sí aumentan tu desgaste.","Al renunciar perdiste la indemnización que te correspondía."]},
+ lider:{st:[5],t:"Ahora diriges",d:"Coordinas a un equipo y una persona a tu cargo se ve agotada y comete errores.",e:"d",sk:["Liderazgo","Inteligencia emocional","Escucha activa"],
+  o:["Hablar en privado con ella, ajustar su carga y revisar si el problema es de todo el equipo.","Cubrir su trabajo para que no afecte los resultados del área.","Llamarle la atención por escrito para que sepa que los errores tienen consecuencias."],
+  f:["Cuidar a tu equipo también es un resultado; detectaste a tiempo un problema de carga.","El área cumple, pero ahora la carga extra es tuya.","La persona renunció, el equipo se desmotivó y los resultados cayeron."]},
+ cronico:{st:[5],t:"Cansancio crónico",d:"Llevas meses durmiendo mal y sientes que nada de lo que haces es suficiente.",e:"b",sk:["Autocuidado y manejo del estrés","Pedir ayuda a tiempo","Capacidad de descansar y desconectar"],
+  o:["Buscar apoyo psicológico a tiempo y hablar con tu jefatura sobre cargas y pausas.","Tomar unos días de vacaciones y regresar con la misma rutina.","Aguantar hasta el próximo aumento; después podrás bajar el ritmo."],
+  f:["Pedir ayuda antes de tocar fondo es una de las decisiones más sanas de una carrera.","Descansas unos días, pero la rutina que te agotó sigue igual.","El aumento no llegó a tiempo y el agotamiento sí."]},
+ /* Propias de cada área */
+ com1:{ar:"com",st:[2],t:"Metas imposibles",d:"Suben tu meta de ventas 30% sin cambiar nada más.",e:"b",sk:["Negociación","Visión comercial"],
+  o:["Pedir que la meta se revise con datos de temporada y proponer una meta escalonada.","Aceptarla y ver al final del mes qué tan lejos quedas.","Cubrir la diferencia vendiendo también en tus días libres."],
+  f:["Negociar con datos hace la meta alcanzable y te posiciona bien.","Llegas lejos de la meta y sin argumentos para explicarlo.","Vender en tus días libres te dejó sin descanso."]},
+ com2:{ar:"com",st:[4],t:"Amenaza de un cliente",d:"Un cliente amenaza con publicar una queja falsa si no le haces un descuento.",e:"d",sk:["Trato con clientes difíciles","Manejo de objeciones","Manejo de conflictos"],
+  o:["Mantener la política, registrar el incidente y pedir apoyo a tu supervisor.","Hacerle un descuento pequeño para calmarlo y evitar la mala reseña.","Darle el descuento completo; una queja pública afectaría tu evaluación."],
+  f:["Registrar y escalar protege a la empresa y a ti.","Cedes un poco y el cliente vuelve a intentarlo la próxima vez.","Hacer descuentos sin autorización te costó una sanción."]},
+ salud1:{ar:"salud",st:[2],t:"Guardias dobles",d:"Te piden cubrir guardias dobles cada semana por falta de personal.",e:"b",sk:["Establecer límites sanos","Cuidado de la propia salud"],
+  o:["Aceptar solo las que respeten tu descanso mínimo y pedir un plan para completar la plantilla.","Aceptar todas este mes y pedir días de descanso el siguiente.","Aceptar todas; el equipo te necesita y no quieres dejarlo solo."],
+  f:["Cuidarte también es cuidar a tus pacientes.","El mes siguiente también faltó personal y el descanso no llegó.","El agotamiento en salud pone en riesgo a pacientes y a ti."]},
+ salud2:{ar:"salud",st:[4],t:"Un duelo en el trabajo",d:"Falleció un paciente con quien tenías mucho vínculo y no dejas de pensarlo.",e:"b",sk:["Contención emocional","Inteligencia emocional","Pedir ayuda a tiempo"],
+  o:["Hablarlo en los espacios de contención del equipo o con un profesional, y darte tiempo.","Guardarlo para ti y concentrarte en los demás pacientes.","Tomar más turnos para no pensar en eso."],
+  f:["El duelo en salud es real; atenderlo evita la fatiga por compasión.","Sigues trabajando, pero la carga emocional se acumula.","Llenarte de turnos te llevó al límite físico y emocional."]},
+ tec1:{ar:"tec",st:[2],t:"Guardias de soporte",d:"Te ponen de guardia un fin de semana sí y otro no, sin pago adicional.",e:"b",sk:["Negociación","Disciplina para el trabajo remoto","Establecer límites sanos"],
+  o:["Pedir por escrito que la guardia se pague o se compense y que los turnos se roten.","Aceptar las guardias, pero no revisar el correo el resto del fin de semana.","Aceptar sin más; en tecnología así se trabaja."],
+  f:["Las guardias son trabajo y deben reconocerse.","Te proteges un poco, pero sigues sin fines de semana completos.","Sin descansos completos, el desgaste se aceleró."]},
+ tec2:{ar:"tec",st:[4],t:"El sistema se cayó",d:"Un cambio tuyo tiró el sistema dos horas en un día de ventas.",e:"d",sk:["Resolución de incidentes","Responsabilidad","Documentación técnica"],
+  o:["Reportarlo de inmediato, ayudar a restaurar y proponer un proceso para que no se repita.","Arreglarlo rápido y explicarlo solo si alguien pregunta.","Atribuirlo al proveedor de servidores; es difícil que lo comprueben."],
+  f:["Un buen reporte de incidente convierte el error en mejora del proceso.","Se resolvió, pero nadie aprendió nada y puede repetirse.","Los registros mostraron el origen y perdiste la confianza del equipo."]},
+ ind1:{ar:"ind",st:[2],t:"Turnos rotativos",d:"Tu turno cambia cada semana entre día y noche y ya no duermes bien.",e:"b",sk:["Cuidado del propio cuerpo","Autocuidado y manejo del estrés"],
+  o:["Hablar con tu supervisor y el servicio médico para ajustar la rotación y revisar tu sueño.","Usar cortinas oscuras y dormir más en tus días libres.","Tomar pastillas para dormir que te recomendó un compañero."],
+  f:["Ajustar la rotación con apoyo médico ataca la causa.","Mejora un poco, pero la rotación sigue desordenando tu sueño.","Automedicarte te dejó con somnolencia en la línea: un riesgo para ti y tu equipo."]},
+ ind2:{ar:"ind",st:[4],t:"Una lesión menor",d:"Te lastimaste la mano en la línea; no es grave, pero duele.",e:"b",sk:["Seguridad como hábito","Normas de seguridad industrial","Conocimiento de tus derechos laborales"],
+  o:["Reportarlo como riesgo de trabajo para que el IMSS te atienda y quede registrado.","Atenderte en una farmacia y seguir trabajando con cuidado.","No reportarlo para no afectar el bono de días sin accidentes."],
+  f:["Un riesgo de trabajo registrado te da atención e incapacidad pagada.","La lesión sanó a medias y sigue molestando.","La lesión empeoró y, sin registro, el IMSS no la reconoce como riesgo de trabajo."]},
+ edu1:{ar:"edu",st:[2],t:"Trabajo que se lleva a casa",d:"Calificas, planeas y editas en casa todas las noches sin pago extra.",e:"b",sk:["Planeación didáctica","Planeación y organización","Establecer límites sanos"],
+  o:["Delimitar horas de planeación dentro de tu jornada y hablar de la carga con tu coordinación.","Hacerlo solo entre semana y liberar por completo los domingos.","Seguir así; la vocación implica dar más de lo que te pagan."],
+  f:["Hacer visible el trabajo invisible es el primer paso para que se reconozca.","Recuperas un día, pero las noches siguen ocupadas.","La vocación sin límites se volvió agotamiento."]},
+ edu2:{ar:"edu",st:[4],t:"Contrato por proyecto",d:"Tu contrato se renueva cada seis meses y nunca sabes si continuarás.",e:"b",sk:["Conocimiento de tus derechos laborales","Gestión de proyectos culturales"],
+  o:["Pedir por escrito que se reconozca tu antigüedad y buscar plazas con base, mientras cuidas un ahorro.","Aceptar las renovaciones y no pensar mucho en ello.","Tomar trabajos extra los fines de semana por si no renuevan."],
+  f:["Si el trabajo es permanente, la ley protege la continuidad; informarte te da certeza.","Sigues, pero la incertidumbre se acumula en silencio.","Trabajar sin descanso por miedo aceleró el desgaste."]}
+};
+const TRAMPA_SIT = {"Decir que sí a todo":"carga","Multitarea constante":"error","Disponibilidad total 24/7":"msj","Competitividad extrema":"equipo","Perfeccionismo":"extra","Necesidad de aprobación":"vac","Autoexigencia sin pausas":"cronico"};
+
+const BOSS = {
+ f:{name:"Lic. Rocío Méndez",g:"f",skin:"#C68E63",hair:"chongo",hc:"#2B1D16",shirt:"#3B2F55",glasses:true,blazer:true},
+ m:{name:"Ing. Arturo Pineda",g:"m",skin:"#E0B08A",hair:"rapado",hc:"#3A2A20",shirt:"#2F3E4E",glasses:false,blazer:true}
+};
+
+const SKINS=["#F1C9A5","#D9A47A","#B97D55","#8D5A3B","#5E3B26"];
+const HAIRS=[["corto","Corto"],["largo","Largo"],["chongo","Chongo"],["rizado","Rizado"],["rapado","Rapado"]];
+const HCS=["#1F1A17","#4A2E1F","#8B5A2B","#C9A15B","#6B21F5"];
+const SHIRTS=["#6B21F5","#FF6B1A","#16877A","#2F3E4E","#C8322A"];
+
+/* ============ UTILIDADES ============ */
+const $=s=>document.querySelector(s);
+const app=$("#app");
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const shuffle=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+const money=n=>"$"+Math.round(n).toLocaleString("es-MX");
+const lc=s=>s.charAt(0).toLowerCase()+s.slice(1);
+const escH=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const acento='<div class="acento" aria-hidden="true"><span></span><b></b><span></span></div>';
+const parseJobs=s=>s.split(";").map(x=>{const [n,v]=x.split(":");return {n,s:+v}});
+const parseSk=s=>s.split(";").map(x=>{const p=x.split("/");return {n:p[0],r:+p[1],w:+p[2],t:p[3]||""}});
+
+/* ============ AVATAR SVG ============ */
+/* o.dmg (0-4): estragos acumulados del burnout. 1 ojeras, 2 aumento de peso, 3 caída de cabello y canas, 4 calvicie y tensión */
+function mixHex(a,b,t){const p=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));const x=p(a),y=p(b);return "#"+x.map((v,i)=>Math.round(v+(y[i]-v)*t).toString(16).padStart(2,"0")).join("")}
+function avatarSVG(a,o={}){
+  const mood=o.mood??1, anger=clamp(o.anger??0,0,1), tired=clamp(o.tired??0,0,1), dmg=clamp(o.dmg??0,0,4);
+  const sk=a.skin, fw=dmg>=2?6:0;               /* fw: ensanchamiento por aumento de peso */
+  const hc=dmg>=3?mixHex(a.hc,"#A9A6AE",dmg>=4?.7:.45):a.hc;
+  const rx=28+fw, L=60-rx, R=60+rx;
+  const cap=`<path d="M${31-fw*.6} 55 Q29 19 60 19 Q91 19 ${89+fw*.6} 55 Q86 37 72 33 Q60 41 45 36 Q34 41 ${31-fw*.6} 55Z" fill="${hc}"/>`;
+  let back="",front="";
+  if(dmg>=4){
+    /* calvicie: solo quedan mechones a los lados */
+    back=a.hair==="largo"?`<path d="M${L-2} 58 L${L-6} 108 Q${L+2} 112 ${L+6} 100 L${L+4} 60Z M${R+2} 58 L${R+6} 108 Q${R-2} 112 ${R-6} 100 L${R-4} 60Z" fill="${hc}" opacity=".8"/>`:"";
+    front=`<path d="M${L+1} 62 Q${L-1} 44 ${L+7} 36 Q${L+6} 48 ${L+8} 60Z M${R-1} 62 Q${R+1} 44 ${R-7} 36 Q${R-6} 48 ${R-8} 60Z" fill="${hc}"/>`;
+  } else {
+    switch(a.hair){
+      case "largo": back=`<path d="M${28-fw} 58 Q25 16 60 16 Q95 16 ${92+fw} 58 L${97+fw} 116 Q60 126 ${23-fw} 116Z" fill="${hc}" opacity="${dmg>=3?.7:1}"/>`; front=cap; break;
+      case "chongo": back=`<circle cx="60" cy="17" r="${dmg>=3?8:12}" fill="${hc}"/>`; front=cap; break;
+      case "rizado": {let c="";for(let ang=195;ang<=345;ang+=19){const r=ang*Math.PI/180;c+=`<circle cx="${(60+(31+fw*.6)*Math.cos(r)).toFixed(1)}" cy="${(52+31*Math.sin(r)).toFixed(1)}" r="${dmg>=3?7:10}" fill="${hc}"/>`}
+        front=`<path d="M32 52 Q31 24 60 24 Q89 24 88 52 Q80 38 60 37 Q40 38 32 52Z" fill="${hc}"/>`+c; break;}
+      case "rapado": front=`<path d="M33 50 Q34 24 60 24 Q86 24 87 50 Q80 34 60 33 Q40 34 33 50Z" fill="${hc}" opacity="${dmg>=3?.35:.6}"/>`; break;
+      default: front=cap;
+    }
+    /* caída de cabello: entradas en las sienes y coronilla rala */
+    if(dmg>=3){const id="cf"+Math.random().toString(36).slice(2,8);
+      front+=`<clipPath id="${id}"><ellipse cx="60" cy="57" rx="${rx}" ry="${31+fw*.3}"/></clipPath><g clip-path="url(#${id})" fill="${sk}"><ellipse cx="43" cy="30" rx="9" ry="10"/><ellipse cx="77" cy="30" rx="9" ry="10"/><ellipse cx="60" cy="24" rx="7" ry="6" opacity=".85"/></g>`;}
+  }
+  const eyeY=58;
+  const bagOp=Math.max(tired>.35?.2+tired*.4:0,dmg>=1?.55+dmg*.08:0);
+  const bags=bagOp>0?`<path d="M43 64 Q49 ${dmg>=1?69:67} 55 64 M65 64 Q71 ${dmg>=1?69:67} 77 64" stroke="rgba(70,30,80,${bagOp.toFixed(2)})" stroke-width="${dmg>=1?3.2:2}" fill="none" stroke-linecap="round"/>`:"";
+  const ry=tired>.6||dmg>=4?1.4:3.2;
+  const bIn=anger*6-(mood>1?1.5:0)+(dmg>=4?2:0), bOut=-anger*2;
+  const brows=`<path d="M43 ${50+bOut} L54 ${50+bIn} M77 ${50+bOut} L66 ${50+bIn}" stroke="${dmg>=3?mixHex("#2A1D24","#9A96A0",.5):"#2A1D24"}" stroke-width="2.6" stroke-linecap="round"/>`;
+  const curv=mood*3.2-anger*7-tired*3-(dmg>=2?1.5:0);
+  const mouth=`<path d="M51 73 Q60 ${(73+curv).toFixed(1)} 69 73" stroke="#4A2230" stroke-width="2.6" fill="none" stroke-linecap="round"/>`;
+  const flush=anger>0?`<ellipse cx="60" cy="57" rx="${rx}" ry="31" fill="#FF3B30" opacity="${(anger*.38).toFixed(2)}"/>`:"";
+  const greyOp=Math.max(tired*.28,dmg*.06);
+  const grey=greyOp>0?`<ellipse cx="60" cy="57" rx="${rx}" ry="31" fill="#7A7890" opacity="${greyOp.toFixed(2)}"/>`:"";
+  const chin=dmg>=2?`<path d="M${46-fw*.4} 84 Q60 ${94+fw*.3} ${74+fw*.4} 84" stroke="rgba(60,30,40,.4)" stroke-width="2.4" fill="none" stroke-linecap="round"/><path d="M${L+5} 70 Q${L+8} 78 ${L+13} 81 M${R-5} 70 Q${R-8} 78 ${R-13} 81" stroke="rgba(60,30,40,.22)" stroke-width="2" fill="none" stroke-linecap="round"/>`:"";
+  const lines=dmg>=3?`<path d="M49 41 Q60 38 71 41 M52 45 Q60 43 68 45" stroke="rgba(60,30,40,.3)" stroke-width="1.6" fill="none" stroke-linecap="round"/>`:"";
+  const cheeks=mood>=2&&dmg<2?`<circle cx="45" cy="67" r="4" fill="#FF6B8A" opacity=".35"/><circle cx="75" cy="67" r="4" fill="#FF6B8A" opacity=".35"/>`:"";
+  const glasses=a.glasses?`<g stroke="#2A1D24" stroke-width="2" fill="none"><circle cx="49" cy="${eyeY}" r="7"/><circle cx="71" cy="${eyeY}" r="7"/><path d="M56 ${eyeY} L64 ${eyeY}"/></g>`:"";
+  const sweat=o.sweat?`<path d="M${86+fw} 42 Q${90+fw} 50 ${86+fw} 53 Q${82+fw} 50 ${86+fw} 42Z" fill="#6FB7FF"/>`:"";
+  const steam=anger>.75?`<g stroke="#FF6B1A" stroke-width="2.5" stroke-linecap="round" fill="none"><path d="M36 10 Q40 4 36 -2"/><path d="M60 4 Q64 -2 60 -8"/><path d="M84 10 Q88 4 84 -2"/></g>`:"";
+  const blazer=a.blazer?`<path d="M42 100 L60 128 L52 140 L30 140Z M78 100 L60 128 L68 140 L90 140Z" fill="rgba(0,0,0,.28)"/>`:"";
+  const bw=fw*2.4;
+  const body=`<path d="M${16-bw} 140 Q${19-bw} ${100-fw*.6} 60 96 Q${101+bw} ${100-fw*.6} ${104+bw} 140Z" fill="${a.shirt}"/>`;
+  const belly=dmg>=2?`<path d="M${34-bw*.4} 140 Q60 ${118-fw} ${86+bw*.4} 140" fill="rgba(0,0,0,.08)"/>`:"";
+  const sh=o.slouch?`transform="translate(0 ${(Math.max(tired,dmg/5)*5).toFixed(1)})"`:"";
+  return `<svg viewBox="0 -10 120 150" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Avatar de ${escH(a.name||"")}">
+  <g ${sh}>${back}
+  <rect x="${52-fw}" y="82" width="${16+fw*2}" height="16" fill="${sk}"/>
+  ${body}${belly}${blazer}
+  <path d="M50 97 L60 110 L70 97" fill="none" stroke="rgba(0,0,0,.22)" stroke-width="3" stroke-linejoin="round"/>
+  <circle cx="${L+4}" cy="59" r="5" fill="${sk}"/><circle cx="${R-4}" cy="59" r="5" fill="${sk}"/>
+  <ellipse cx="60" cy="57" rx="${rx}" ry="${31+fw*.3}" fill="${sk}"/>${grey}${flush}${cheeks}${chin}${lines}
+  <ellipse cx="49" cy="${eyeY}" rx="3.2" ry="${ry}" fill="#231A2E"/><ellipse cx="71" cy="${eyeY}" rx="3.2" ry="${ry}" fill="#231A2E"/>
+  ${bags}${brows}${glasses}${mouth}${front}${sweat}${steam}</g></svg>`;
+}
+
+/* ============ ESTADO ============ */
+const S={scen:null,av:null,game:null,diff:"medio",area:null,job:null,jobs:null,edit:null};
+let I=null, H=null, B=null;
+
+/* ============ MUESTRA PÚBLICA: captura de datos + envío de resultado ============
+   Cuando el juego se juega desde "Muestras" (panel/index.html), SIN token de
+   proyecto (?t=), se le pide a la persona un dato de contacto antes de dejarla
+   entrar a las puertas — igual que el resto de las muestras del sitio — y al
+   terminar cualquiera de los dos módulos (entrevista o habilidades) se manda su
+   resultado por el mismo pipeline genérico ya usado por IMES/BusquedaEmpleo/etc.
+   (apiCapturarInteresadoMuestra + apiGenerarInterpretacionMuestra +
+   apiEnviarResultadoMuestra, tipoMuestra "Simulacion" — ver WebApp.gs). Si en el
+   futuro se abre desde la Plataforma con un token de proyecto (?t=), esta
+   captura se omite: ese es un flujo aparte, todavía no conectado aquí. */
+/* Misma URL de Web App, y el mismo par jsonp()/jsonpPost(), que ya usan
+   muestra_imes.html y el resto de las muestras públicas del sitio — se
+   copian aquí verbatim (este archivo no incluye config.js: confirmado sin
+   uso por el resto de las muestras) para que una llamada desde el juego se
+   comporte exactamente igual que cualquier otra muestra ante fallas de red,
+   tiempos de espera, etc. */
+var WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxZbLiOP7QXvrgUIDhhVciVGY-Yval3YBvqBHOpQfK8El2wHXNNBtZvsnkbwMaJUss/exec';
+function jsonp(action, params, timeoutMs) {
+  return new Promise(function (resolve) {
+    var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+    var url = WEB_APP_URL + '?action=' + encodeURIComponent(action) + '&callback=' + cbName;
+    params = params || {};
+    for (var k in params) {
+      if (params[k] !== undefined && params[k] !== null) url += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
+    }
+    var script = document.createElement('script');
+    var cleaned = false;
+    function cleanup() { if (cleaned) return; cleaned = true; delete window[cbName]; if (script.parentNode) script.parentNode.removeChild(script); }
+    window[cbName] = function (data) { cleanup(); resolve(data); };
+    script.onerror = function () { cleanup(); resolve({ ok: false, error: 'No se pudo conectar.' }); };
+    setTimeout(function () { if (!cleaned) { cleanup(); resolve({ ok: false, error: 'Tardó demasiado en responder.' }); } }, timeoutMs || 25000);
+    script.src = url;
+    document.body.appendChild(script);
+  });
+}
+function jsonpPost(action, params, timeoutMs) {
+  return new Promise(function (resolve) {
+    var timedOut = false;
+    var timer = setTimeout(function () { timedOut = true; resolve({ ok: false, error: 'Tardó demasiado en responder.' }); }, timeoutMs || 25000);
+    var body = { action: action };
+    params = params || {};
+    for (var k in params) { if (params[k] !== undefined && params[k] !== null) body[k] = params[k]; }
+    fetch(WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
+      .then(function (resp) { return resp.json(); })
+      .then(function (data) { if (timedOut) return; clearTimeout(timer); resolve(data); })
+      .catch(function () { if (timedOut) return; clearTimeout(timer); resolve({ ok: false, error: 'No se pudo conectar.' }); });
+  });
+}
+function tieneToken(){
+  let q={};try{q=Object.fromEntries(new URLSearchParams(location.search))}catch(e){}
+  return !!(q.t&&String(q.t).trim());
+}
+const EMAIL_RE=/^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function pantallaIntake(alSiguiente){
+  paint(`<section class="intake">
+   <h2>Antes de empezar</h2>${acento}
+   <p class="lede">Solo necesitamos esto para poder enviarte tu resultado al terminar. No compartimos tus datos con nadie fuera de Sintropía Social.</p>
+   <form id="fIntake" class="stack bloque" novalidate>
+    <div class="campo"><label for="inNombre">Nombre <span class="req">*</span></label><input id="inNombre" type="text" maxlength="120" autocomplete="given-name" required></div>
+    <div class="doscol">
+     <div class="campo"><label for="inApellido">Apellido</label><input id="inApellido" type="text" maxlength="120" autocomplete="family-name"></div>
+     <div class="campo"><label for="inEdad">Edad</label><input id="inEdad" type="text" inputmode="numeric" maxlength="3" autocomplete="off"></div>
+    </div>
+    <div class="doscol">
+     <div class="campo"><label for="inCorreo">Correo electrónico <span class="req">*</span></label><input id="inCorreo" type="email" maxlength="160" autocomplete="email" required></div>
+     <div class="campo"><label for="inTel">Teléfono</label><input id="inTel" type="tel" maxlength="40" autocomplete="tel"></div>
+    </div>
+    <div class="campo trampa" aria-hidden="true"><label for="inTrampa">No llenar este campo</label><input id="inTrampa" type="text" tabindex="-1" autocomplete="off"></div>
+    <label class="consent"><input type="checkbox" id="inConsent"> Autorizo a Sintropía Social a contactarme por correo para enviarme el resultado de esta simulación y, si aplica, información relacionada con sus servicios.</label>
+    <div id="intakeErr" class="err" role="alert" style="display:none"></div>
+    <div class="fila" style="margin-top:6px"><button type="submit" class="btn">Empezar la simulación</button>
+     <button type="button" class="btn lnk" data-act="home">Volver</button></div>
+   </form>
+  </section>`);
+  document.getElementById("fIntake").addEventListener("submit",ev=>{
+    ev.preventDefault();
+    const nombre=document.getElementById("inNombre").value.trim();
+    const apellido=document.getElementById("inApellido").value.trim();
+    const edad=document.getElementById("inEdad").value.trim();
+    const correo=document.getElementById("inCorreo").value.trim();
+    const telefono=document.getElementById("inTel").value.trim();
+    const trampa=document.getElementById("inTrampa").value;
+    const consent=document.getElementById("inConsent").checked;
+    const errEl=document.getElementById("intakeErr");
+    const mostrarErr=m=>{errEl.textContent=m;errEl.style.display="block"};
+    if(!nombre)return mostrarErr("Escribe tu nombre.");
+    if(!correo||!EMAIL_RE.test(correo))return mostrarErr("Escribe un correo electrónico válido.");
+    if(!consent)return mostrarErr("Necesitamos tu autorización para poder enviarte el resultado.");
+    S.lead={nombre,apellido,edad,correo,telefono,trampa,consent:true};
+    jsonp("capturarInteresadoMuestra",{muestra:"Simulacion",nombre,apellido,email:correo,telefono,edad,
+      consentimiento:"Sí",sitioWebTrampa:trampa,notas:"Simulación \"Tres puertas al trabajo\" — datos capturados antes de jugar."});
+      /* no se espera la respuesta ni se bloquea el avance: si el registro
+         del lead falla por red, la persona igual entra a jugar */
+    alSiguiente();
+  });
+}
+/* Envía el resultado de un módulo (entrevista o habilidades) por el mismo
+   pipeline genérico de Muestras. No bloquea la pantalla de resultado: se
+   dispara al mostrarla y sigue en segundo plano (igual que el resto del
+   sitio) — si falla, la persona ya vio su resultado en pantalla igual. */
+function enviarResultadoSimulacion(opts){
+  if(!S.lead||!S.lead.correo)return; /* juego con token de proyecto, o sin intake: no se manda a Muestras */
+  const ar=AREAS.find(a=>a.id===S.area);
+  const resultados=[{nombre:opts.nombreModulo,puntaje:opts.puntaje,max:opts.max}];
+  const secciones=(opts.secciones||[]).slice(0,12);
+  const paramsIA={muestra:"Simulacion",email:S.lead.correo,nombre:S.lead.nombre,
+    resultados:JSON.stringify(resultados),area:ar?ar.nom:"",dificultad:S.diff,
+    resumenDecisiones:(opts.resumenDecisiones||"").slice(0,600),sitioWebTrampa:S.lead.trampa};
+  /* GET (jsonp): solo alimenta la ampliación con IA en pantalla, mismo
+     patrón que _iniciarCadenaIACorreo en muestra_imes.html — no bloquea. */
+  jsonp("generarInterpretacionMuestra",paramsIA);
+  /* POST (jsonpPost): valida y ENCOLA el envío del correo — el servidor
+     genera su propia interpretación con IA en segundo plano a partir de
+     paramsInterpretacionIA, así el correo sale completo aunque la persona
+     cierre la ventana antes de que la llamada de arriba responda. */
+  jsonpPost("enviarResultadoMuestra",{tipoMuestra:"Simulacion",correo:S.lead.correo,nombre:S.lead.nombre,
+    tituloResultado:opts.tituloResultado,resumenTexto:opts.resumenTexto,
+    secciones:JSON.stringify(secciones),paramsInterpretacionIA:JSON.stringify(paramsIA),
+    sitioWebTrampa:S.lead.trampa});
+}
+
+function miga(){
+  const p=[];
+  if(S.scen)p.push(SCEN[S.scen].nom);
+  if(S.game)p.push(S.game==="ent"?"La entrevista":"Habilidades");
+  $("#miga").innerHTML=p.length?escH(p.join(" / "))+' <button class="btn lnk" data-act="home">Inicio</button>':"";
+}
+function paint(html,focus=true){app.innerHTML=html;miga();if(focus){window.scrollTo(0,0);const h=app.querySelector("h1,h2");if(h){h.setAttribute("tabindex","-1");h.focus({preventScroll:true})}}}
+
+/* ============ PANTALLAS ============ */
+function home(){
+  Object.assign(S,{scen:null,av:null,game:null,area:null,job:null,pre:null});
+  paint(`<section>
+  <h1>Tres puertas al mundo del trabajo</h1>${acento}
+  <p class="lede">Elige tu momento, arma tu avatar y ponte a prueba en una entrevista o en tus primeros meses de trabajo. Al final te espera una prueba real para conocer tu perfil.</p>
+  <div class="doors">
+   <button class="door d1" data-act="scen" data-v="prepa"><small>Preparatoria</small><h3>Orientación vocacional</h3><p>${SCEN.prepa.para}</p></button>
+   <button class="door d2" data-act="scen" data-v="uni"><small>Universidad</small><h3>Orientación profesional</h3><p>${SCEN.uni.para}</p></button>
+   <button class="door d3" data-act="scen" data-v="empleo"><small>Búsqueda de empleo</small><h3>Perfiles de trabajo</h3><p>${SCEN.empleo.para}</p></button>
+  </div></section>`);
+}
+
+function avatars(){
+  const sc=SCEN[S.scen];
+  paint(`<button class="btn lnk volver" data-act="home">Volver a las puertas</button>
+  <h2>Elige tu avatar</h2>${acento}
+  <p class="lede">Será quien vaya a la entrevista o quien empiece a trabajar. También puedes crear el tuyo.</p>
+  <div class="grid bloque">
+   ${sc.avs.map((a,i)=>`<button class="card" data-act="pickav" data-v="${i}"><div class="av">${avatarSVG(a)}</div><h3>${a.name}, ${a.age} años</h3><p>${a.line}</p></button>`).join("")}
+   <button class="card crear" data-act="crear"><h3>Crear mi avatar</h3><p>Elige nombre, tono de piel, cabello y ropa.</p></button>
+  </div>`);
+}
+
+function editor(){
+  const e=S.edit;
+  const sw=(k,arr)=>arr.map(c=>`<button data-act="ed" data-k="${k}" data-v="${c}" style="background:${c}" aria-label="Color ${c}" aria-pressed="${e[k]===c}"></button>`).join("");
+  paint(`<button class="btn lnk volver" data-act="toav">Volver a los avatares</button>
+  <h2>Crea tu avatar</h2>${acento}
+  <div class="editor bloque">
+   <div class="preview" id="prev">${avatarSVG(e,{mood:1})}</div>
+   <div>
+    <div class="campo"><label for="nom">Nombre</label><input id="nom" type="text" maxlength="18" value="${escH(e.name)}" autocomplete="off"></div>
+    <div class="campo"><span class="et">¿Cómo nos referimos a tu avatar?</span><div class="chips">
+      ${[["f","Ella"],["m","Él"],["x","Elle"]].map(([v,t])=>`<button class="chip" data-act="ed" data-k="g" data-v="${v}" aria-pressed="${e.g===v}">${t}</button>`).join("")}</div></div>
+    <div class="campo"><span class="et">Tono de piel</span><div class="sw">${sw("skin",SKINS)}</div></div>
+    <div class="campo"><span class="et">Cabello</span><div class="chips">${HAIRS.map(([v,t])=>`<button class="chip" data-act="ed" data-k="hair" data-v="${v}" aria-pressed="${e.hair===v}">${t}</button>`).join("")}</div></div>
+    <div class="campo"><span class="et">Color de cabello</span><div class="sw">${sw("hc",HCS)}</div></div>
+    <div class="campo"><span class="et">Ropa</span><div class="sw">${sw("shirt",SHIRTS)}</div></div>
+    <div class="campo"><span class="et">Lentes</span><div class="chips"><button class="chip" data-act="ed" data-k="glasses" data-v="1" aria-pressed="${e.glasses}">Con lentes</button><button class="chip" data-act="ed" data-k="glasses" data-v="0" aria-pressed="${!e.glasses}">Sin lentes</button></div></div>
+    <button class="btn" data-act="usaredit">Usar este avatar</button>
+   </div>
+  </div>`,false);
+  $("#nom").addEventListener("input",ev=>{S.edit.name=ev.target.value});
+}
+
+function juegos(){
+  const a=S.av;
+  paint(`<button class="btn lnk volver" data-act="toav">Cambiar avatar</button>
+  <div class="fila" style="gap:16px;align-items:center"><div class="av" style="width:84px">${avatarSVG(a,{mood:2})}</div>
+  <div><h2>¿A qué juegas con ${escH(a.name)}?</h2></div></div>${acento}
+  <div class="grid bloque" style="grid-template-columns:repeat(auto-fill,minmax(260px,1fr))">
+   <button class="card juego j1" data-act="game" data-v="ent"><h3>La entrevista</h3><p>Responde lo que hoy preguntan los reclutadores en México. Cada respuesta débil impacienta a quien te entrevista; aprende a recuperar la conversación.</p></button>
+   <button class="card juego j2" data-act="game" data-v="hab"><h3>¿Qué habilidades requiere el mercado laboral actual?</h3><p>Equipa a tu avatar con habilidades, competencias y aptitudes y descubre si sostiene sus primeros meses de trabajo sin llegar al desgaste.</p></button>
+  </div>`);
+}
+
+function setup(){
+  const dtxt=S.game==="ent"
+    ?{bajo:"10 preguntas y tres intentos para calmar a quien te entrevista.",medio:"12 preguntas; cada error cuesta más puntos.",alto:"15 preguntas, solo dos intentos para calmar y la paciencia se agota rápido."}
+    :{bajo:"Hasta 4 errores y un desgaste más lento.",medio:"Hasta 4 errores con un ritmo laboral típico.",alto:"Hasta 4 errores, pero cada uno pesa más y el desgaste llega antes."};
+  paint(`<button class="btn lnk volver" data-act="tojuegos">Volver a los juegos</button>
+  <h2>Prepara tu partida</h2>${acento}
+  <div class="bloque"><h3>Nivel de dificultad</h3>
+   <div class="seg" role="group" aria-label="Dificultad" style="margin-top:10px">
+    ${["bajo","medio","alto"].map(d=>`<button data-act="diff" data-v="${d}" aria-pressed="${S.diff===d}">${d[0].toUpperCase()+d.slice(1)}</button>`).join("")}
+   </div><p class="nota" style="margin-top:8px" id="dtxt">${dtxt[S.diff]}</p></div>
+  <div class="bloque"><h3>¿En qué área te gustaría ${S.scen==="empleo"?"trabajar":"tener tu primer trabajo"}?</h3>
+   <div class="grid" style="margin-top:12px">${AREAS.map(a=>`<button class="card" data-act="area" data-v="${a.id}"><h3>${a.nom}</h3></button>`).join("")}</div></div>`);
+  S._dtxt=dtxt;
+}
+
+function empleos(){
+  const ar=AREAS.find(a=>a.id===S.area);
+  if(!S.jobs){const js=parseJobs(ar.jobs[S.scen]);const cut=js.map(j=>j.s).sort((a,b)=>b-a)[2];S.jobs=shuffle(js).map(j=>({...j,alto:j.s>=cut}))}
+  paint(`<button class="btn lnk volver" data-act="tosetup">Cambiar de área</button>
+  <h2>${ar.nom}: elige un empleo</h2>${acento}
+  <p class="lede">Siete de estos empleos pagan cerca del salario mínimo y solo tres pagan bastante más. No sabrás cuánto gana el tuyo hasta el final.</p>
+  <div class="grid bloque">${S.jobs.map((j,i)=>`<button class="card" data-act="job" data-v="${i}"><h3>${j.n}</h3></button>`).join("")}</div>`);
+}
+
+/* ============ JUEGO 1: ENTREVISTA ============ */
+function tokens(){
+  const ar=AREAS.find(a=>a.id===S.area), t=SCEN[S.scen].tok, j=S.job;
+  return {p:lc(j.n),a:lc(ar.nom),e:ar.co,lo:money(Math.round(j.s*.95/500)*500),hi:money(Math.round(j.s*1.1/500)*500),esc:t.esc,yo:t.yo};
+}
+const fill=(s,t)=>s.replace(/\{(\w+)\}/g,(m,k)=>t[k]??m);
+
+function startEnt(){
+  const ar=AREAS.find(a=>a.id===S.area), sc=S.scen[0];
+  const N={bajo:10,medio:12,alto:15}[S.diff];
+  const ok=q=>!q[0]||q[0]==="F"||q[0]==="L"||q[0].includes(sc);
+  const pool=QG.filter(ok);
+  const first=pool.find(q=>q[0]==="F"), last=pool.find(q=>q[0]==="L");
+  const mid=pool.filter(q=>q[0]!=="F"&&q[0]!=="L");
+  const imss=mid.find(q=>q[1].startsWith("Los primeros tres meses"));
+  const rest=shuffle(mid.filter(q=>q!==imss));
+  const areaQ=AQ[S.area].map(q=>["",...q]);
+  let chosen=shuffle([imss,...areaQ,...rest.slice(0,N-2-1-areaQ.length)]);
+  const qs=[first,...chosen,last];
+  const g=Math.random()<.5?"f":"m";
+  I={qs,i:0,pts:100,anger:0,calms:{bajo:3,medio:3,alto:2}[S.diff],answered:false,calming:false,boss:BOSS[g],bg:g,log:[],said:"Buenos días, toma asiento. Empecemos.",mult:{bajo:1,medio:1.25,alto:1.5}[S.diff],tk:tokens()};
+  prepQ(); rEnt();
+}
+function prepQ(){const q=I.qs[I.i];I.opts=shuffle(q[2].map((t,k)=>({t:fill(t,I.tk),g:4-k})));I.q=fill(q[1],I.tk);I.tip=q[3]}
+function estado(){const x=I.bg==="f";const a=I.anger;
+  return a<30?(x?"Tranquila":"Tranquilo"):a<60?(x?"Impaciente":"Impaciente"):a<80?(x?"Molesta":"Molesto"):(x?"Muy molesta":"Muy molesto")}
+function rEnt(){
+  const pat=100-I.anger, col=pat>70?"var(--morado)":pat>40?"var(--naranja)":"var(--mal)";
+  const quien=I.bg==="f"?"la entrevistadora":"el entrevistador";
+  let body="";
+  if(I.calming){
+    body=`<div class="calmar"><h3>¿Qué le dices para calmar${I.bg==="f"?"la":"lo"}?</h3><div class="opciones" style="margin-top:0">
+      ${I.calmOpts.map((o,k)=>`<button class="op" data-act="calmpick" data-v="${k}">${o.t}</button>`).join("")}</div>
+      <button class="btn lnk" data-act="calmno" style="margin-top:8px">Mejor sigo con la entrevista</button></div>`;
+  } else if(!I.answered){
+    body=`<div class="opciones" role="group" aria-label="Respuestas">${I.opts.map((o,k)=>`<button class="op" data-act="ans" data-v="${k}">${o.t}</button>`).join("")}</div>`;
+  } else {
+    const L=I.last;
+    const lab=["La peor opción","Respuesta débil","Respuesta regular","Buena respuesta, puede ser más concreta","La mejor respuesta"][L.g];
+    body=`<div class="opciones">${I.opts.map((o,k)=>`<button class="op${k===L.k?" elegida":""}${o.g===4?" mejor":""}" disabled>${o.t}</button>`).join("")}</div>
+    <div class="retro" aria-live="polite"><div class="cal g${L.g}">${lab}${L.pen?` (−${L.pen} puntos)`:""}</div><p class="tip">${I.tip}</p></div>
+    <div class="fila" style="margin-top:14px"><button class="btn" data-act="sig">${I.pts<=30?"Ver resultado":I.i===I.qs.length-1?"Terminar entrevista":"Siguiente pregunta"}</button></div>`;
+  }
+  const calmBtn=(!I.calming&&I.anger>=30&&I.calms>0&&I.pts>30&&!(I.answered&&I.i===I.qs.length-1))
+    ?`<button class="btn sec" data-act="calm" style="margin-top:14px">Calmar a ${quien} (${I.calms} ${I.calms===1?"intento":"intentos"})</button>`:"";
+  paint(`<div class="hud">
+    <div><small>Puntos</small><strong>${I.pts}</strong></div>
+    <div><small>Pregunta</small><strong>${I.i+1} <span style="font-size:.8rem;color:var(--suave)">de ${I.qs.length}</span></strong></div>
+    <div><small>Paciencia: ${estado()}</small><div class="barra"><i style="width:${pat}%;background:${col}"></i></div></div>
+  </div>
+  <div class="globo" id="globo"><p class="reac">${I.said}</p><h2 class="preg">${I.q}</h2></div>
+  <div class="escena${I.anger>=60?" enojo":""}">
+    <div class="personas">
+      <div class="persona" id="boss">${avatarSVG(I.boss,{anger:I.anger/100,mood:I.anger<20?1:0})}<span>${I.boss.name}</span></div>
+      <div class="persona">${avatarSVG(S.av,{mood:I.anger>60?-1:I.anger>30?0:1,sweat:I.anger>=55})}<span>${escH(S.av.name)}</span></div>
+    </div><div class="escritorio"></div>
+  </div>
+  ${body}${calmBtn}`,I.i===0&&!I.answered);
+}
+const REAC={4:["Excelente, justo lo que buscamos.","Muy bien planteado.","Me gusta esa respuesta."],3:["Bien, aunque esperaba algo más concreto.","De acuerdo.","Correcto."],2:["Mmm... ya veo.","Esperaba algo más elaborado.","Ajá."],1:["No es lo que buscamos.","Eso me preocupa un poco.","(Anota algo en su libreta y frunce el ceño)"],0:["Le pido que se tome esto en serio.","(Suspira y mira el reloj)","Eso no ayuda nada, la verdad."]};
+function ans(k){
+  const o=I.opts[k], g=o.g;
+  let pen=Math.round([14,10,6,3,0][g]*I.mult);
+  if(I.anger>=70&&g<4)pen+=S.diff==="alto"?5:3;
+  I.anger=clamp(I.anger+[26,18,11,4,-5][g]*I.mult,0,100);
+  I.pts=Math.max(0,I.pts-pen);
+  I.last={g,pen,k};I.answered=true;
+  I.log.push({g,tip:I.tip,q:I.q});
+  I.said=REAC[g][Math.floor(Math.random()*3)];
+  rEnt();
+  if(g<=1){const b=$("#boss");if(b){b.classList.add("vibra")}}
+}
+function sig(){
+  if(I.pts<=30){return finEnt(true)}
+  I.i++;
+  if(I.i>=I.qs.length)return finEnt(false);
+  I.answered=false;
+  const pre=I.anger>=60?"(Con tono seco) ":I.anger>=30?"Sigamos. ":"";
+  I.said=pre+["Siguiente pregunta.","Muy bien, continuemos.","Ahora dime:","Otra cosa:"][Math.floor(Math.random()*4)];
+  prepQ();rEnt();
+}
+function calm(){I.calming=true;const set=CALM[Math.floor(Math.random()*CALM.length)];I.calmOpts=shuffle(set.map((t,k)=>({t,k})));rEnt()}
+function calmPick(v){
+  const k=I.calmOpts[v].k;I.calms--;I.calming=false;
+  if(k===0){I.anger=clamp(I.anger-32,0,100);I.said="(Relaja los hombros) Está bien, te escucho.";}
+  else if(k===1){I.anger=clamp(I.anger-10,0,100);I.said="Mmm, de acuerdo.";}
+  else{I.anger=clamp(I.anger+15,0,100);I.pts=Math.max(0,I.pts-Math.round(5*I.mult));I.said="(Cruza los brazos) Eso no ayuda.";}
+  if(I.pts<=30)return finEnt(true);
+  rEnt();
+}
+function finEnt(perdio){
+  const p=I.pts, ex=I.log.filter(l=>l.g===4).length;
+  let v,t,mood;
+  if(perdio){v="La entrevista terminó antes de tiempo";t=`Llegaste a ${p} puntos y ${I.bg==="f"?"la entrevistadora":"el entrevistador"} decidió cerrar la conversación. Revisa los consejos de abajo y vuelve a intentarlo.`;mood=-1}
+  else if(p>=85){v="Te quedaste con el puesto";t=`Tus respuestas mostraron preparación, claridad y conocimiento de tus derechos. El puesto de ${lc(S.job.n)} es tuyo.`;mood=2}
+  else if(p>=65){v="Pasas a la segunda entrevista";t="Vas por buen camino. Afina las respuestas en las que dudaste y llegarás mejor a la siguiente etapa.";mood=1}
+  else{v="«Nosotros te llamamos»";t="Lograste terminar, pero tu perfil no convenció. La buena noticia: cada respuesta se puede practicar.";mood=0}
+  const malas=I.log.filter(l=>l.g<=2).slice(0,4);
+  paint(`<div class="final">
+   <div class="fila" style="gap:18px;align-items:center"><div class="av" style="width:110px">${avatarSVG(S.av,{mood})}</div>
+   <div><div class="cifra">${p}<small> de 100</small></div></div></div>
+   <h2 style="margin-top:14px">${v}</h2>${acento}
+   <p>${t}</p>
+   <p class="nota" style="margin-top:8px">Respondiste ${ex} de ${I.log.length} preguntas con la mejor opción.</p>
+   ${salarioHTML(p>=85&&!perdio)}
+   ${malas.length?`<h3 style="margin-top:18px">Para practicar</h3><ul>${malas.map(m=>`<li><strong>${m.q}</strong> ${m.tip}</li>`).join("")}</ul>`:""}
+  </div>${cta()}`);
+  enviarResultadoSimulacion({
+    nombreModulo:"Entrevista de trabajo",puntaje:p,max:100,
+    tituloResultado:v,
+    resumenTexto:`${v}. ${t} Respondió ${ex} de ${I.log.length} preguntas con la mejor opción.`,
+    resumenDecisiones:malas.map(m=>m.q).slice(0,3).join(" / "),
+    secciones:[{titulo:"Cómo le fue en la entrevista",parrafos:[t]}].concat(malas.length?[{titulo:"Para practicar",parrafos:malas.map(m=>m.q+" — "+m.tip)}]:[])
+  });
+}
+
+/* ============ JUEGO 2: HABILIDADES ============ */
+function startHab(){
+  const ar=AREAS.find(a=>a.id===S.area);
+  const L={};
+  for(const k of ["h","c","a"])L[k]=shuffle([...parseSk(SKG[k]),...parseSk(ar.sk[k])]);
+  H={L,sel:{h:[],c:[],a:[]},tab:"h"};
+  rHab();
+}
+function rHab(){
+  const tab=H.tab, tot=H.sel.h.length+H.sel.c.length+H.sel.a.length;
+  paint(`<h2>Equipa a ${escH(S.av.name)} para su trabajo como ${lc(S.job.n)}</h2>${acento}
+  <p class="lede">Elige 6 de cada eje. Todo suena útil, pero no todo protege tu bienestar.</p>
+  <div class="tabs" role="tablist">${Object.keys(EJES).map(k=>`<button role="tab" aria-selected="${k===tab}" data-act="tab" data-v="${k}">${EJES[k]}<em>${H.sel[k].length}/6</em></button>`).join("")}</div>
+  <div class="lista" role="group" aria-label="${EJES[tab]}">
+   ${H.L[tab].map((x,i)=>{const on=H.sel[tab].includes(i);return `<button class="chip" data-act="sk" data-v="${i}" aria-pressed="${on}"${!on&&H.sel[tab].length>=6?" disabled style=\"opacity:.45\"":""}>${x.n}${tab==="h"&&x.t?`<small>${x.t==="b"?"blanda":"dura"}</small>`:""}</button>`}).join("")}
+  </div>
+  <div class="pie"><span class="nota">${tot} de 18 elegidas</span>
+   <div class="fila">${tab!=="a"?`<button class="btn sec" data-act="tab" data-v="${tab==="h"?"c":"a"}">Siguiente eje</button>`:""}
+   <button class="btn" data-act="trabajar" ${tot<18?"disabled":""}>Empezar a trabajar</button></div></div>`,false);
+}
+function toggleSk(i){
+  const s=H.sel[H.tab], p=s.indexOf(i);
+  if(p>=0)s.splice(p,1);else if(s.length<6)s.push(i);
+  const y=window.scrollY;rHab();window.scrollTo(0,y);
+}
+/* Estragos visibles del burnout, uno por cada error */
+const ESTRAGOS=[
+ {t:"Ojeras profundas",d:"El insomnio es de las primeras señales del burnout: duermes, pero no descansas."},
+ {t:"Aumento de peso",d:"Con el estrés sostenido llegan las comidas a deshoras, el picoteo nocturno y menos movimiento, y se nota en el cuerpo."},
+ {t:"Caída de cabello y canas",d:"El estrés prolongado puede provocar caída de cabello semanas después de la etapa más pesada."},
+ {t:"Calvicie y tensión constante",d:"El cuerpo lleva meses en alerta: dolores, tensión y un cansancio que ya no se quita con un fin de semana."},
+ {t:"Agotamiento total",d:"Cinco errores acumulados: el cuerpo y la mente dicen basta."}
+];
+/* Rectificaciones: después de un error se puede corregir el rumbo. [correcta, a medias, incorrecta] */
+const RECT={
+ b:[
+  {t:"El cansancio ya se nota",d:"Tu familia te dice que ya no pareces tú y que casi no descansas.",
+   o:["Reconocerlo, hablar con tu jefatura y hacer un plan concreto de descanso para las próximas semanas.","Prometerte que descansarás en el próximo puente largo.","Decirles que es algo temporal y que están exagerando."],
+   f:["Reconocer el desgaste es el primer paso para revertirlo.","El puente llega, pero la rutina que te agota sigue igual.","Negarlo hizo que el desgaste siguiera avanzando."]},
+  {t:"El cuerpo te frena",d:"Amaneces con taquicardia y un dolor de cabeza que no se quita.",
+   o:["Acudir a tu clínica del IMSS, pedir incapacidad si hace falta y avisar en el trabajo.","Tomar algo para el dolor y trabajar desde casa ese día.","Ir a trabajar como siempre; faltar se vería mal."],
+   f:["Atenderte a tiempo evita que un aviso se vuelva enfermedad.","Bajas el dolor, pero no sabes qué lo causa.","Ignorar la señal hizo que el cuerpo cobrara la factura después."]},
+  {t:"Sin energía para nada",d:"Llegas a casa y solo miras el celular hasta la madrugada.",
+   o:["Fijar una hora para dormir, dejar el celular fuera del cuarto y retomar una actividad que disfrutes.","Dormir más el fin de semana para recuperar lo que no dormiste.","Tomar café o bebidas energéticas para rendir al día siguiente."],
+   f:["Recuperar rutinas de sueño y placer devuelve energía de verdad.","Recuperas un poco, pero entre semana vuelves a lo mismo.","Rendir con estimulantes solo esconde el cansancio."]}],
+ d:[
+  {t:"Tu jefatura lo notó",d:"Te citan para hablar de tu bajo rendimiento.",
+   o:["Reconocer lo que pasó, explicar qué vas a cambiar y pedir seguimiento en un mes.","Escuchar y comprometerte a echarle más ganas, sin dar detalles.","Explicar que el problema es la carga que te pusieron."],
+   f:["Un plan concreto recupera la confianza de tu jefatura.","Suena bien, pero sin un plan nadie ve el cambio.","Aunque la carga sea real, sonó a excusa y la relación se tensó."]},
+  {t:"La confianza del equipo",d:"Tus compañeros dejan de contar contigo para los proyectos.",
+   o:["Pedir retroalimentación directa y ofrecer apoyo concreto en el siguiente proyecto.","Esperar a que se les pase y concentrarte en tus tareas.","Buscar aliados para quejarte de quien te dejó fuera."],
+   f:["Preguntar y ofrecer ayuda reabre la puerta.","Nadie te cierra la puerta, pero tampoco te la abren.","El chisme dividió al equipo y quedaste más aislado."]},
+  {t:"Un llamado de atención",d:"Te entregan un acta administrativa por lo que pasó.",
+   o:["Leerla con calma, anotar tu versión de los hechos y pedir asesoría si no estás de acuerdo.","Firmarla sin leerla para no alargar el problema.","Negarte a recibirla y dejar de hablarle a tu jefatura."],
+   f:["Dejar constancia de tu versión te protege y muestra madurez.","Cierras el tema, pero no sabes qué firmaste.","Romper la comunicación empeoró tu situación."]}]
+};
+const MAXERR=4;
+
+function startBurn(){
+  const ar=AREAS.find(a=>a.id===S.area);
+  const picks=[];for(const k of ["h","c","a"])H.sel[k].forEach(i=>picks.push({...H.L[k][i],eje:k}));
+  const R=Math.round(picks.reduce((s,x)=>s+x.r,0)/54*100);
+  const W=picks.reduce((s,x)=>s+x.w,0);
+  const dm={bajo:.85,medio:1,alto:1.3}[S.diff];
+  const strain=ar.st*(S.job.alto?1:1.1)*dm;
+  const b=clamp(Math.round(50+W*2.5-(strain-1)*40),28,82);
+  const d=clamp(Math.round(30+R*.6),30,88);
+  const traps=picks.filter(x=>x.w<=-1);
+  const chosen=new Set(picks.map(p=>p.n));
+  const faltan=shuffle([...parseSk(ar.sk.h),...parseSk(ar.sk.c)].filter(x=>x.r===3&&!chosen.has(x.n)));
+  const gap=R<66&&faltan.length?faltan[0].n:null;
+  B={b,d,R,W,dm,strain,picks,traps,gap,stage:0,err:0,rectUsed:{b:[],d:[]},phase:"intro",log:[]};
+  B.plan=planEtapas();
+  rBurn();
+}
+/* Las habilidades y el área deciden qué focos rojos aparecen en cada etapa */
+function planEtapas(){
+  const used=new Set(), plan=[];
+  const trapQ=[...new Set(shuffle(B.traps.map(t=>TRAMPA_SIT[t.n]).filter(Boolean)))];
+  const libre=(k,s)=>!used.has(k)&&!SIT[k].ar&&k!=="eval"&&SIT[k].st.includes(s);
+  for(let s=1;s<=5;s++){
+    let pick=null;
+    const pendientes=trapQ.filter(k=>!used.has(k));
+    if(s%2===1||pendientes.length>2)pick=pendientes[0]||null;
+    if(!pick&&s===3&&B.gap)pick="eval";
+    if(!pick&&(s===2||s===4)&&Math.random()<.7){const k=S.area+(s===2?"1":"2");if(SIT[k])pick=k}
+    if(!pick){const pool=Object.keys(SIT).filter(k=>libre(k,s));pick=pool[Math.floor(Math.random()*pool.length)]}
+    if(!pick){const pool=Object.keys(SIT).filter(k=>!used.has(k)&&!SIT[k].ar&&k!=="eval");pick=pool[0]}
+    used.add(pick);plan.push(pick);
+  }
+  return plan;
+}
+function tiredOf(b){return clamp((75-b)/60,0,1)}
+function etiqueta(){return ETAPAS[Math.max(0,B.stage-1)]}
+function vidas(){
+  return `<div class="vidas" aria-label="Errores: ${B.err} de ${MAXERR} permitidos">${Array.from({length:MAXERR},(_,i)=>`<span class="${i<B.err?"usada":""}"></span>`).join("")}<em>${B.err===0?`Puedes equivocarte ${MAXERR} veces`:B.err<MAXERR?(MAXERR-B.err===1?"Te queda 1 error":`Te quedan ${MAXERR-B.err} errores`):"Un error más y termina tu carrera"}</em></div>`;
+}
+function estragosHTML(){
+  if(!B.err)return "";
+  return `<ul class="estragos">${ESTRAGOS.slice(0,Math.min(B.err,4)).map(e=>`<li>${e.t}</li>`).join("")}</ul>`;
+}
+function rBurn(){
+  const b=B.b,d=B.d;
+  const col=v=>v>=60?"var(--ok)":v>=35?"var(--naranja)":"var(--mal)";
+  const med=`<div class="medidor"><small><span>Bienestar</span><span>${b}</span></small><div class="barra"><i style="width:${b}%;background:${col(b)}"></i></div></div>
+   <div class="medidor"><small><span>Desempeño</span><span>${d}</span></small><div class="barra"><i style="width:${d}%;background:${col(d)}"></i></div></div>`;
+  const ruta=`<ol class="ruta" aria-label="Etapas">${ETAPAS.map((e,i)=>{const n=i+1;const c=n<B.stage||(n===B.stage&&B.phase==="fb"&&B.next==="stage")?"hecha":n===B.stage?"actual":"";return `<li class="${c}">${e}</li>`}).join("")}</ol>`;
+  const ret=`<div class="retrato"><div id="retav">${avatarSVG(S.av,{tired:tiredOf(b),dmg:B.err,mood:b>70?1:b>45?0:-1,sweat:b<35,slouch:true})}</div><p class="nota" style="margin-top:4px">${escH(S.av.name)} a los ${etiqueta()}</p>${vidas()}${estragosHTML()}${med}${ruta}</div>`;
+  let main="";
+  if(B.phase==="intro"){
+    const est=b>=60?"Llega con energía, aunque ya se notan los primeros signos de cansancio.":b>=40?"Se ve cansancio acumulado: duerme poco y le cuesta concentrarse.":"Está al borde del agotamiento: irritabilidad, dolores y ganas de renunciar.";
+    main=`<div class="situ"><div class="mes">Tres meses después</div><h3>Así se ve ${escH(S.av.name)} después de tres meses como ${lc(S.job.n)}</h3>
+     <p>${est}</p><p class="nota" style="margin-top:8px">Tus elecciones le dieron un desempeño de ${d} y un bienestar de ${b}. Vienen cinco etapas: 3 meses, 11 meses, 1 año y medio, 2 años y medio y 4 años. En cada una aparece un foco rojo con tres caminos que suenan razonables.</p>
+     <p class="nota" style="margin-top:8px">Puedes equivocarte hasta ${MAXERR} veces. Cada error deja una huella visible en ${escH(S.av.name)}, pero después de cada error tendrás la oportunidad de rectificar el camino.</p>
+     <div class="fila" style="margin-top:14px"><button class="btn" data-act="bnext">Ver el primer foco rojo</button></div></div>`;
+  } else if(B.phase==="sit"||B.phase==="rect"){
+    const s=B.phase==="sit"?SIT[B.cur]:B.rect;
+    const cab=B.phase==="sit"?`${ETAPAS[B.stage-1]}. Etapa ${B.stage} de 5`:`${ETAPAS[B.stage-1]}. Rectificar el camino`;
+    main=`<div class="situ${B.phase==="rect"?" rect":""}"><div class="mes">${cab}</div><h3>${s.t}</h3><p>${fill(s.d,{form:SCEN[S.scen].tok.form,gap:B.gap||""})}</p>
+      <p class="nota" style="margin-top:8px">${B.phase==="sit"?`¿Qué debería hacer ${escH(S.av.name)}?`:"Todavía puedes corregir el rumbo. ¿Qué hace ahora?"}</p>
+      <div class="opciones">${B.opts.map((o,k)=>`<button class="op" data-act="bpick" data-v="${k}">${o.t}</button>`).join("")}</div></div>`;
+  } else if(B.phase==="fb"){
+    const L=B.last;
+    const tit=L.rect?(L.k===0?"Rectificaste el camino":L.k===1?"Corrección a medias":"No lograste rectificar"):(L.k===0?"Buena decisión":L.k===1?"Decisión a medias":"Mala decisión");
+    const btn=B.end?"Ver el final":B.next==="rect"?"Rectificar el camino":`Avanzar a ${ETAPAS[B.stage]}`;
+    const huella=L.estrago?`<div class="huella"><strong>Nueva huella: ${L.estrago.t}.</strong> ${L.estrago.d}</div>`:"";
+    main=`<div class="situ"><div class="mes">${ETAPAS[B.stage-1]}</div><h3>${tit}</h3><p>${L.f}</p>
+      ${L.msg?`<p class="nota" style="margin-top:8px">${L.msg}</p>`:""}${huella}
+      <div class="fila" style="margin-top:14px"><button class="btn" data-act="bnext">${btn}</button></div></div>`;
+  }
+  paint(`<div class="sim">${ret}<div>${main}</div></div>`,B.phase!=="fb");
+  if(B.phase==="fb"&&B.last.estrago){const r=$("#retav");if(r)r.classList.add("vibra")}
+}
+function opcionesDe(s){return shuffle(s.o.map((t,k)=>({t,k,f:s.f[k]})))}
+function bNext(){
+  if(B.end)return finHab(B.end);
+  if(B.next==="rect"){
+    const tipo=B.rectTipo, pool=RECT[tipo].filter((_,i)=>!B.rectUsed[tipo].includes(i));
+    const i=RECT[tipo].indexOf(pool.length?pool[Math.floor(Math.random()*pool.length)]:RECT[tipo][0]);
+    B.rectUsed[tipo].push(i);B.rect=RECT[tipo][i];B.opts=opcionesDe(B.rect);B.phase="rect";B.next=null;return rBurn();
+  }
+  if(B.stage>0){
+    /* El tiempo desgasta; las habilidades protectoras frenan el desgaste */
+    const decay=Math.max(3,Math.round((9-B.W*.4)*B.strain));
+    B.b=clamp(B.b-decay,0,100);
+  }
+  B.stage++;
+  B.cur=B.plan[B.stage-1];
+  B.opts=opcionesDe(SIT[B.cur]);
+  B.phase="sit";rBurn();
+}
+function sumarError(tipo){
+  B.err++;
+  const estrago=ESTRAGOS[Math.min(B.err,5)-1];
+  if(B.err>MAXERR)B.end=(tipo==="d"&&B.d<=B.b)||B.d<25?"despido":"terapia";
+  return estrago;
+}
+function bPick(v){
+  const o=B.opts[v], dm=B.dm, rect=B.phase==="rect";
+  const s=rect?B.rect:SIT[B.cur];
+  const tipo=rect?B.rectTipo:s.e;
+  const rel=rect?[]:(s.sk||[]).filter(n=>B.picks.some(p=>p.n===n));
+  const f=rel.length?.6:1;
+  let msg="", estrago=null;
+  B.end=null;
+  if(o.k===0){
+    if(rect){B.b+=12;B.d+=8;msg="Recuperas terreno, aunque las huellas que ya dejó el desgaste siguen ahí."}
+    else{B.b+=14;B.d+=6;if(rel.length)msg=`Elegir «${rel[0]}» te ayudó a ver el camino.`}
+  } else if(o.k===1){
+    if(rect){B.b+=3;B.d+=2;msg="Frenas un poco el deterioro, pero no lo reviertes."}
+    else{B.b-=Math.round(10*dm*f);B.d-=Math.round(6*dm*f);msg=rel.length?`«${rel[0]}» amortiguó parte del golpe.`:"Sigues, pero con menos energía para la siguiente etapa."}
+  } else {
+    if(tipo==="d"){B.d-=Math.round(14*dm*f);B.b-=Math.round(6*dm*f)}else{B.b-=Math.round(14*dm*f);B.d-=Math.round(5*dm*f)}
+    estrago=sumarError(tipo);
+    if(rel.length&&!B.end)msg=`«${rel[0]}» evitó que el golpe fuera mayor.`;
+  }
+  B.b=clamp(B.b,0,100);B.d=clamp(B.d,0,100);
+  /* Después de un error en un foco rojo, se abre la rectificación; si no, se avanza de etapa */
+  B.next=!B.end&&!rect&&o.k===2?"rect":"stage";
+  if(B.next==="rect")B.rectTipo=s.e;
+  if(!B.end&&B.next==="stage"&&B.stage===5)B.end=B.err===0||(B.b>=45&&B.err<=2)?"bienestar":"estragos";
+  B.log.push({s:rect?null:B.cur,t:s.t,rect,k:o.k,etapa:B.stage});
+  B.last={k:o.k,f:o.f,msg,rect,estrago};
+  B.phase="fb";rBurn();
+}
+function finHab(fin){
+  const top=B.picks.filter(x=>x.r===3).slice(0,4).map(x=>x.n);
+  const protect=B.picks.filter(x=>x.w>=2).map(x=>x.n);
+  const main=B.log.filter(l=>!l.rect), buenas=main.filter(l=>l.k===0).length;
+  const rects=B.log.filter(l=>l.rect), rectOk=rects.filter(l=>l.k===0).length;
+  const cuando=ETAPAS[Math.max(0,B.stage-1)];
+  const n=escH(S.av.name);
+  const T={
+    bienestar:["Bienestar laboral",`${n} llegó a los 4 años como ${lc(S.job.n)} con un ritmo sostenible. Supo poner límites, cuidar su salud y hacer valer sus derechos.`,2],
+    estragos:["Llegó, pero con estragos",`${n} cumplió 4 años como ${lc(S.job.n)}, pero el camino le dejó huellas visibles. Sigue en pie; le toca atender su salud antes de que el desgaste se vuelva crónico.`,0],
+    despido:["Despido",`A los ${cuando}, después de ${B.err} errores, el desempeño de ${n} cayó demasiado y la empresa terminó la relación laboral. No es el final de su trayectoria: revisa qué habilidades del puesto le faltaron.`,-1],
+    terapia:["Pausa y terapia",`A los ${cuando}, después de ${B.err} errores, ${n} llegó al agotamiento y necesita acompañamiento psicológico para recuperarse. Pedir ayuda a tiempo es una decisión sana, no un fracaso.`,-1]
+  }[fin];
+  const ind=clamp(Math.round((B.b+B.d)/2*(B.stage/5)-B.err*4),0,100);
+  const res=["Buena decisión","A medias","Mala decisión"], resR=["Rectificó","Rectificó a medias","No rectificó"];
+  paint(`<div class="final">
+   <div class="fila" style="gap:18px;align-items:center"><div class="av" style="width:120px">${avatarSVG(S.av,{mood:T[2],dmg:B.err,tired:fin==="terapia"?.8:tiredOf(B.b)})}</div>
+   <div><div class="cifra">${ind}<small> de 100</small></div><p class="nota">Índice de vida laboral</p></div></div>
+   <h2 style="margin-top:14px">${T[0]}</h2>${acento}
+   <p>${T[1]}</p>
+   ${B.err?`<div class="huella" style="margin-top:14px"><strong>Huellas del burnout en ${n}:</strong> ${ESTRAGOS.slice(0,Math.min(B.err,4)).map(e=>lc(e.t)).join(", ")}. El burnout no solo se siente: también se ve en el cuerpo.</div>`:""}
+   ${salarioHTML()}
+   <h3 style="margin-top:18px">Su trayectoria</h3>
+   <ol class="tray">${B.log.map(l=>l.rect?`<li class="r">Rectificación, ${l.t.toLowerCase()}: ${resR[l.k]}.</li>`:`<li><strong>${ETAPAS[l.etapa-1]}: ${l.t}.</strong> ${res[l.k]}.</li>`).join("")}</ol>
+   <ul style="margin-top:14px">
+    <li><strong>Afinidad con el puesto: ${B.R} de 100.</strong> ${top.length?`Lo más útil que elegiste: ${top.join(", ")}.`:"Casi no elegiste habilidades propias del área."}${B.gap?` Te faltó «${B.gap}».`:""}</li>
+    <li><strong>Protección de tu bienestar.</strong> ${protect.length?`Te cuidaron: ${protect.join(", ")}.`:"No elegiste ningún rasgo que protegiera tu bienestar, como descansar o poner límites."}</li>
+    ${B.traps.length?`<li><strong>Rasgos que desgastan:</strong> ${B.traps.map(t=>t.n).join(", ")}. Suenan a virtud en una entrevista, pero te pusieron enfrente sus propios focos rojos.</li>`:""}
+    <li>Tomaste ${buenas} de ${main.length} buenas decisiones${rects.length?` y rectificaste ${rectOk} de ${rects.length} veces`:""}; te equivocaste ${B.err} ${B.err===1?"vez":"veces"}.</li>
+   </ul>
+  </div>${cta()}`);
+  enviarResultadoSimulacion({
+    nombreModulo:"Manejo de habilidades y estrés en el puesto",puntaje:ind,max:100,
+    tituloResultado:T[0],
+    resumenTexto:`${T[0]}. ${T[1]} Tomó ${buenas} de ${main.length} buenas decisiones y se equivocó ${B.err} ${B.err===1?"vez":"veces"}.`,
+    resumenDecisiones:B.log.filter(l=>!l.rect).slice(0,3).map(l=>l.t).join(" / "),
+    secciones:[{titulo:"Cómo le fue en el puesto",parrafos:[T[1]]}]
+  });
+}
+
+/* ============ SALARIO (se revela al final) ============ */
+function salarioHTML(gano){
+  const j=S.job;
+  const verbo=S.game==="ent"?(gano?"Ganarás":"El puesto pagaba"):"Ganaba";
+  return `<div class="salario"><small>Salario del puesto: ${escH(lc(j.n))}</small><strong>${verbo} ${money(j.s)} al mes</strong>
+   <p>${j.alto?"Es uno de los tres empleos mejor pagados de esta área.":"Es uno de los siete empleos de esta área que pagan cerca del salario mínimo."} Referencia mensual antes de impuestos para la Ciudad de México y zona metropolitana; varía según la empresa.</p></div>`;
+}
+
+/* ============ LLAMADO A LA PRUEBA ============ */
+function cta(){
+  const sc=SCEN[S.scen];
+  const otro=S.game==="ent"?"hab":"ent";
+  return `<section class="prueba"><h2>Ahora, la prueba real</h2>
+   <p>${sc.instTxt} Toma unos minutos y al terminar recibes tu resultado.</p>
+   <div class="fila"><a class="btn" href="${sc.url}" target="_blank" rel="noopener">Hacer la prueba: ${sc.inst}</a></div>
+  </section>
+  <div class="fila" style="margin-top:18px">
+   <button class="btn sec" data-act="again">Jugar de nuevo</button>
+   <button class="btn sec" data-act="game" data-v="${otro}">${otro==="ent"?"Probar la entrevista":"Probar el juego de habilidades"}</button>
+   <button class="btn lnk" data-act="home">Elegir otra puerta</button>
+  </div>`;
+}
+
+/* ============ ACCIONES ============ */
+const ACT={
+  home, scen:v=>{S.scen=v;avatars()}, toav:()=>avatars(),
+  pickav:v=>{S.av={...SCEN[S.scen].avs[+v]};trasAvatar()},
+  crear:()=>{S.edit={name:"Mi avatar",g:"x",skin:SKINS[1],hair:"corto",hc:HCS[0],shirt:SHIRTS[0],glasses:false};editor()},
+  ed:(v,el)=>{const k=el.dataset.k;S.edit[k]=k==="glasses"?v==="1":v;const y=window.scrollY;editor();window.scrollTo(0,y)},
+  usaredit:()=>{const n=($("#nom").value||"").trim()||"Mi avatar";S.av={...S.edit,name:n};trasAvatar()},
+  tojuegos:()=>{S.game=null;juegos()},
+  game:v=>{S.game=v;S.jobs=null;setup()},
+  diff:v=>{S.diff=v;document.querySelectorAll(".seg button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===v));$("#dtxt").textContent=S._dtxt[v]},
+  area:v=>{S.area=v;S.jobs=null;empleos()}, tosetup:()=>setup(),
+  job:v=>{S.job=S.jobs[+v];S.game==="ent"?startEnt():startHab()},
+  ans:v=>ans(+v), sig, calm, calmpick:v=>calmPick(+v), calmno:()=>{I.calming=false;rEnt()},
+  tab:v=>{H.tab=v;rHab();$(".tabs").scrollIntoView({block:"nearest"})}, sk:v=>toggleSk(+v), trabajar:startBurn,
+  bnext:bNext, bpick:v=>bPick(+v),
+  again:()=>{S.jobs=null;setup()}
+};
+function trasAvatar(){
+  /* En el flujo público (sin token), se pide el dato de contacto una sola
+     vez, justo antes de entrar a los juegos — no antes de elegir avatar,
+     para no interponer un formulario antes de que la persona ya esté
+     interesada en jugar. */
+  const seguir=()=>{if(S.pre){S.game=S.pre;S.jobs=null;setup()}else juegos()};
+  if(!tieneToken()&&!S.lead)pantallaIntake(seguir);else seguir();
+}
+document.addEventListener("click",e=>{const t=e.target.closest("[data-act]");if(!t||t.disabled)return;const f=ACT[t.dataset.act];if(f)f(t.dataset.v,t)});
+(function(){
+  let q={};try{q=Object.fromEntries(new URLSearchParams(location.search))}catch(e){}
+  if(SCEN[q.puerta]){S.scen=q.puerta;if(q.juego==="ent"||q.juego==="hab")S.pre=q.juego;avatars()}else home();
+})();
+</script>
+</body>
+</html>

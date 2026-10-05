@@ -131,26 +131,44 @@ function jsonpPost(action, params, timeoutMs) {
  * INS-EDU-03 — IMES Universidad. PROPUESTA de Sintropía Social, pendiente
  * de revisión y aprobación de David Salgado López (a diferencia de IMES
  * Preparatoria, aquí él no entregó un instrumento ya armado — solo las 3
- * dimensiones y sus descripciones — así que este banco de reactivos (18
+ * dimensiones y sus descripciones — así que este banco de reactivos (36
  * ítems, 6 preguntas cualitativas y 3 de cierre) es un borrador razonado a
  * partir de esas 3 dimensiones, siguiendo el mismo formato que IMES
  * Preparatoria. No activar en producción sin que David lo revise primero.
+ *
+ * VERSION_INSTRUMENTO = 2026. Por indicación de David, los 6 ítems nuevos
+ * de cada dimensión (los últimos 6 de los 12) están anclados en lo que el
+ * mercado laboral mexicano está pidiendo actualmente — no son teóricos:
+ * vienen de IMCO (Reporte Futuro del Empleo 2025), ManpowerGroup México
+ * (Escasez de Talento 2025), LinkedIn/Forbes (habilidades en ascenso 2025),
+ * OCC Mundial (tips de CV/LinkedIn) y UVM (marco de 10 competencias 2026) —
+ * entre ellos, alfabetización en IA generativa, análisis de datos básico,
+ * tolerancia a la frustración/resiliencia, LinkedIn como perfil vivo (no
+ * solo el CV) y aplicación selectiva de vacantes. Este instrumento debe
+ * revisarse cada año para mantenerlo vigente — año de referencia: 2026.
  * Escala cuantitativa: 1 Nunca · 2 Casi nunca · 3 A veces · 4 Casi siempre
  * · 5 Siempre.
  * ============================================================ */
+var VERSION_INSTRUMENTO = '2026';
 var OPCIONES_LIKERT = ['Nunca', 'Casi nunca', 'A veces', 'Casi siempre', 'Siempre'];
 
 var SECCIONES_UNI = [
   {
     clave: 'social', nombre: 'Habilidades sociales (socioemocionales)',
-    teoria: 'Cómo se desenvuelve la persona en sus relaciones y contextos de trabajo: comunicación, manejo emocional y resolución de conflictos en entornos académicos y profesionales.',
+    teoria: 'Cómo se desenvuelve la persona en sus relaciones y contextos de trabajo: comunicación, manejo emocional y resolución de conflictos en entornos académicos y profesionales. 8 de cada 10 reclutadores en México señalan que la brecha real de talento hoy es socioemocional, no técnica (Tress / UVM, 2025-2026).',
     items: [
       'Me comunico con claridad y seguridad en contextos académicos y profesionales (exposiciones, reuniones, trabajos en equipo).',
       'Escucho activamente los puntos de vista de mis compañeros/as y profesores/as, aunque difieran del mío.',
       'Manejo mis emociones de forma adecuada en situaciones de presión académica o laboral (exámenes, entregas, prácticas profesionales).',
       'Puedo dar y recibir retroalimentación de forma constructiva.',
       'Establezco y mantengo relaciones profesionales de manera efectiva (compañeros, profesores, jefes de prácticas).',
-      'Resuelvo conflictos interpersonales buscando soluciones, no solo "ganar" la discusión.'
+      'Resuelvo conflictos interpersonales buscando soluciones, no solo "ganar" la discusión.',
+      'Tolero la frustración cuando algo no sale como esperaba, sin que me paralice para seguir trabajando.',
+      'Me adapto con facilidad a equipos de trabajo nuevos o a formas de trabajo distintas a las que conozco (presencial, remoto, híbrido).',
+      'Puedo asumir un rol de liderazgo compartido en un equipo cuando la situación lo requiere, sin necesitar un título formal para hacerlo.',
+      'Tomo decisiones con responsabilidad incluso bajo presión de tiempo.',
+      'Sé identificar cuándo necesito apoyo para resolver algo y lo busco sin verlo como una debilidad.',
+      'Mantengo una actitud de aprendizaje continuo ante la retroalimentación y los cambios de mi entorno laboral o académico.'
     ],
     cualitativas: [
       { id: 'Q1', texto: 'Describe una situación de trabajo en equipo (escolar o laboral) donde tuviste que manejar un desacuerdo. ¿Qué hiciste?' },
@@ -159,14 +177,20 @@ var SECCIONES_UNI = [
   },
   {
     clave: 'empleabilidad', nombre: 'Empleabilidad',
-    teoria: 'Recursos y habilidades relacionados con su incorporación al mercado laboral: claridad de objetivo, materiales profesionales y conocimiento del mercado.',
+    teoria: 'Recursos y habilidades relacionados con su incorporación al mercado laboral: claridad de objetivo, materiales profesionales y conocimiento del mercado. En México, Ventas, Administración, TI/Sistemas y RRHH concentran hoy la mayor cantidad de vacantes (OCC Mundial, 2025).',
     items: [
       'Tengo claro el tipo de puesto o área profesional en la que quiero iniciar mi trayectoria laboral.',
       'Mi CV y/o portafolio están actualizados y reflejan mi formación y experiencia reales.',
       'Conozco cómo funciona el mercado laboral de mi carrera (empresas, sueldos de entrada, requisitos).',
       'He realizado (o estoy realizando) prácticas profesionales, servicio social o proyectos vinculados a mi área.',
       'Sé cómo prepararme para un proceso de selección (entrevistas, pruebas psicométricas, dinámicas grupales).',
-      'Utilizo activamente redes de contacto (profesores, egresados, LinkedIn) para buscar oportunidades.'
+      'Utilizo activamente redes de contacto (profesores, egresados, LinkedIn) para buscar oportunidades.',
+      'Mi perfil de LinkedIn está completo (foto, resumen, habilidades, experiencia) y lo mantengo actualizado, no solo mi CV en PDF.',
+      'En mi CV destaco logros concretos y medibles, no solo una lista de tareas o responsabilidades.',
+      'Conozco qué certificaciones o cursos cortos podrían hacer más competitivo mi perfil en mi área (por ejemplo, herramientas digitales o de inteligencia artificial relevantes para mi carrera).',
+      'Tengo un nivel de inglés funcional para el tipo de puestos que me interesan.',
+      'Aplico de forma selectiva a vacantes que coinciden con mi perfil, en vez de aplicar de forma masiva sin revisar si cumplo los requisitos.',
+      'Sé en qué sectores o puestos hay más demanda actualmente para mi carrera (y en cuáles hay escasez de profesionales preparados).'
     ],
     cualitativas: [
       { id: 'Q3', texto: '¿Qué experiencia (escolar, de prácticas o laboral) sientes que más te ha preparado para el mercado laboral? ¿Por qué?' },
@@ -175,14 +199,20 @@ var SECCIONES_UNI = [
   },
   {
     clave: 'tecnica', nombre: 'Habilidades técnicas',
-    teoria: 'Aspectos relacionados con su preparación para desempeñarse profesionalmente: dominio de herramientas, aplicación práctica del conocimiento y actualización continua.',
+    teoria: 'Aspectos relacionados con su preparación para desempeñarse profesionalmente: dominio de herramientas, aplicación práctica del conocimiento y actualización continua. La alfabetización en IA generativa es hoy la habilidad en mayor ascenso a nivel global, y el análisis de datos y la ciberseguridad aparecen entre las más valoradas por empleadores mexicanos (LinkedIn/IMCO, 2025).',
     items: [
       'Domino las herramientas y software que se usan comúnmente en mi área profesional.',
       'Puedo aplicar los conocimientos teóricos de mi carrera a problemas prácticos y reales.',
       'Busco actualizarme por cuenta propia en temas técnicos de mi disciplina (cursos, certificaciones, tutoriales).',
-      'Tengo un manejo adecuado del idioma inglés (u otro relevante) para mi área profesional.',
+      'Puedo leer y comprender material técnico o académico de mi área en inglés (manuales, artículos, documentación).',
       'Sé usar herramientas digitales básicas de productividad y colaboración (hojas de cálculo, gestión de proyectos, videoconferencia).',
-      'Me siento preparado/a técnicamente para desempeñar un primer puesto en mi área.'
+      'Me siento preparado/a técnicamente para desempeñar un primer puesto en mi área.',
+      'Utilizo herramientas de inteligencia artificial generativa (como asistentes de IA) para apoyar tareas de mi carrera, de forma crítica y no solo copiando resultados.',
+      'Tengo nociones básicas de análisis de datos (leer e interpretar una tabla, una gráfica o un reporte con cifras) aplicables a mi área.',
+      'Conozco prácticas básicas de seguridad y manejo responsable de la información digital (contraseñas, privacidad, uso adecuado de datos) en un entorno laboral.',
+      'Puedo aprender a usar una herramienta o sistema de trabajo nuevo por cuenta propia, sin depender de que alguien me capacite paso a paso.',
+      'Manejo Excel (u hojas de cálculo) a un nivel más allá de lo básico (fórmulas, tablas, organización de datos).',
+      'Entiendo cómo mi perfil técnico se compara con lo que piden actualmente las vacantes de entrada en mi área (herramientas, certificaciones, nivel esperado).'
     ],
     cualitativas: [
       { id: 'Q5', texto: 'Describe un proyecto académico o práctico donde hayas aplicado tus conocimientos técnicos de forma concreta.' },

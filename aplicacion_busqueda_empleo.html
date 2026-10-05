@@ -136,14 +136,29 @@ function jsonpPost(action, params, timeoutMs) {
  * son los ya validados en la muestra pública; los otros 3 son la ampliación
  * propuesta por Sintropía Social, pendiente de revisión de David Salgado
  * López antes de activarse en producción.
+ *
+ * VERSION_INSTRUMENTO = 2026. Por indicación de David, cada dimensión se
+ * ancla en "vacantes genéricas" — lo que los puestos de trabajo están
+ * pidiendo actualmente en México, no en supuestos teóricos — tomado de
+ * OCC Mundial (sectores con más vacantes y más difíciles de cubrir: Ventas,
+ * Administración, TI/Sistemas, RRHH, Atención a clientes), ManpowerGroup
+ * México (Escasez de Talento 2025: 70% de empleadores con dificultad para
+ * cubrir vacantes) e IMCO (Reporte Futuro del Empleo 2025: IA/datos,
+ * pensamiento creativo, ciberseguridad). Los requisitos genéricos más
+ * repetidos hoy en vacantes de nivel de entrada son: manejo de Office/Excel,
+ * disponibilidad de horario, inglés básico-intermedio, atención a clientes,
+ * certificaciones cortas y un perfil de LinkedIn activo (no solo CV en
+ * PDF). Este instrumento debe revisarse cada año para mantenerlo vigente —
+ * año de referencia: 2026.
  * Escala: 1 Nada · 2 Poco · 3 Algo · 4 Bastante · 5 Totalmente.
  * ============================================================ */
+var VERSION_INSTRUMENTO = '2026';
 var OPCIONES_LIKERT = ['Nada', 'Poco', 'Algo', 'Bastante', 'Totalmente'];
 
 var SECCIONES_EMPLEO = [
   {
     clave: 'objetivo', nombre: 'Claridad del objetivo profesional',
-    teoria: 'Mark Savickas (2005) sitúa la claridad del objetivo profesional en el centro de la construcción de una carrera: sin un rumbo propio, cualquier búsqueda se vuelve reactiva.',
+    teoria: 'Mark Savickas (2005) sitúa la claridad del objetivo profesional en el centro de la construcción de una carrera: sin un rumbo propio, cualquier búsqueda se vuelve reactiva. En México, Ventas, Administración, TI/Sistemas y RRHH concentran hoy la mayor cantidad de vacantes abiertas (OCC Mundial, 2025) — tener claro en cuál de estos campos (u otro) buscas entrar ya es una ventaja.',
     items: [
       '¿Qué tan clara tienes la posición o el tipo de puesto que buscas?',
       '¿Sabes en qué sector o tipo de empresa te gustaría trabajar?',
@@ -159,12 +174,12 @@ var SECCIONES_EMPLEO = [
   },
   {
     clave: 'materiales', nombre: 'Materiales y presencia profesional',
-    teoria: 'Michael Spence (1973) describe el currículum y los materiales de postulación como señales que reducen la incertidumbre de quien contrata — señales débiles alargan la búsqueda, no por falta de talento sino por falta de evidencia visible de él.',
+    teoria: 'Michael Spence (1973) describe el currículum y los materiales de postulación como señales que reducen la incertidumbre de quien contrata — señales débiles alargan la búsqueda, no por falta de talento sino por falta de evidencia visible de él. Hoy, quien recluta en México revisa cada vez más el perfil de LinkedIn directamente (no solo el CV en PDF) y valora que el CV muestre logros medibles, no solo una lista de tareas (OCC Mundial, 2025).',
     items: [
       '¿Tu CV está actualizado y adaptado al tipo de vacante que buscas?',
-      '¿Tu perfil de LinkedIn (u otra red profesional) está actualizado y completo?',
+      '¿Tu perfil de LinkedIn (u otra red profesional) está actualizado y completo (foto, resumen, habilidades, experiencia)?',
       '¿Tienes referencias laborales o contactos que puedan recomendarte?',
-      '¿Cuentas con una carta de presentación o mensaje personalizado para cada vacante a la que aplicas?',
+      '¿Tu CV destaca logros concretos y medibles, y no solo una lista de tareas o responsabilidades?',
       '¿Tus redes sociales públicas proyectan una imagen adecuada para un posible empleador?',
       '¿Tienes documentos de identificación, comprobantes y certificados listos para un proceso de contratación?'
     ],
@@ -175,10 +190,10 @@ var SECCIONES_EMPLEO = [
   },
   {
     clave: 'preparacion', nombre: 'Preparación para el proceso de selección',
-    teoria: 'Albert Bandura (1997) ligaría la preparación para procesos de selección a la autoeficacia: practicar entrevistas y pruebas no solo mejora el desempeño, mejora la confianza con la que se llega a ellas.',
+    teoria: 'Albert Bandura (1997) ligaría la preparación para procesos de selección a la autoeficacia: practicar entrevistas y pruebas no solo mejora el desempeño, mejora la confianza con la que se llega a ellas. Los requisitos genéricos que más se repiten hoy en vacantes de nivel de entrada en México son: manejo de Office/Excel, disponibilidad de horario, inglés básico-intermedio, atención a clientes y, cada vez más, el uso crítico de herramientas de inteligencia artificial (ManpowerGroup / IMCO, 2025).',
     items: [
       '¿Qué tan preparado te sientes para una entrevista de trabajo?',
-      '¿Cuentas con las habilidades o certificaciones que piden las vacantes que te interesan?',
+      '¿Cumples con los requisitos genéricos que piden hoy la mayoría de las vacantes de nivel de entrada en tu área (por ejemplo: manejo de Office/Excel, disponibilidad de horario, inglés básico-intermedio, atención a clientes)?',
       '¿Has practicado tus respuestas a las preguntas más frecuentes de entrevista?',
       '¿Sabes cómo resolver pruebas psicométricas o técnicas comunes en procesos de selección?',
       '¿Investigas la empresa antes de ir a una entrevista?',
@@ -191,12 +206,12 @@ var SECCIONES_EMPLEO = [
   },
   {
     clave: 'estrategia', nombre: 'Estrategia de búsqueda activa',
-    teoria: 'Mark Granovetter (1973) mostró que son los lazos débiles — conocidos, no solo amigos cercanos — los que más abren puertas laborales; una estrategia de búsqueda pasiva deja ese canal sin usar.',
+    teoria: 'Mark Granovetter (1973) mostró que son los lazos débiles — conocidos, no solo amigos cercanos — los que más abren puertas laborales; una estrategia de búsqueda pasiva deja ese canal sin usar. En México, 7 de cada 10 empleadores reportan dificultad para cubrir vacantes (ManpowerGroup, 2025) — quien aplica de forma activa y selectiva, en más de una fuente, tiene hoy una ventaja real.',
     items: [
       '¿Con qué frecuencia aplicas a vacantes o contactas empresas?',
       '¿Usas tu red de contactos (networking) para encontrar oportunidades?',
       '¿Buscas en más de una fuente (bolsas de trabajo, redes sociales, contactos directos)?',
-      '¿Haces seguimiento a las aplicaciones que ya enviaste?',
+      '¿Aplicas de forma selectiva a vacantes que coinciden con tu perfil, en vez de aplicar de forma masiva sin revisar si cumples los requisitos?',
       '¿Tienes un registro o control de las vacantes a las que ya aplicaste y sus resultados?',
       '¿Ajustas tu estrategia de búsqueda cuando no estás obteniendo resultados?'
     ],
@@ -207,7 +222,7 @@ var SECCIONES_EMPLEO = [
   },
   {
     clave: 'disponibilidad', nombre: 'Disponibilidad y condiciones',
-    teoria: 'La OIT (2020) advierte que la disponibilidad real (tiempo, movilidad, condiciones aceptables) es tan determinante como el perfil mismo para el tiempo que toma encontrar empleo.',
+    teoria: 'La OIT (2020) advierte que la disponibilidad real (tiempo, movilidad, condiciones aceptables) es tan determinante como el perfil mismo para el tiempo que toma encontrar empleo. La disponibilidad de horario sigue siendo uno de los requisitos genéricos más solicitados en vacantes de nivel de entrada en México (OCC Mundial, 2025).',
     items: [
       '¿Qué tan disponible estás para iniciar un nuevo empleo?',
       '¿Tienes flexibilidad de horario o ubicación (remoto, híbrido, movilidad)?',
