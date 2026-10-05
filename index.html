@@ -4126,7 +4126,7 @@ async function renderInstrumentoAplicacionEdu(familia) {
   };
   document.getElementById('btnDescargarLigasEdu').onclick = async function () { await descargarLigasAplicacionEdu(familia); };
   document.getElementById('btnReporteEdu').onclick = function () { abrirModalReporteAplicacionEdu(familia); };
-  document.getElementById('btnProgramarEnvioEdu').onclick = function () { abrirModalProgramarEnvioAplicacionEdu(familia); };
+  document.getElementById('btnProgramarEnvioEdu').onclick = function () { abrirModalProgramarEnvioAplicacionEdu(familia, filas); };
   Array.prototype.forEach.call(box.querySelectorAll('.btnCopiarLigaEdu'), function (b) {
     b.onclick = function () {
       navigator.clipboard.writeText(b.getAttribute('data-liga')).then(function () {
@@ -4200,35 +4200,140 @@ async function descargarLigasAplicacionEdu(familia) {
   }
 }
 
-function abrirModalProgramarEnvioAplicacionEdu(familia) {
+// Mismas etiquetas de combinación que CAMPOS_MERGE_EDU_PARTICIPANTES en
+// WebApp.gs — deben coincidir para que la vista previa de aquí muestre
+// exactamente lo que el backend va a sustituir al enviar de verdad.
+var CAMPOS_MERGE_EDU_PARTICIPANTES_FRONT = [
+  { key: 'nombre', tag: 'Nombre' },
+  { key: 'apellido', tag: 'Apellido' },
+  { key: 'correo', tag: 'Correo' },
+  { key: 'telefono', tag: 'Teléfono' },
+  { key: 'escuela', tag: 'Escuela / institución' },
+  { key: 'liga', tag: 'Liga' },
+  { key: 'proyecto', tag: 'Proyecto' }
+];
+
+// Convierte el texto plano del textarea al mismo HTML que esperan
+// apiProgramarEnvioAplicacionEdu / apiEnviarAhoraAplicacionEdu en el backend:
+// escapa, cambia saltos de línea por <br> y vuelve a dejar <<Etiqueta>> sin
+// escapar para que el backend la reconozca y sustituya.
+function _eduCuerpoTextoAHtml(cuerpoTexto) {
+  return escapeHtml(cuerpoTexto).replace(/\n/g, '<br>')
+    .replace(/&lt;&lt;/g, '<<').replace(/&gt;&gt;/g, '>>');
+}
+
+function _insertarEnTextarea(ta, texto) {
+  var inicio = ta.selectionStart != null ? ta.selectionStart : ta.value.length;
+  var fin = ta.selectionEnd != null ? ta.selectionEnd : ta.value.length;
+  var val = ta.value;
+  ta.value = val.slice(0, inicio) + texto + val.slice(fin);
+  var nuevaPos = inicio + texto.length;
+  ta.focus();
+  ta.setSelectionRange(nuevaPos, nuevaPos);
+}
+
+// filas: la lista ya cargada por renderInstrumentoAplicacionEdu, para armar
+// la vista previa con un participante real sin pedirla otra vez al backend.
+function abrirModalProgramarEnvioAplicacionEdu(familia, filas) {
   var cfgFam = FAMILIAS_APLICACION_EDU[familia];
+  filas = filas || [];
+  var elegibles = filas.filter(function (f) { return f.liga && f.correo && f.estatusEnvio === 'Pendiente'; });
+  var muestra = elegibles[0] || filas.filter(function (f) { return f.liga && f.correo; })[0] || null;
+
+  var chipsHtml = CAMPOS_MERGE_EDU_PARTICIPANTES_FRONT.map(function (c) {
+    return '<button type="button" class="small secondary tagchip" data-tag="' + escapeHtml('<<' + c.tag + '>>') + '" style="margin:2px">' +
+      escapeHtml(c.tag) + '</button>';
+  }).join('');
+
   var modal = el(
     '<div class="modal-bg"><div class="modal wide">' +
-      '<h2>Programar envío de ligas — ' + escapeHtml(cfgFam.nombre) + '</h2>' +
-      '<p class="subtle">Se manda un correo con la liga personalizada a cada participante con roster (nombre y correo conocidos) que esté pendiente y ya tenga su liga generada — las ligas anónimas por cantidad no reciben correo, se reparten aparte. El envío se reparte en tandas de máximo 50 destinatarios por día, usando la misma cola de "Correos Programados" del CRM.</p>' +
+      '<h2>Enviar ligas — ' + escapeHtml(cfgFam.nombre) + '</h2>' +
+      '<p class="subtle">Se manda un correo con la liga personalizada a cada participante con roster (nombre y correo conocidos) que esté pendiente y ya tenga su liga generada — las ligas anónimas por cantidad no reciben correo, se reparten aparte.' +
+        (elegibles.length ? ' Hay <b>' + elegibles.length + '</b> participante(s) listos para recibir su liga.' : ' Por ahora no hay participantes listos (con liga generada y correo registrado, pendientes de envío).') +
+      '</p>' +
       '<label>Asunto</label><input type="text" id="eduAsunto" placeholder="Tu aplicación de ' + escapeHtml(cfgFam.nombre) + '">' +
-      '<label>Cuerpo (usa &lt;&lt;Nombre&gt;&gt;, &lt;&lt;Liga&gt;&gt;, &lt;&lt;Escuela&gt;&gt;)</label>' +
+      '<label>Cuerpo (usa las etiquetas de abajo — se reemplazan por el dato real de cada participante)</label>' +
       '<textarea id="eduCuerpo" rows="8" placeholder="Hola <<Nombre>>, te compartimos tu liga personalizada: <<Liga>>"></textarea>' +
+      '<p class="subtle" style="margin:8px 0 4px">Clic para insertar una etiqueta donde tengas el cursor:</p>' +
+      '<div>' + chipsHtml + '</div>' +
+      '<div id="eduVistaPrevia" style="margin-top:14px"></div>' +
+      '<div class="toolbar" style="justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:16px;align-items:center">' +
+        '<label style="margin:0;display:flex;align-items:center;gap:6px;font-weight:500"><input type="checkbox" id="eduRepartirChk" style="width:auto"> Repartir en varios días (tandas)</label>' +
+        '<span id="eduPorDiaWrap" style="display:none;align-items:center;gap:6px">' +
+          '<label style="margin:0">Por día</label>' +
+          '<select id="eduPorDia" style="width:auto">' +
+            [10, 20, 30, 50, 100, 200, 300, 400].map(function (n) { return '<option value="' + n + '"' + (n === 50 ? ' selected' : '') + '>' + n + '</option>'; }).join('') +
+          '</select>' +
+        '</span>' +
+      '</div>' +
+      '<p class="subtle" id="eduExplicacionModo" style="margin-top:4px">Sin marcar: manda de inmediato a todos los que estén listos (hasta donde alcance la cuota diaria de correo de esta cuenta de Google). Marcado: lo programa repartido en tandas por día, igual que antes.</p>' +
       '<div id="eduProgMsg"></div>' +
       '<div class="modal-actions">' +
         '<button class="secondary" id="eduProgCancelar">Cancelar</button>' +
-        '<button class="primary" id="eduProgConfirmar">Programar envío</button>' +
+        '<button class="primary" id="eduProgConfirmar">Enviar ahora</button>' +
       '</div>' +
     '</div></div>'
   );
   document.body.appendChild(modal);
+
+  var asuntoInput = modal.querySelector('#eduAsunto');
+  var cuerpoTa = modal.querySelector('#eduCuerpo');
+  var repartirChk = modal.querySelector('#eduRepartirChk');
+  var porDiaWrap = modal.querySelector('#eduPorDiaWrap');
+  var btnConfirmar = modal.querySelector('#eduProgConfirmar');
+
+  function actualizarVistaPrevia() {
+    var caja = modal.querySelector('#eduVistaPrevia');
+    if (!muestra) { caja.innerHTML = ''; return; }
+    var asuntoPrev = _reemplazarTagsPreview(asuntoInput.value, muestra, CAMPOS_MERGE_EDU_PARTICIPANTES_FRONT);
+    var cuerpoHtmlPrev = _eduCuerpoTextoAHtml(cuerpoTa.value);
+    var cuerpoPrev = _reemplazarTagsPreview(cuerpoHtmlPrev, muestra, CAMPOS_MERGE_EDU_PARTICIPANTES_FRONT);
+    var nombreMuestra = ((muestra.nombre || '') + ' ' + (muestra.apellido || '')).trim() || muestra.codigo;
+    caja.innerHTML =
+      '<p class="subtle" style="margin-bottom:4px">Vista previa para: ' + escapeHtml(nombreMuestra) + '</p>' +
+      '<p class="subtle" style="margin:0 0 8px"><b>Asunto:</b> ' + (escapeHtml(asuntoPrev) || '(sin asunto)') + '</p>' +
+      '<div style="border:1px solid #eee;border-radius:8px;padding:16px;background:#fafafa">' +
+        _envolverHtmlCorreoPreview(cuerpoPrev || '<span class="subtle">(sin cuerpo)</span>') +
+      '</div>';
+  }
+  asuntoInput.oninput = actualizarVistaPrevia;
+  cuerpoTa.oninput = actualizarVistaPrevia;
+  actualizarVistaPrevia();
+
+  Array.prototype.forEach.call(modal.querySelectorAll('.tagchip'), function (chip) {
+    chip.onclick = function () {
+      _insertarEnTextarea(cuerpoTa, chip.getAttribute('data-tag'));
+      actualizarVistaPrevia();
+    };
+  });
+
+  repartirChk.onchange = function () {
+    var repartir = repartirChk.checked;
+    porDiaWrap.style.display = repartir ? 'inline-flex' : 'none';
+    btnConfirmar.textContent = repartir ? 'Programar envío' : 'Enviar ahora';
+  };
+
   modal.querySelector('#eduProgCancelar').onclick = function () { modal.remove(); };
-  modal.querySelector('#eduProgConfirmar').onclick = async function () {
-    var asunto = modal.querySelector('#eduAsunto').value.trim();
-    var cuerpoTexto = modal.querySelector('#eduCuerpo').value.trim();
+  btnConfirmar.onclick = async function () {
+    var asunto = asuntoInput.value.trim();
+    var cuerpoTexto = cuerpoTa.value.trim();
     var msgBox = modal.querySelector('#eduProgMsg');
     if (!asunto || !cuerpoTexto) { msgBox.innerHTML = '<div class="msg error">Completa asunto y cuerpo.</div>'; return; }
-    var btn = modal.querySelector('#eduProgConfirmar');
-    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Programando...';
-    var cuerpoHtml = escapeHtml(cuerpoTexto).replace(/\n/g, '<br>')
-      .replace(/&lt;&lt;/g, '<<').replace(/&gt;&gt;/g, '>>');
-    var rr = await api('programarEnvio' + familia, { proyecto: state.proyectoActivo.codigo, asunto: asunto, cuerpo: cuerpoHtml });
-    btn.disabled = false; btn.textContent = 'Programar envío';
+    var repartir = repartirChk.checked;
+    var porDiaSel = modal.querySelector('#eduPorDia').value;
+    var confirmMsg = repartir
+      ? '¿Programar el envío repartido en tandas de ' + porDiaSel + ' por día?'
+      : '¿Enviar ahora mismo a todos los participantes listos? No se puede deshacer.';
+    if (!confirm(confirmMsg)) return;
+
+    btnConfirmar.disabled = true;
+    btnConfirmar.innerHTML = '<span class="spinner"></span>' + (repartir ? 'Programando...' : 'Enviando...');
+    var cuerpoHtml = _eduCuerpoTextoAHtml(cuerpoTexto);
+    var accion = (repartir ? 'programarEnvio' : 'enviarAhora') + familia;
+    var paramsEnvio = { proyecto: state.proyectoActivo.codigo, asunto: asunto, cuerpo: cuerpoHtml };
+    if (repartir) paramsEnvio.porDia = porDiaSel;
+    var rr = await api(accion, paramsEnvio);
+    btnConfirmar.disabled = false; btnConfirmar.textContent = repartir ? 'Programar envío' : 'Enviar ahora';
     if (!rr.ok) { msgBox.innerHTML = '<div class="msg error">' + escapeHtml(rr.error) + '</div>'; return; }
     msgBox.innerHTML = '<div class="msg ok">' + escapeHtml(rr.msg) + '</div>';
     setTimeout(function () { modal.remove(); renderInstrumentoAplicacionEdu(familia); }, 1500);
