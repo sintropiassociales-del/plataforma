@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="IMES — Instrumento de Medición de Empleabilidad Social. Aplicación digital para estudiantes de preparatoria, por Sintropía Social.">
+<title>IMES Preparatoria — Sintropía Social</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --purple: #631EEB; --purple-dark: #4E17B8; --orange: #FF7929;
+    --bg: #F5F3FC; --card: #FFFFFF; --text: #2C2C2C; --subtle: #6B6B78; --border: #E6E2F5;
+    --error: #C0392B; --error-bg: #FDECEA; --ok: #1E8449; --ok-bg: #EAF7EE;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Open Sans', -apple-system, "Segoe UI", Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.55; }
+  header.top { background: var(--purple); color: #fff; padding: 26px 18px 44px; text-align: center; border-radius: 0 0 22px 22px; }
+  header.top .marca { font-size: 20px; font-weight: 800; letter-spacing: .3px; }
+  header.top .marca span { color: var(--orange); }
+  header.top .subt { font-size: 13.5px; opacity: .92; margin-top: 6px; max-width: 480px; margin-left: auto; margin-right: auto; }
+  main { max-width: 700px; margin: -26px auto 40px; padding: 0 16px; }
+  .card { background: var(--card); border-radius: 14px; padding: 26px 24px; margin-bottom: 16px; box-shadow: 0 6px 20px rgba(99,30,235,.08); border: 1px solid var(--border); }
+  h1 { font-size: 21px; margin: 0 0 8px; }
+  h2 { font-size: 18px; margin: 0 0 10px; color: var(--purple-dark); }
+  h3 { font-size: 14.5px; margin: 20px 0 2px; color: var(--purple-dark); }
+  p.subtle, .subtle { color: var(--subtle); font-size: 13.5px; }
+  .teoria { background: #FAF8FF; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 12.5px; color: var(--subtle); font-style: italic; margin-bottom: 16px; }
+  .progreso { display: flex; gap: 5px; margin: 18px 0 22px; flex-wrap: wrap; }
+  .progreso .paso { flex: 1; min-width: 10px; height: 6px; border-radius: 4px; background: var(--border); }
+  .progreso .paso.hecho { background: var(--orange); }
+  .progreso .paso.actual { background: var(--purple); }
+  label { display: block; font-size: 13.5px; font-weight: 600; margin: 14px 0 5px; }
+  label .req { color: var(--orange); }
+  input[type=text], input[type=email], textarea {
+    width: 100%; padding: 11px 12px; border: 1.5px solid var(--border); border-radius: 9px;
+    font-size: 15px; font-family: inherit; background: #fff; color: var(--text);
+  }
+  textarea { min-height: 72px; resize: vertical; }
+  input:focus, textarea:focus { outline: none; border-color: var(--purple); }
+  .fila-botones { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+  button { font-family: inherit; font-size: 14.5px; font-weight: 700; border-radius: 999px; padding: 12px 24px; border: none; cursor: pointer; }
+  button.primary { background: var(--purple); color: #fff; }
+  button.primary:hover { background: var(--purple-dark); }
+  button.secondary { background: #fff; color: var(--purple); border: 1.5px solid var(--purple); }
+  button:disabled { opacity: .5; cursor: default; }
+  .msg { padding: 10px 13px; border-radius: 9px; font-size: 13.5px; margin: 12px 0; }
+  .msg.error { background: var(--error-bg); color: var(--error); }
+  .msg.ok { background: var(--ok-bg); color: var(--ok); }
+
+  .item-likert { border-top: 1px solid var(--border); padding: 16px 0; }
+  .item-likert:first-of-type { border-top: none; padding-top: 4px; }
+  .item-texto { font-size: 14.5px; font-weight: 600; margin-bottom: 10px; }
+  .escala-likert { display: flex; gap: 6px; flex-wrap: wrap; }
+  .op-likert { flex: 1; min-width: 78px; border: 1.5px solid var(--border); border-radius: 9px; background: #fff;
+    color: var(--subtle); font-weight: 600; font-size: 12px; padding: 9px 4px; cursor: pointer; text-align: center;
+    transition: background .12s, border-color .12s, color .12s; }
+  .op-likert .num { display: block; font-size: 15px; font-weight: 800; }
+  .op-likert.marcada { background: var(--purple); border-color: var(--purple); color: #fff; }
+
+  .pregunta-cualitativa { margin-top: 18px; }
+  .pregunta-cualitativa label { font-weight: 700; }
+
+  footer.pie { text-align: center; padding: 20px 16px 40px; font-size: 12px; color: var(--subtle); }
+  footer.pie .wordmark { font-weight: 800; margin-bottom: 4px; }
+  footer.pie a { color: var(--purple); text-decoration: none; }
+  .spinner { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--purple); border-radius: 50%; animation: girar 0.8s linear infinite; margin: 20px auto; }
+  @keyframes girar { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="marca">Sintropía <span>Social</span></div>
+  <div class="subt">IMES — Instrumento de Medición de Empleabilidad Social (Preparatoria)</div>
+</header>
+
+<main>
+  <div id="app" class="card">
+    <div class="spinner"></div>
+    <p class="subtle" style="text-align:center">Cargando tu aplicación...</p>
+  </div>
+</main>
+
+<footer class="pie">
+  <div class="wordmark"><span style="color:var(--purple)">Sintropía</span> <span style="color:var(--orange)">Social</span></div>
+  <a href="https://sintropiassociales-del.github.io/">Sintropía Social</a> · <a href="mailto:contacto@sintropiasocial.com">contacto@sintropiasocial.com</a>
+</footer>
+
+<script>
+var WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxZbLiOP7QXvrgUIDhhVciVGY-Yval3YBvqBHOpQfK8El2wHXNNBtZvsnkbwMaJUss/exec';
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function jsonp(action, params, timeoutMs) {
+  return new Promise(function (resolve) {
+    var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+    var url = WEB_APP_URL + '?action=' + encodeURIComponent(action) + '&callback=' + cbName;
+    params = params || {};
+    for (var k in params) { if (params[k] !== undefined && params[k] !== null) url += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(params[k]); }
+    var script = document.createElement('script');
+    var cleaned = false;
+    function cleanup() { if (cleaned) return; cleaned = true; delete window[cbName]; if (script.parentNode) script.parentNode.removeChild(script); }
+    window[cbName] = function (data) { cleanup(); resolve(data); };
+    script.onerror = function () { cleanup(); resolve({ ok: false, error: 'No se pudo conectar. Revisa tu conexión a internet e intenta de nuevo.' }); };
+    setTimeout(function () { if (!cleaned) { cleanup(); resolve({ ok: false, error: 'La plataforma tardó demasiado en responder. Intenta de nuevo.' }); } }, timeoutMs || 25000);
+    script.src = url;
+    document.body.appendChild(script);
+  });
+}
+function jsonpPost(action, params, timeoutMs) {
+  return new Promise(function (resolve) {
+    var timedOut = false;
+    var timer = setTimeout(function () { timedOut = true; resolve({ ok: false, error: 'La plataforma tardó demasiado en responder. Intenta de nuevo.' }); }, timeoutMs || 25000);
+    var body = { action: action };
+    params = params || {};
+    for (var k in params) { if (params[k] !== undefined && params[k] !== null) body[k] = params[k]; }
+    fetch(WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
+      .then(function (resp) { return resp.json(); })
+      .then(function (data) { if (timedOut) return; clearTimeout(timer); resolve(data); })
+      .catch(function () { if (timedOut) return; clearTimeout(timer); resolve({ ok: false, error: 'No se pudo conectar. Revisa tu conexión a internet e intenta de nuevo.' }); });
+  });
+}
+
+/* ============================================================
+ * Contenido íntegro del instrumento IMES — Instrumento de Medición de
+ * Empleabilidad Social (Preparatoria), v1.0 2025, Sintropía Social / ENAH —
+ * transcrito del PDF original proporcionado por David Salgado López.
+ * Escala cuantitativa: 1 Nunca · 2 Casi nunca · 3 A veces · 4 Casi siempre
+ * · 5 Siempre. El ítem 18 es de puntaje inverso (así lo marca el propio
+ * instrumento) y se invierte (6 - respuesta) antes de promediar su sección.
+ * ============================================================ */
+var OPCIONES_LIKERT = ['Nunca', 'Casi nunca', 'A veces', 'Casi siempre', 'Siempre'];
+
+var SECCIONES_IMES = [
+  {
+    clave: 'I', nombre: 'Comunicación efectiva y escucha activa',
+    teoria: 'La comunicación en contextos laborales no se reduce a hablar bien. Incluye escuchar, leer el entorno, argumentar con evidencia y adaptar el mensaje a distintos interlocutores (Sennett, 2009; De la Garza Toledo, 2006). En México, las brechas comunicativas siguen siendo uno de los principales obstáculos de inserción laboral juvenil (STPS, 2023).',
+    items: [
+      'Expreso mis ideas con claridad cuando hablo con otras personas.',
+      'Escucho a los demás sin interrumpirlos, aunque no esté de acuerdo.',
+      'Sé adaptar mi forma de hablar según con quién estoy (maestra/o, empleador/a, compañero/a).',
+      'Cuando no entiendo algo, pregunto o busco la manera de aclararlo.',
+      'En situaciones de conflicto, busco explicar mi punto de vista sin agresividad.',
+      'Puedo redactar un correo electrónico o mensaje formal de manera adecuada.'
+    ],
+    cualitativas: [
+      { id: 'Q1', texto: 'Describe una situación en la que tuviste que comunicar algo difícil (una queja, un error, un desacuerdo) a alguien con más autoridad que tú. ¿Qué hiciste? ¿Cómo resultó?' },
+      { id: 'Q2', texto: '¿Hay situaciones en las que sientes que no puedes expresarte bien? ¿Cuándo y por qué crees que pasa eso?' }
+    ]
+  },
+  {
+    clave: 'II', nombre: 'Trabajo en equipo y colaboración',
+    teoria: 'Las transformaciones productivas post-fordistas han reconfigurado el trabajo individual en procesos colaborativos y flexibles (Coriat, 1992; Toyotismo). Sin embargo, en México, la experiencia de trabajo en equipo de jóvenes escolarizados está altamente mediada por dinámicas de desigualdad de género, clase y origen étnico que deben leerse críticamente (CEPAL, 2022).',
+    items: [
+      'Cuando trabajo en equipo, cumplo con las tareas que me corresponden.',
+      'Ayudo a mis compañeros/as cuando tienen dificultades, aunque no sea mi responsabilidad.',
+      'Puedo reconocer mis errores sin culpar a los demás cuando algo sale mal.',
+      'Escucho y tomo en cuenta las ideas de todos los integrantes del equipo, incluso las que son diferentes a las mías.',
+      'Cuando hay conflictos en el equipo, trato de buscar soluciones, no de ganar la discusión.',
+      'Puedo trabajar con personas que tienen formas de pensar o vivir muy distintas a las mías.'
+    ],
+    cualitativas: [
+      { id: 'Q3', texto: 'Piensa en el mejor equipo en el que has trabajado (en la escuela, en tu colonia, en cualquier lugar). ¿Qué lo hacía funcionar bien? ¿Qué papel jugabas tú?' },
+      { id: 'Q4', texto: '¿Qué es lo más difícil para ti cuando tienes que trabajar con personas con quienes no te llevas bien o que tienen ideas muy distintas a las tuyas?' }
+    ]
+  },
+  {
+    clave: 'III', nombre: 'Resolución de problemas y pensamiento crítico',
+    teoria: 'La capacidad de análisis situacional y toma de decisiones bajo incertidumbre es central en los perfiles laborales contemporáneos. Más allá de las competencias técnicas, el mercado laboral mexicano demanda jóvenes capaces de leer contextos, cuestionar supuestos y proponer rutas de acción (IMCO, 2023; Milanese, 2007).',
+    items: [
+      'Cuando tengo un problema, pienso varias opciones antes de tomar una decisión.',
+      'Puedo distinguir entre lo urgente y lo importante cuando tengo varias cosas que resolver.',
+      'Busco información de diferentes fuentes antes de sacar conclusiones.',
+      'Si mi primera solución no funciona, busco otra en lugar de rendirme.',
+      'Puedo identificar cuándo una situación necesita la ayuda de otra persona o de un especialista.',
+      { texto: 'Me resulta difícil tomar decisiones cuando no tengo toda la información.', inverso: true }
+    ],
+    cualitativas: [
+      { id: 'Q5', texto: 'Describe un problema concreto que hayas resuelto recientemente (puede ser de la escuela, de tu casa o de tu vida personal). ¿Cómo lo identificaste? ¿Qué hiciste para resolverlo?' },
+      { id: 'Q6', texto: '¿Alguna vez has cuestionado una regla, una tarea o una instrucción que te parecía injusta o equivocada? ¿Qué hiciste con esa duda?' }
+    ]
+  },
+  {
+    clave: 'IV', nombre: 'Adaptabilidad y gestión del cambio',
+    teoria: 'La precarización laboral y la volatilidad del mercado de trabajo en México exigen una capacidad de adaptación que va más allá de la tolerancia a la frustración: implica agencia, resiliencia estructurada y comprensión crítica del entorno (Sennett, 2000; OIT, 2022). Para la juventud en contextos vulnerables, adaptarse no es sinónimo de resignarse.',
+    items: [
+      'Cuando los planes cambian de repente, soy capaz de ajustarme sin que me afecte demasiado.',
+      'Puedo aprender cosas nuevas aunque al principio no las entienda bien.',
+      'Cuando algo no me sale, intento entender por qué antes de intentarlo de nuevo.',
+      'Me siento cómodo/a en situaciones donde no sé exactamente qué va a pasar.',
+      'Puedo mantener la calma cuando estoy bajo presión o con mucho estrés.',
+      'Ante los cambios, generalmente pienso en las oportunidades que traen, no solo en los problemas.'
+    ],
+    cualitativas: [
+      { id: 'Q7', texto: '¿Ha habido algún cambio importante en tu vida (de escuela, de casa, de ciudad, económico) que haya sido difícil de enfrentar? ¿Cómo lo viviste? ¿Qué aprendiste de esa experiencia?' },
+      { id: 'Q8', texto: '¿Qué es lo que más te cuesta trabajo aceptar cuando las cosas no salen como esperabas? ¿Por qué crees que es así?' }
+    ]
+  },
+  {
+    clave: 'V', nombre: 'Autogestión, responsabilidad y aprendizaje continuo',
+    teoria: 'En el contexto de economías de plataforma y trabajo flexible, la autogestión del aprendizaje y del tiempo se convierte en una exigencia estructural (Rifkin, 2004; PNUD, 2022). Sin embargo, reducir esto a "disciplina individual" oculta las condiciones materiales que determinan las posibilidades reales de los jóvenes mexicanos para organizar su vida y su desarrollo.',
+    items: [
+      'Organizo mi tiempo para cumplir con mis responsabilidades sin que nadie me lo recuerde.',
+      'Cuando me comprometo a hacer algo, lo cumplo aunque surjan contratiempos.',
+      'Identifico mis propias fortalezas y áreas de mejora sin necesitar que otros me lo digan.',
+      'Busco aprender algo nuevo por cuenta propia, aunque no sea obligatorio.',
+      'Cuando recibo una crítica, la tomo como una oportunidad de mejorar, no como un ataque personal.',
+      'Me fijo metas concretas y reviso si las estoy cumpliendo.'
+    ],
+    cualitativas: [
+      { id: 'Q9', texto: '¿En qué área de tu vida (escuela, trabajo, relaciones, habilidades) sientes que has crecido más en el último año? ¿Qué hiciste para lograrlo?' },
+      { id: 'Q10', texto: '¿Qué quisieras aprender o desarrollar en los próximos dos años? ¿Qué te lo ha impedido hasta ahora?' }
+    ]
+  },
+  {
+    clave: 'VI', nombre: 'Identidad laboral y conciencia del entorno',
+    teoria: 'La identidad en el trabajo no es solo una construcción individual; está atravesada por la clase, el género, el territorio y la historia (Geertz, 1973; Marx, 1867; De la Garza, 2010). Esta sección explora cómo los jóvenes se posicionan frente al mundo laboral: sus expectativas, sus miedos y su comprensión del contexto en que buscarán insertarse.',
+    items: [
+      'Tengo claridad sobre lo que quiero hacer cuando termine la escuela.',
+      'Conozco cuáles son mis derechos como trabajador/a (salario justo, prestaciones, contrato).',
+      'Sé cómo es el mercado de trabajo en mi ciudad o región.',
+      'Creo que mis habilidades y conocimientos actuales son suficientes para conseguir un trabajo digno.',
+      'Considero que el trabajo que haré en el futuro podrá tener un impacto positivo en mi comunidad.',
+      'Me siento preparado/a para enfrentar los retos del mundo laboral actual.'
+    ],
+    cualitativas: [
+      { id: 'Q11', texto: '¿Qué significa para ti tener un trabajo digno? ¿Es lo mismo que tener un buen trabajo? ¿Por qué?' },
+      { id: 'Q12', texto: '¿Has vivido o conoces de cerca situaciones de trabajo injusto, mal pagado o sin condiciones adecuadas? ¿Cómo te hace sentir eso? ¿Qué piensas al respecto?' }
+    ]
+  }
+];
+var CIERRE_IMES = [
+  { id: 'CF1', texto: 'De todo lo que respondiste hoy, ¿qué fue lo que más te hizo pensar? ¿Por qué?' },
+  { id: 'CF2', texto: 'Si pudieras cambiar una sola cosa de tu formación escolar para prepararte mejor para el trabajo, ¿qué sería?' },
+  { id: 'CF3', texto: '¿Hay algo importante sobre tu vida, tu contexto o tus aspiraciones que este instrumento no haya preguntado y que quisieras compartir?' }
+];
+
+var qs = {}; try { qs = Object.fromEntries(new URLSearchParams(location.search)); } catch (e) {}
+var TOKEN = qs.t || '';
+
+// paso: 'cargando' | 'error' | 'yaCompletado' | 'intake' | 0..5 (secciones) | 'cierre' | 'enviando' | 'gracias'
+var state = { paso: 'cargando', participante: null, identidad: {}, respuestas: {}, cualitativas: {}, inicio: null };
+var app = document.getElementById('app');
+var TOTAL_PASOS_CUESTIONARIO = SECCIONES_IMES.length + 1; // + cierre
+
+function progresoHtml(actual) {
+  var html = '<div class="progreso">';
+  for (var i = 0; i < TOTAL_PASOS_CUESTIONARIO; i++) {
+    var cls = i < actual ? 'hecho' : (i === actual ? 'actual' : '');
+    html += '<div class="paso ' + cls + '"></div>';
+  }
+  return html + '</div>';
+}
+
+function render() {
+  if (state.paso === 'cargando') return renderCargando();
+  if (state.paso === 'error') return renderError();
+  if (state.paso === 'yaCompletado') return renderYaCompletado();
+  if (state.paso === 'intake') return renderIntake();
+  if (state.paso === 'cierre') return renderCierre();
+  if (state.paso === 'enviando') return renderEnviando();
+  if (state.paso === 'gracias') return renderGracias();
+  return renderSeccion(state.paso);
+}
+
+function renderCargando() {
+  app.innerHTML = '<div class="spinner"></div><p class="subtle" style="text-align:center">Cargando tu aplicación...</p>';
+}
+function renderError() {
+  app.innerHTML = '<h1>Liga no válida</h1><p>Esta liga ya no está disponible o no existe. Si crees que es un error, contacta a tu escuela o a ' +
+    '<a href="mailto:contacto@sintropiasocial.com">contacto@sintropiasocial.com</a>.</p>';
+}
+function renderYaCompletado() {
+  app.innerHTML = '<h1>Ya completaste esta aplicación</h1><p>Gracias por tu participación — tu resultado e interpretación ya fueron enviados a tu correo. Si no lo encuentras, revisa spam o escribe a <a href="mailto:contacto@sintropiasocial.com">contacto@sintropiasocial.com</a>.</p>';
+}
+
+function renderIntake() {
+  var d = state.identidad;
+  app.innerHTML =
+    '<h1>Antes de empezar</h1>' +
+    '<p class="subtle">IMES — Instrumento de Medición de Empleabilidad Social. No es un examen, no hay respuestas correctas o incorrectas: nos interesa cómo percibes tus propias capacidades frente al mundo del trabajo. Tus respuestas son confidenciales.</p>' +
+    '<div id="secMsg"></div>' +
+    '<label>Nombre(s) <span class="req">*</span></label><input type="text" id="iNombre" value="' + escapeHtml(d.nombre || '') + '">' +
+    '<label>Apellido(s)</label><input type="text" id="iApellido" value="' + escapeHtml(d.apellido || '') + '">' +
+    '<label>Correo electrónico <span class="req">*</span></label><input type="email" id="iCorreo" placeholder="tucorreo@ejemplo.com" value="' + escapeHtml(d.correo || '') + '">' +
+    '<label>Escuela (opcional)</label><input type="text" id="iEscuela" value="' + escapeHtml(d.escuela || '') + '">' +
+    '<div class="fila-botones"><button class="primary" id="btnSiguiente">Comenzar →</button></div>';
+  document.getElementById('btnSiguiente').onclick = function () {
+    var msgBox = document.getElementById('secMsg');
+    var nombre = document.getElementById('iNombre').value.trim();
+    var correo = document.getElementById('iCorreo').value.trim();
+    if (!nombre) { msgBox.innerHTML = '<div class="msg error">Escribe tu nombre.</div>'; return; }
+    if (!correo || correo.indexOf('@') === -1) { msgBox.innerHTML = '<div class="msg error">Escribe un correo electrónico válido — ahí recibirás tu resultado.</div>'; return; }
+    state.identidad = { nombre: nombre, apellido: document.getElementById('iApellido').value.trim(), correo: correo, escuela: document.getElementById('iEscuela').value.trim() };
+    state.paso = 0;
+    state.inicio = state.inicio || Date.now();
+    render();
+  };
+}
+
+function renderSeccion(idx) {
+  var sec = SECCIONES_IMES[idx];
+  var resp = state.respuestas[sec.clave] || (state.respuestas[sec.clave] = {});
+  var cual = state.cualitativas;
+  var itemsHtml = sec.items.map(function (it, i) {
+    var texto = typeof it === 'string' ? it : it.texto;
+    var valorActual = resp[i];
+    return '<div class="item-likert">' +
+      '<div class="item-texto">' + (i + 1) + '. ' + escapeHtml(texto) + '</div>' +
+      '<div class="escala-likert">' + OPCIONES_LIKERT.map(function (op, n) {
+        var v = n + 1;
+        return '<div class="op-likert' + (valorActual === v ? ' marcada' : '') + '" data-item="' + i + '" data-valor="' + v + '"><span class="num">' + v + '</span>' + op + '</div>';
+      }).join('') + '</div></div>';
+  }).join('');
+  var cualHtml = sec.cualitativas.map(function (q) {
+    return '<div class="pregunta-cualitativa"><label>' + escapeHtml(q.texto) + '</label>' +
+      '<textarea data-q="' + q.id + '">' + escapeHtml(cual[q.id] || '') + '</textarea></div>';
+  }).join('');
+
+  app.innerHTML =
+    progresoHtml(idx) +
+    '<h2>Sección ' + sec.clave + ' — ' + escapeHtml(sec.nombre) + '</h2>' +
+    '<div class="teoria">' + escapeHtml(sec.teoria) + '</div>' +
+    '<p class="subtle">Marca qué tan frecuentemente haces o experimentas cada cosa: 1 Nunca · 2 Casi nunca · 3 A veces · 4 Casi siempre · 5 Siempre.</p>' +
+    '<div id="secMsg"></div>' +
+    itemsHtml +
+    '<h3>Para responder con tus propias palabras</h3>' +
+    cualHtml +
+    '<div class="fila-botones">' +
+      (idx > 0 ? '<button class="secondary" id="btnAtras">← Atrás</button>' : '') +
+      '<button class="primary" id="btnSiguiente">Continuar →</button>' +
+    '</div>';
+
+  app.querySelectorAll('.op-likert').forEach(function (el) {
+    el.onclick = function () {
+      var i = Number(el.getAttribute('data-item')), v = Number(el.getAttribute('data-valor'));
+      resp[i] = v;
+      app.querySelectorAll('.item-likert').forEach(function (bloque, bi) {
+        if (bi !== i) return;
+        bloque.querySelectorAll('.op-likert').forEach(function (o) {
+          o.classList.toggle('marcada', Number(o.getAttribute('data-valor')) === v);
+        });
+      });
+    };
+  });
+  app.querySelectorAll('textarea[data-q]').forEach(function (ta) {
+    ta.oninput = function () { cual[ta.getAttribute('data-q')] = ta.value; };
+  });
+  if (idx > 0) document.getElementById('btnAtras').onclick = function () { state.paso = idx - 1; render(); };
+  document.getElementById('btnSiguiente').onclick = function () {
+    var faltan = sec.items.some(function (it, i) { return resp[i] == null; });
+    if (faltan) { document.getElementById('secMsg').innerHTML = '<div class="msg error">Responde las ' + sec.items.length + ' preguntas de esta sección antes de continuar.</div>'; return; }
+    state.paso = (idx + 1 < SECCIONES_IMES.length) ? (idx + 1) : 'cierre';
+    render();
+  };
+}
+
+function renderCierre() {
+  var cual = state.cualitativas;
+  var html = CIERRE_IMES.map(function (q) {
+    return '<div class="pregunta-cualitativa"><label>' + escapeHtml(q.texto) + '</label>' +
+      '<textarea data-q="' + q.id + '">' + escapeHtml(cual[q.id] || '') + '</textarea></div>';
+  }).join('');
+  app.innerHTML =
+    progresoHtml(SECCIONES_IMES.length) +
+    '<h2>Cierre y reflexión final</h2>' +
+    '<p class="subtle">Has llegado al final del instrumento. Antes de cerrar, tómate un momento para responder estas últimas preguntas de manera libre.</p>' +
+    html +
+    '<div class="fila-botones"><button class="secondary" id="btnAtras">← Atrás</button><button class="primary" id="btnEnviar">Enviar mis respuestas</button></div>';
+  app.querySelectorAll('textarea[data-q]').forEach(function (ta) { ta.oninput = function () { cual[ta.getAttribute('data-q')] = ta.value; }; });
+  document.getElementById('btnAtras').onclick = function () { state.paso = SECCIONES_IMES.length - 1; render(); };
+  document.getElementById('btnEnviar').onclick = enviarAplicacion;
+}
+
+function renderEnviando() {
+  app.innerHTML = '<div class="spinner"></div><p class="subtle" style="text-align:center">Enviando tus respuestas...</p>';
+}
+function renderGracias() {
+  app.innerHTML = '<h1>¡Gracias por tu participación!</h1>' +
+    '<p>Tus respuestas son valiosas para comprender mejor la situación de los jóvenes en México y para diseñar programas que realmente correspondan a sus necesidades y potenciales.</p>' +
+    '<p class="subtle">En los próximos minutos recibirás por correo tu resultado y una interpretación — revisa también tu carpeta de spam.</p>' +
+    '<p class="subtle" style="margin-top:20px">— Sintropía Social / ENAH, México 2025 —</p>';
+}
+
+function promedioSeccion(sec, resp) {
+  var vals = sec.items.map(function (it, i) {
+    var v = resp[i];
+    if (v == null) return null;
+    var inverso = typeof it === 'object' && it.inverso;
+    return inverso ? (6 - v) : v;
+  }).filter(function (v) { return v != null; });
+  if (!vals.length) return null;
+  return Math.round((vals.reduce(function (a, b) { return a + b; }, 0) / vals.length) * 100) / 100;
+}
+
+function enviarAplicacion() {
+  state.paso = 'enviando';
+  render();
+  var dimensiones = SECCIONES_IMES.map(function (sec) {
+    return { clave: sec.clave, nombre: sec.nombre, promedio: promedioSeccion(sec, state.respuestas[sec.clave] || {}) };
+  });
+  var tiempoRespuestaMin = state.inicio ? Math.round(((Date.now() - state.inicio) / 60000) * 10) / 10 : '';
+  var params = {
+    familia: 'EDU02', token: TOKEN,
+    dimensiones: JSON.stringify(dimensiones),
+    respuestasCualitativas: JSON.stringify(state.cualitativas),
+    tiempoRespuestaMin: tiempoRespuestaMin
+  };
+  if (state.identidad.nombre) {
+    params.nombre = state.identidad.nombre; params.apellido = state.identidad.apellido || '';
+    params.correo = state.identidad.correo; params.escuela = state.identidad.escuela || '';
+  }
+  jsonpPost('aplicarEDU02', params, 30000).then(function (res) {
+    if (!res || !res.ok) {
+      state.paso = 'cierre';
+      render();
+      var err = document.createElement('div');
+      err.className = 'msg error';
+      err.textContent = (res && res.error) || 'No se pudo enviar. Intenta de nuevo.';
+      app.insertBefore(err, app.firstChild);
+      return;
+    }
+    state.paso = 'gracias';
+    render();
+  });
+}
+
+(function iniciar() {
+  if (!TOKEN) { state.paso = 'error'; render(); return; }
+  jsonp('consultarParticipanteEDU02', { token: TOKEN }).then(function (res) {
+    if (!res || !res.ok) { state.paso = 'error'; render(); return; }
+    state.participante = res;
+    if (res.yaCompletado) { state.paso = 'yaCompletado'; render(); return; }
+    state.inicio = Date.now();
+    if (res.roster) {
+      state.identidad = { nombre: res.nombre, apellido: res.apellido, correo: res.correo, escuela: res.escuela };
+      state.paso = 0;
+    } else {
+      state.paso = 'intake';
+    }
+    render();
+  });
+})();
+</script>
+</body>
+</html>

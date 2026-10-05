@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="IMES Universidad — instrumento de empleabilidad para estudiantes universitarios, por Sintropía Social.">
+<title>IMES Universidad — Sintropía Social</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --purple: #631EEB; --purple-dark: #4E17B8; --orange: #FF7929;
+    --bg: #F5F3FC; --card: #FFFFFF; --text: #2C2C2C; --subtle: #6B6B78; --border: #E6E2F5;
+    --error: #C0392B; --error-bg: #FDECEA; --ok: #1E8449; --ok-bg: #EAF7EE;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Open Sans', -apple-system, "Segoe UI", Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.55; }
+  header.top { background: var(--purple); color: #fff; padding: 26px 18px 44px; text-align: center; border-radius: 0 0 22px 22px; }
+  header.top .marca { font-size: 20px; font-weight: 800; letter-spacing: .3px; }
+  header.top .marca span { color: var(--orange); }
+  header.top .subt { font-size: 13.5px; opacity: .92; margin-top: 6px; max-width: 480px; margin-left: auto; margin-right: auto; }
+  main { max-width: 700px; margin: -26px auto 40px; padding: 0 16px; }
+  .card { background: var(--card); border-radius: 14px; padding: 26px 24px; margin-bottom: 16px; box-shadow: 0 6px 20px rgba(99,30,235,.08); border: 1px solid var(--border); }
+  h1 { font-size: 21px; margin: 0 0 8px; }
+  h2 { font-size: 18px; margin: 0 0 10px; color: var(--purple-dark); }
+  h3 { font-size: 14.5px; margin: 20px 0 2px; color: var(--purple-dark); }
+  p.subtle, .subtle { color: var(--subtle); font-size: 13.5px; }
+  .teoria { background: #FAF8FF; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; font-size: 12.5px; color: var(--subtle); font-style: italic; margin-bottom: 16px; }
+  .progreso { display: flex; gap: 5px; margin: 18px 0 22px; flex-wrap: wrap; }
+  .progreso .paso { flex: 1; min-width: 10px; height: 6px; border-radius: 4px; background: var(--border); }
+  .progreso .paso.hecho { background: var(--orange); }
+  .progreso .paso.actual { background: var(--purple); }
+  label { display: block; font-size: 13.5px; font-weight: 600; margin: 14px 0 5px; }
+  label .req { color: var(--orange); }
+  input[type=text], input[type=email], textarea {
+    width: 100%; padding: 11px 12px; border: 1.5px solid var(--border); border-radius: 9px;
+    font-size: 15px; font-family: inherit; background: #fff; color: var(--text);
+  }
+  textarea { min-height: 72px; resize: vertical; }
+  input:focus, textarea:focus { outline: none; border-color: var(--purple); }
+  .fila-botones { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+  button { font-family: inherit; font-size: 14.5px; font-weight: 700; border-radius: 999px; padding: 12px 24px; border: none; cursor: pointer; }
+  button.primary { background: var(--purple); color: #fff; }
+  button.primary:hover { background: var(--purple-dark); }
+  button.secondary { background: #fff; color: var(--purple); border: 1.5px solid var(--purple); }
+  button:disabled { opacity: .5; cursor: default; }
+  .msg { padding: 10px 13px; border-radius: 9px; font-size: 13.5px; margin: 12px 0; }
+  .msg.error { background: var(--error-bg); color: var(--error); }
+  .msg.ok { background: var(--ok-bg); color: var(--ok); }
+
+  .item-likert { border-top: 1px solid var(--border); padding: 16px 0; }
+  .item-likert:first-of-type { border-top: none; padding-top: 4px; }
+  .item-texto { font-size: 14.5px; font-weight: 600; margin-bottom: 10px; }
+  .escala-likert { display: flex; gap: 6px; flex-wrap: wrap; }
+  .op-likert { flex: 1; min-width: 78px; border: 1.5px solid var(--border); border-radius: 9px; background: #fff;
+    color: var(--subtle); font-weight: 600; font-size: 12px; padding: 9px 4px; cursor: pointer; text-align: center;
+    transition: background .12s, border-color .12s, color .12s; }
+  .op-likert .num { display: block; font-size: 15px; font-weight: 800; }
+  .op-likert.marcada { background: var(--purple); border-color: var(--purple); color: #fff; }
+
+  .pregunta-cualitativa { margin-top: 18px; }
+  .pregunta-cualitativa label { font-weight: 700; }
+
+  footer.pie { text-align: center; padding: 20px 16px 40px; font-size: 12px; color: var(--subtle); }
+  footer.pie .wordmark { font-weight: 800; margin-bottom: 4px; }
+  footer.pie a { color: var(--purple); text-decoration: none; }
+  .spinner { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--purple); border-radius: 50%; animation: girar 0.8s linear infinite; margin: 20px auto; }
+  @keyframes girar { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="marca">Sintropía <span>Social</span></div>
+  <div class="subt">IMES Universidad — Habilidades sociales, empleabilidad y habilidades técnicas</div>
+</header>
+
+<main>
+  <div id="app" class="card">
+    <div class="spinner"></div>
+    <p class="subtle" style="text-align:center">Cargando tu aplicación...</p>
+  </div>
+</main>
+
+<footer class="pie">
+  <div class="wordmark"><span style="color:var(--purple)">Sintropía</span> <span style="color:var(--orange)">Social</span></div>
+  <a href="https://sintropiassociales-del.github.io/">Sintropía Social</a> · <a href="mailto:contacto@sintropiasocial.com">contacto@sintropiasocial.com</a>
+</footer>
+
+<script>
+var WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxZbLiOP7QXvrgUIDhhVciVGY-Yval3YBvqBHOpQfK8El2wHXNNBtZvsnkbwMaJUss/exec';
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function jsonp(action, params, timeoutMs) {
+  return new Promise(function (resolve) {
+    var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+    var url = WEB_APP_URL + '?action=' + encodeURIComponent(action) + '&callback=' + cbName;
+    params = params || {};
+    for (var k in params) { if (params[k] !== undefined && params[k] !== null) url += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(params[k]); }
+    var script = document.createElement('script');
+    var cleaned = false;
+    function cleanup() { if (cleaned) return; cleaned = true; delete window[cbName]; if (script.parentNode) script.parentNode.removeChild(script); }
+    window[cbName] = function (data) { cleanup(); resolve(data); };
+    script.onerror = function () { cleanup(); resolve({ ok: false, error: 'No se pudo conectar. Revisa tu conexión a internet e intenta de nuevo.' }); };
+    setTimeout(function () { if (!cleaned) { cleanup(); resolve({ ok: false, error: 'La plataforma tardó demasiado en responder. Intenta de nuevo.' }); } }, timeoutMs || 25000);
+    script.src = url;
+    document.body.appendChild(script);
+  });
+}
+function jsonpPost(action, params, timeoutMs) {
+  return new Promise(function (resolve) {
+    var timedOut = false;
+    var timer = setTimeout(function () { timedOut = true; resolve({ ok: false, error: 'La plataforma tardó demasiado en responder. Intenta de nuevo.' }); }, timeoutMs || 25000);
+    var body = { action: action };
+    params = params || {};
+    for (var k in params) { if (params[k] !== undefined && params[k] !== null) body[k] = params[k]; }
+    fetch(WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
+      .then(function (resp) { return resp.json(); })
+      .then(function (data) { if (timedOut) return; clearTimeout(timer); resolve(data); })
+      .catch(function () { if (timedOut) return; clearTimeout(timer); resolve({ ok: false, error: 'No se pudo conectar. Revisa tu conexión a internet e intenta de nuevo.' }); });
+  });
+}
+
+/* ============================================================
+ * INS-EDU-03 — IMES Universidad. PROPUESTA de Sintropía Social, pendiente
+ * de revisión y aprobación de David Salgado López (a diferencia de IMES
+ * Preparatoria, aquí él no entregó un instrumento ya armado — solo las 3
+ * dimensiones y sus descripciones — así que este banco de reactivos (18
+ * ítems, 6 preguntas cualitativas y 3 de cierre) es un borrador razonado a
+ * partir de esas 3 dimensiones, siguiendo el mismo formato que IMES
+ * Preparatoria. No activar en producción sin que David lo revise primero.
+ * Escala cuantitativa: 1 Nunca · 2 Casi nunca · 3 A veces · 4 Casi siempre
+ * · 5 Siempre.
+ * ============================================================ */
+var OPCIONES_LIKERT = ['Nunca', 'Casi nunca', 'A veces', 'Casi siempre', 'Siempre'];
+
+var SECCIONES_UNI = [
+  {
+    clave: 'social', nombre: 'Habilidades sociales (socioemocionales)',
+    teoria: 'Cómo se desenvuelve la persona en sus relaciones y contextos de trabajo: comunicación, manejo emocional y resolución de conflictos en entornos académicos y profesionales.',
+    items: [
+      'Me comunico con claridad y seguridad en contextos académicos y profesionales (exposiciones, reuniones, trabajos en equipo).',
+      'Escucho activamente los puntos de vista de mis compañeros/as y profesores/as, aunque difieran del mío.',
+      'Manejo mis emociones de forma adecuada en situaciones de presión académica o laboral (exámenes, entregas, prácticas profesionales).',
+      'Puedo dar y recibir retroalimentación de forma constructiva.',
+      'Establezco y mantengo relaciones profesionales de manera efectiva (compañeros, profesores, jefes de prácticas).',
+      'Resuelvo conflictos interpersonales buscando soluciones, no solo "ganar" la discusión.'
+    ],
+    cualitativas: [
+      { id: 'Q1', texto: 'Describe una situación de trabajo en equipo (escolar o laboral) donde tuviste que manejar un desacuerdo. ¿Qué hiciste?' },
+      { id: 'Q2', texto: '¿En qué situaciones sociales o de equipo sientes menos seguridad? ¿Por qué?' }
+    ]
+  },
+  {
+    clave: 'empleabilidad', nombre: 'Empleabilidad',
+    teoria: 'Recursos y habilidades relacionados con su incorporación al mercado laboral: claridad de objetivo, materiales profesionales y conocimiento del mercado.',
+    items: [
+      'Tengo claro el tipo de puesto o área profesional en la que quiero iniciar mi trayectoria laboral.',
+      'Mi CV y/o portafolio están actualizados y reflejan mi formación y experiencia reales.',
+      'Conozco cómo funciona el mercado laboral de mi carrera (empresas, sueldos de entrada, requisitos).',
+      'He realizado (o estoy realizando) prácticas profesionales, servicio social o proyectos vinculados a mi área.',
+      'Sé cómo prepararme para un proceso de selección (entrevistas, pruebas psicométricas, dinámicas grupales).',
+      'Utilizo activamente redes de contacto (profesores, egresados, LinkedIn) para buscar oportunidades.'
+    ],
+    cualitativas: [
+      { id: 'Q3', texto: '¿Qué experiencia (escolar, de prácticas o laboral) sientes que más te ha preparado para el mercado laboral? ¿Por qué?' },
+      { id: 'Q4', texto: '¿Qué es lo que más te preocupa sobre tu incorporación al mercado laboral al terminar la carrera?' }
+    ]
+  },
+  {
+    clave: 'tecnica', nombre: 'Habilidades técnicas',
+    teoria: 'Aspectos relacionados con su preparación para desempeñarse profesionalmente: dominio de herramientas, aplicación práctica del conocimiento y actualización continua.',
+    items: [
+      'Domino las herramientas y software que se usan comúnmente en mi área profesional.',
+      'Puedo aplicar los conocimientos teóricos de mi carrera a problemas prácticos y reales.',
+      'Busco actualizarme por cuenta propia en temas técnicos de mi disciplina (cursos, certificaciones, tutoriales).',
+      'Tengo un manejo adecuado del idioma inglés (u otro relevante) para mi área profesional.',
+      'Sé usar herramientas digitales básicas de productividad y colaboración (hojas de cálculo, gestión de proyectos, videoconferencia).',
+      'Me siento preparado/a técnicamente para desempeñar un primer puesto en mi área.'
+    ],
+    cualitativas: [
+      { id: 'Q5', texto: 'Describe un proyecto académico o práctico donde hayas aplicado tus conocimientos técnicos de forma concreta.' },
+      { id: 'Q6', texto: '¿Qué habilidad técnica sientes que te falta desarrollar antes de egresar?' }
+    ]
+  }
+];
+var CIERRE_UNI = [
+  { id: 'CF1', texto: 'De todo lo que respondiste, ¿qué fue lo que más te hizo reflexionar sobre tu preparación profesional?' },
+  { id: 'CF2', texto: 'Si pudieras cambiar una cosa de tu formación universitaria para salir mejor preparado/a al mercado laboral, ¿qué sería?' },
+  { id: 'CF3', texto: '¿Hay algo sobre tu trayectoria, contexto o aspiraciones profesionales que este instrumento no haya preguntado y que quisieras compartir?' }
+];
+
+var qs = {}; try { qs = Object.fromEntries(new URLSearchParams(location.search)); } catch (e) {}
+var TOKEN = qs.t || '';
+
+// paso: 'cargando' | 'error' | 'yaCompletado' | 'intake' | 0..5 (secciones) | 'cierre' | 'enviando' | 'gracias'
+var state = { paso: 'cargando', participante: null, identidad: {}, respuestas: {}, cualitativas: {}, inicio: null };
+var app = document.getElementById('app');
+var TOTAL_PASOS_CUESTIONARIO = SECCIONES_UNI.length + 1; // + cierre
+
+function progresoHtml(actual) {
+  var html = '<div class="progreso">';
+  for (var i = 0; i < TOTAL_PASOS_CUESTIONARIO; i++) {
+    var cls = i < actual ? 'hecho' : (i === actual ? 'actual' : '');
+    html += '<div class="paso ' + cls + '"></div>';
+  }
+  return html + '</div>';
+}
+
+function render() {
+  if (state.paso === 'cargando') return renderCargando();
+  if (state.paso === 'error') return renderError();
+  if (state.paso === 'yaCompletado') return renderYaCompletado();
+  if (state.paso === 'intake') return renderIntake();
+  if (state.paso === 'cierre') return renderCierre();
+  if (state.paso === 'enviando') return renderEnviando();
+  if (state.paso === 'gracias') return renderGracias();
+  return renderSeccion(state.paso);
+}
+
+function renderCargando() {
+  app.innerHTML = '<div class="spinner"></div><p class="subtle" style="text-align:center">Cargando tu aplicación...</p>';
+}
+function renderError() {
+  app.innerHTML = '<h1>Liga no válida</h1><p>Esta liga ya no está disponible o no existe. Si crees que es un error, contacta a tu escuela o a ' +
+    '<a href="mailto:contacto@sintropiasocial.com">contacto@sintropiasocial.com</a>.</p>';
+}
+function renderYaCompletado() {
+  app.innerHTML = '<h1>Ya completaste esta aplicación</h1><p>Gracias por tu participación — tu resultado e interpretación ya fueron enviados a tu correo. Si no lo encuentras, revisa spam o escribe a <a href="mailto:contacto@sintropiasocial.com">contacto@sintropiasocial.com</a>.</p>';
+}
+
+function renderIntake() {
+  var d = state.identidad;
+  app.innerHTML =
+    '<h1>Antes de empezar</h1>' +
+    '<p class="subtle">IMES Universidad. No es un examen, no hay respuestas correctas o incorrectas: nos interesa cómo percibes tu propia preparación para incorporarte al mercado laboral. Tus respuestas son confidenciales.</p>' +
+    '<div id="secMsg"></div>' +
+    '<label>Nombre(s) <span class="req">*</span></label><input type="text" id="iNombre" value="' + escapeHtml(d.nombre || '') + '">' +
+    '<label>Apellido(s)</label><input type="text" id="iApellido" value="' + escapeHtml(d.apellido || '') + '">' +
+    '<label>Correo electrónico <span class="req">*</span></label><input type="email" id="iCorreo" placeholder="tucorreo@ejemplo.com" value="' + escapeHtml(d.correo || '') + '">' +
+    '<label>Escuela (opcional)</label><input type="text" id="iEscuela" value="' + escapeHtml(d.escuela || '') + '">' +
+    '<div class="fila-botones"><button class="primary" id="btnSiguiente">Comenzar →</button></div>';
+  document.getElementById('btnSiguiente').onclick = function () {
+    var msgBox = document.getElementById('secMsg');
+    var nombre = document.getElementById('iNombre').value.trim();
+    var correo = document.getElementById('iCorreo').value.trim();
+    if (!nombre) { msgBox.innerHTML = '<div class="msg error">Escribe tu nombre.</div>'; return; }
+    if (!correo || correo.indexOf('@') === -1) { msgBox.innerHTML = '<div class="msg error">Escribe un correo electrónico válido — ahí recibirás tu resultado.</div>'; return; }
+    state.identidad = { nombre: nombre, apellido: document.getElementById('iApellido').value.trim(), correo: correo, escuela: document.getElementById('iEscuela').value.trim() };
+    state.paso = 0;
+    state.inicio = state.inicio || Date.now();
+    render();
+  };
+}
+
+function renderSeccion(idx) {
+  var sec = SECCIONES_UNI[idx];
+  var resp = state.respuestas[sec.clave] || (state.respuestas[sec.clave] = {});
+  var cual = state.cualitativas;
+  var itemsHtml = sec.items.map(function (it, i) {
+    var texto = typeof it === 'string' ? it : it.texto;
+    var valorActual = resp[i];
+    return '<div class="item-likert">' +
+      '<div class="item-texto">' + (i + 1) + '. ' + escapeHtml(texto) + '</div>' +
+      '<div class="escala-likert">' + OPCIONES_LIKERT.map(function (op, n) {
+        var v = n + 1;
+        return '<div class="op-likert' + (valorActual === v ? ' marcada' : '') + '" data-item="' + i + '" data-valor="' + v + '"><span class="num">' + v + '</span>' + op + '</div>';
+      }).join('') + '</div></div>';
+  }).join('');
+  var cualHtml = sec.cualitativas.map(function (q) {
+    return '<div class="pregunta-cualitativa"><label>' + escapeHtml(q.texto) + '</label>' +
+      '<textarea data-q="' + q.id + '">' + escapeHtml(cual[q.id] || '') + '</textarea></div>';
+  }).join('');
+
+  app.innerHTML =
+    progresoHtml(idx) +
+    '<h2>' + (idx + 1) + '. ' + escapeHtml(sec.nombre) + '</h2>' +
+    '<div class="teoria">' + escapeHtml(sec.teoria) + '</div>' +
+    '<p class="subtle">Marca qué tan frecuentemente haces o experimentas cada cosa: 1 Nunca · 2 Casi nunca · 3 A veces · 4 Casi siempre · 5 Siempre.</p>' +
+    '<div id="secMsg"></div>' +
+    itemsHtml +
+    '<h3>Para responder con tus propias palabras</h3>' +
+    cualHtml +
+    '<div class="fila-botones">' +
+      (idx > 0 ? '<button class="secondary" id="btnAtras">← Atrás</button>' : '') +
+      '<button class="primary" id="btnSiguiente">Continuar →</button>' +
+    '</div>';
+
+  app.querySelectorAll('.op-likert').forEach(function (el) {
+    el.onclick = function () {
+      var i = Number(el.getAttribute('data-item')), v = Number(el.getAttribute('data-valor'));
+      resp[i] = v;
+      app.querySelectorAll('.item-likert').forEach(function (bloque, bi) {
+        if (bi !== i) return;
+        bloque.querySelectorAll('.op-likert').forEach(function (o) {
+          o.classList.toggle('marcada', Number(o.getAttribute('data-valor')) === v);
+        });
+      });
+    };
+  });
+  app.querySelectorAll('textarea[data-q]').forEach(function (ta) {
+    ta.oninput = function () { cual[ta.getAttribute('data-q')] = ta.value; };
+  });
+  if (idx > 0) document.getElementById('btnAtras').onclick = function () { state.paso = idx - 1; render(); };
+  document.getElementById('btnSiguiente').onclick = function () {
+    var faltan = sec.items.some(function (it, i) { return resp[i] == null; });
+    if (faltan) { document.getElementById('secMsg').innerHTML = '<div class="msg error">Responde las ' + sec.items.length + ' preguntas de esta sección antes de continuar.</div>'; return; }
+    state.paso = (idx + 1 < SECCIONES_UNI.length) ? (idx + 1) : 'cierre';
+    render();
+  };
+}
+
+function renderCierre() {
+  var cual = state.cualitativas;
+  var html = CIERRE_UNI.map(function (q) {
+    return '<div class="pregunta-cualitativa"><label>' + escapeHtml(q.texto) + '</label>' +
+      '<textarea data-q="' + q.id + '">' + escapeHtml(cual[q.id] || '') + '</textarea></div>';
+  }).join('');
+  app.innerHTML =
+    progresoHtml(SECCIONES_UNI.length) +
+    '<h2>Cierre y reflexión final</h2>' +
+    '<p class="subtle">Has llegado al final del instrumento. Antes de cerrar, tómate un momento para responder estas últimas preguntas de manera libre.</p>' +
+    html +
+    '<div class="fila-botones"><button class="secondary" id="btnAtras">← Atrás</button><button class="primary" id="btnEnviar">Enviar mis respuestas</button></div>';
+  app.querySelectorAll('textarea[data-q]').forEach(function (ta) { ta.oninput = function () { cual[ta.getAttribute('data-q')] = ta.value; }; });
+  document.getElementById('btnAtras').onclick = function () { state.paso = SECCIONES_UNI.length - 1; render(); };
+  document.getElementById('btnEnviar').onclick = enviarAplicacion;
+}
+
+function renderEnviando() {
+  app.innerHTML = '<div class="spinner"></div><p class="subtle" style="text-align:center">Enviando tus respuestas...</p>';
+}
+function renderGracias() {
+  app.innerHTML = '<h1>¡Gracias por tu participación!</h1>' +
+    '<p>Tus respuestas son valiosas para que tu universidad comprenda mejor cómo están saliendo preparados los estudiantes y pueda orientar mejor la vinculación profesional.</p>' +
+    '<p class="subtle">En los próximos minutos recibirás por correo tu resultado y una interpretación — revisa también tu carpeta de spam.</p>' +
+    '<p class="subtle" style="margin-top:20px">— Sintropía Social, México 2025 —</p>';
+}
+
+function promedioSeccion(sec, resp) {
+  var vals = sec.items.map(function (it, i) {
+    var v = resp[i];
+    if (v == null) return null;
+    var inverso = typeof it === 'object' && it.inverso;
+    return inverso ? (6 - v) : v;
+  }).filter(function (v) { return v != null; });
+  if (!vals.length) return null;
+  return Math.round((vals.reduce(function (a, b) { return a + b; }, 0) / vals.length) * 100) / 100;
+}
+
+function enviarAplicacion() {
+  state.paso = 'enviando';
+  render();
+  var dimensiones = SECCIONES_UNI.map(function (sec) {
+    return { clave: sec.clave, nombre: sec.nombre, promedio: promedioSeccion(sec, state.respuestas[sec.clave] || {}) };
+  });
+  var tiempoRespuestaMin = state.inicio ? Math.round(((Date.now() - state.inicio) / 60000) * 10) / 10 : '';
+  var params = {
+    familia: 'EDU03', token: TOKEN,
+    dimensiones: JSON.stringify(dimensiones),
+    respuestasCualitativas: JSON.stringify(state.cualitativas),
+    tiempoRespuestaMin: tiempoRespuestaMin
+  };
+  if (state.identidad.nombre) {
+    params.nombre = state.identidad.nombre; params.apellido = state.identidad.apellido || '';
+    params.correo = state.identidad.correo; params.escuela = state.identidad.escuela || '';
+  }
+  jsonpPost('aplicarEDU03', params, 30000).then(function (res) {
+    if (!res || !res.ok) {
+      state.paso = 'cierre';
+      render();
+      var err = document.createElement('div');
+      err.className = 'msg error';
+      err.textContent = (res && res.error) || 'No se pudo enviar. Intenta de nuevo.';
+      app.insertBefore(err, app.firstChild);
+      return;
+    }
+    state.paso = 'gracias';
+    render();
+  });
+}
+
+(function iniciar() {
+  if (!TOKEN) { state.paso = 'error'; render(); return; }
+  jsonp('consultarParticipanteEDU03', { token: TOKEN }).then(function (res) {
+    if (!res || !res.ok) { state.paso = 'error'; render(); return; }
+    state.participante = res;
+    if (res.yaCompletado) { state.paso = 'yaCompletado'; render(); return; }
+    state.inicio = Date.now();
+    if (res.roster) {
+      state.identidad = { nombre: res.nombre, apellido: res.apellido, correo: res.correo, escuela: res.escuela };
+      state.paso = 0;
+    } else {
+      state.paso = 'intake';
+    }
+    render();
+  });
+})();
+</script>
+</body>
+</html>

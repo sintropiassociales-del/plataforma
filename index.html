@@ -2023,6 +2023,51 @@ var INSTRUMENTOS = {
       { key: 'escuela', label: 'Escuela / institución', tipo: 'text' }
     ]
   },
+  edu02: {
+    familia: 'EDU',
+    titulo: 'INS-EDU-02 IMES Preparatoria (aplicación completa)',
+    soloTipoProyecto: 'Educación',
+    // Misma vista propia que EDU01 (renderInstrumentoAplicacionEdu), genérica
+    // sobre familia — "campos" se define solo para que abrirModalImportar
+    // (CSV/Excel de roster) pueda mapear columnas.
+    especial: true,
+    listar: 'listarEDU02Participantes', eliminar: 'eliminarParticipanteEDU02',
+    campos: [
+      { key: 'nombre', label: 'Nombre *', tipo: 'text', requerido: true },
+      { key: 'apellido', label: 'Apellido', tipo: 'text' },
+      { key: 'correo', label: 'Correo *', tipo: 'text', requerido: true },
+      { key: 'telefono', label: 'Teléfono', tipo: 'text' },
+      { key: 'escuela', label: 'Escuela / institución', tipo: 'text' }
+    ]
+  },
+  edu03: {
+    familia: 'EDU',
+    titulo: 'INS-EDU-03 IMES Universidad (aplicación completa)',
+    soloTipoProyecto: 'Educación',
+    especial: true,
+    listar: 'listarEDU03Participantes', eliminar: 'eliminarParticipanteEDU03',
+    campos: [
+      { key: 'nombre', label: 'Nombre *', tipo: 'text', requerido: true },
+      { key: 'apellido', label: 'Apellido', tipo: 'text' },
+      { key: 'correo', label: 'Correo *', tipo: 'text', requerido: true },
+      { key: 'telefono', label: 'Teléfono', tipo: 'text' },
+      { key: 'escuela', label: 'Escuela / institución', tipo: 'text' }
+    ]
+  },
+  edu04: {
+    familia: 'EDU',
+    titulo: 'INS-EDU-04 Estoy buscando empleo (aplicación completa)',
+    soloTipoProyecto: 'Educación',
+    especial: true,
+    listar: 'listarEDU04Participantes', eliminar: 'eliminarParticipanteEDU04',
+    campos: [
+      { key: 'nombre', label: 'Nombre *', tipo: 'text', requerido: true },
+      { key: 'apellido', label: 'Apellido', tipo: 'text' },
+      { key: 'correo', label: 'Correo *', tipo: 'text', requerido: true },
+      { key: 'telefono', label: 'Teléfono', tipo: 'text' },
+      { key: 'escuela', label: 'Escuela / institución', tipo: 'text' }
+    ]
+  },
   imes: {
     familia: 'EVA',
     titulo: 'INS-IMES Empleabilidad Social',
@@ -2328,7 +2373,10 @@ var INSTRUMENTOS_INSTALABLES = [
   { clave: 'MUESTRASWEB', nombre: 'Muestras web — Respuestas completas de las muestras públicas gratuitas (Diagnóstico, Semáforo SE, Territorio, IMES, IMES-U, Búsqueda de empleo, Diseño instruccional), no ligada a un proyecto' },
   { clave: 'IMES', nombre: 'INS-IMES — Instrumento de Medición de Empleabilidad Social (autoevaluación aplicada en papel)', especial: true },
   { clave: 'IMESU', nombre: 'INS-IMES-U — Instrumento de Medición de Empleabilidad Social Universitaria (autoevaluación aplicada en papel)', especial: true },
-  { clave: 'EDU01', nombre: 'INS-EDU-01 — Simulador de empleabilidad "Tres puertas al trabajo" (solo proyectos de tipo Educación)', tipos: ['edu01'] }
+  { clave: 'EDU01', nombre: 'INS-EDU-01 — Simulador de empleabilidad "Tres puertas al trabajo" (solo proyectos de tipo Educación)', tipos: ['edu01'] },
+  { clave: 'EDU02', nombre: 'INS-EDU-02 — IMES Preparatoria, aplicación digital completa (solo proyectos de tipo Educación)', tipos: ['edu02'] },
+  { clave: 'EDU03', nombre: 'INS-EDU-03 — IMES Universidad, aplicación digital completa (solo proyectos de tipo Educación)', tipos: ['edu03'] },
+  { clave: 'EDU04', nombre: 'INS-EDU-04 — Estoy buscando empleo, aplicación digital completa (solo proyectos de tipo Educación)', tipos: ['edu04'] }
 ];
 
 /* ============================================================
@@ -2797,7 +2845,7 @@ function renderProyectoDetalle() {
 
 // 'edu01' tiene su propio fetch dentro de renderInstrumentoEDU01 (no usa
 // state.filas/cargarInstrumento — ver ahí), así que no se gestiona aquí.
-var INSTRUMENTOS_CARGA_PROPIA = ['edu01'];
+var INSTRUMENTOS_CARGA_PROPIA = ['edu01', 'edu02', 'edu03', 'edu04'];
 
 // Carga los datos de una pestaña de instrumento la primera vez que se
 // visita dentro del proyecto activo, y no antes — ver el comentario en
@@ -2823,6 +2871,9 @@ function renderInstrumento(tipo) {
   var box = document.getElementById('subContent');
   if (!box) return;
   if (tipo === 'edu01') { renderInstrumentoEDU01(); return; }
+  if (tipo === 'edu02') { renderInstrumentoAplicacionEdu('EDU02'); return; }
+  if (tipo === 'edu03') { renderInstrumentoAplicacionEdu('EDU03'); return; }
+  if (tipo === 'edu04') { renderInstrumentoAplicacionEdu('EDU04'); return; }
   if (state.filas[tipo] === null || state.filas[tipo] === undefined) { box.innerHTML = '<p class="subtle">Cargando…</p>'; return; }
   if (tipo === 'imes') { renderInstrumentoIMES(); return; }
   if (tipo === 'imesu') { renderInstrumentoIMESU(); return; }
@@ -3991,6 +4042,247 @@ function abrirModalProgramarEnvioEDU() {
     if (!rr.ok) { msgBox.innerHTML = '<div class="msg error">' + escapeHtml(rr.error) + '</div>'; return; }
     msgBox.innerHTML = '<div class="msg ok">' + escapeHtml(rr.msg) + '</div>';
     setTimeout(function () { modal.remove(); renderInstrumentoEDU01(); }, 1500);
+  };
+}
+
+/* ============================================================
+ * INS-EDU-02 / INS-EDU-03 / INS-EDU-04 — Aplicación digital masiva de
+ * IMES Preparatoria, IMES Universidad y "Estoy buscando empleo"
+ * ------------------------------------------------------------
+ * Generaliza el mismo patrón de vista de INS-EDU-01 sobre los 3
+ * instrumentos nuevos, parametrizado por "familia" — ver WebApp.gs
+ * (EDU_FAMILIAS_APLICACION) para la contraparte del servidor. A
+ * diferencia de EDU-01, aquí hay DOS formas de sumar participantes
+ * (roster por CSV/Excel, o ligas anónimas por cantidad) y un reporte
+ * agregado por proyecto.
+ * ============================================================ */
+var FAMILIAS_APLICACION_EDU = {
+  EDU02: { tipo: 'edu02', pagina: 'aplicacion_imes_prepa.html', nombre: 'INS-EDU-02 — IMES Preparatoria' },
+  EDU03: { tipo: 'edu03', pagina: 'aplicacion_imes_universidad.html', nombre: 'INS-EDU-03 — IMES Universidad' },
+  EDU04: { tipo: 'edu04', pagina: 'aplicacion_busqueda_empleo.html', nombre: 'INS-EDU-04 — Estoy buscando empleo' }
+};
+// Mismo criterio que _urlBaseJuegoEDU: construir la URL pública a partir de
+// dónde vive este index.html, para no depender de un dominio fijo. Las 3
+// páginas de aplicación deben subirse junto a index.html en GitHub Pages.
+function _urlBaseAplicacionEdu(familia) {
+  var base = location.href.replace(/index\.html(\?.*)?(#.*)?$/, '').replace(/\/?$/, '/');
+  return base + FAMILIAS_APLICACION_EDU[familia].pagina;
+}
+
+async function renderInstrumentoAplicacionEdu(familia) {
+  var cfgFam = FAMILIAS_APLICACION_EDU[familia];
+  var box = document.getElementById('subContent');
+  if (!box) return;
+  box.innerHTML = '<p class="subtle">Cargando participantes...</p>';
+  var r = await api('listar' + familia + 'Participantes', { proyecto: state.proyectoActivo.codigo });
+  var filas = r.ok ? r.data : [];
+  if (!r.ok) { box.innerHTML = '<div class="msg error">' + escapeHtml(r.error || 'No se pudo cargar.') + '</div>'; return; }
+
+  var pendientesConLiga = filas.filter(function (f) { return f.liga && f.estatusEnvio === 'Pendiente'; }).length;
+  var sinLiga = filas.filter(function (f) { return !f.liga; }).length;
+  var completadas = filas.filter(function (f) { return f.estatusAplicacion === 'Completado'; }).length;
+
+  var thead = '<tr><th>Nombre</th><th>Correo</th><th>Escuela</th><th>Liga</th><th>Envío</th><th>Aplicación</th><th>Reflexión</th><th></th></tr>';
+  var trs = filas.map(function (f) {
+    var nombreMostrar = (f.nombre || f.apellido) ? escapeHtml((f.nombre || '') + ' ' + (f.apellido || '')) : '<span class="subtle">(liga anónima, sin usar)</span>';
+    return '<tr>' +
+      '<td>' + nombreMostrar + '</td>' +
+      '<td>' + escapeHtml(f.correo || '—') + '</td>' +
+      '<td>' + escapeHtml(f.escuela || '—') + '</td>' +
+      '<td>' + (f.liga ? '<button class="small secondary btnCopiarLigaEdu" data-liga="' + escapeHtml(f.liga) + '">Copiar liga</button>' : '<span class="subtle">Sin generar</span>') + '</td>' +
+      '<td>' + escapeHtml(f.estatusEnvio || '—') + '</td>' +
+      '<td>' + escapeHtml(f.estatusAplicacion || '—') + '</td>' +
+      '<td>' + escapeHtml(f.reflexionEnviada || 'No') + '</td>' +
+      '<td><button class="small del" data-codigo="' + f.codigo + '">Eliminar</button></td></tr>';
+  }).join('');
+
+  box.innerHTML =
+    '<p class="subtle">' + escapeHtml(cfgFam.nombre) + ' solo aplica a proyectos de tipo "Educación". Puedes sumar participantes por roster (CSV/Excel con nombre y correo — se les manda su liga por correo) o generar ligas anónimas por cantidad (la escuela las reparte y cada quien captura su nombre y correo al aplicar).</p>' +
+    '<div class="toolbar" style="justify-content:space-between;flex-wrap:wrap;gap:8px">' +
+      '<div style="display:flex;gap:8px;flex-wrap:wrap">' +
+        '<button class="secondary" id="btnImportarEdu">Importar CSV / Excel (roster)</button>' +
+        '<button class="secondary" id="btnAnonimosEdu">Generar ligas por cantidad</button>' +
+        '<button class="secondary" id="btnGenerarLigasEdu">Generar ligas' + (sinLiga ? ' (' + sinLiga + ' pendiente(s))' : '') + '</button>' +
+        '<button class="secondary" id="btnDescargarLigasEdu">Descargar ligas (CSV/Excel)</button>' +
+        '<button class="secondary" id="btnReporteEdu">Ver reporte' + (completadas ? ' (' + completadas + ' completada(s))' : '') + '</button>' +
+      '</div>' +
+      '<button class="primary" id="btnProgramarEnvioEdu" style="margin-top:0"' + (pendientesConLiga ? '' : ' disabled') + '>Programar envío (' + pendientesConLiga + ' listo(s))</button>' +
+    '</div>' +
+    '<div id="eduMsg"></div>' +
+    (filas.length === 0
+      ? '<p class="subtle">Todavía no hay participantes. Importa un CSV/Excel (columnas Nombre, Apellido, Correo, Teléfono, Escuela / institución) o genera ligas anónimas por cantidad. Acepta hasta 1000 participantes por proyecto.</p>'
+      : '<div style="overflow-x:auto"><table><thead>' + thead + '</thead><tbody>' + trs + '</tbody></table></div>');
+
+  document.getElementById('btnImportarEdu').onclick = function () {
+    abrirModalImportar(cfgFam.tipo, { proyecto: state.proyectoActivo.codigo, alTerminar: function () { return renderInstrumentoAplicacionEdu(familia); } });
+  };
+  document.getElementById('btnAnonimosEdu').onclick = function () { abrirModalGenerarAnonimosEdu(familia); };
+  document.getElementById('btnGenerarLigasEdu').onclick = async function () {
+    var btn = this; btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Generando...';
+    var rr = await api('generarLigas' + familia, { proyecto: state.proyectoActivo.codigo, baseUrl: _urlBaseAplicacionEdu(familia) });
+    var msgBox = document.getElementById('eduMsg');
+    if (msgBox) msgBox.innerHTML = rr.ok ? '<div class="msg ok">' + escapeHtml(rr.msg) + '</div>' : '<div class="msg error">' + escapeHtml(rr.error) + '</div>';
+    await renderInstrumentoAplicacionEdu(familia);
+  };
+  document.getElementById('btnDescargarLigasEdu').onclick = async function () { await descargarLigasAplicacionEdu(familia); };
+  document.getElementById('btnReporteEdu').onclick = function () { abrirModalReporteAplicacionEdu(familia); };
+  document.getElementById('btnProgramarEnvioEdu').onclick = function () { abrirModalProgramarEnvioAplicacionEdu(familia); };
+  Array.prototype.forEach.call(box.querySelectorAll('.btnCopiarLigaEdu'), function (b) {
+    b.onclick = function () {
+      navigator.clipboard.writeText(b.getAttribute('data-liga')).then(function () {
+        var t = b.textContent; b.textContent = 'Copiado ✓'; setTimeout(function () { b.textContent = t; }, 2000);
+      });
+    };
+  });
+  Array.prototype.forEach.call(box.querySelectorAll('button.del'), function (b) {
+    b.onclick = async function () {
+      if (!confirm('¿Eliminar este participante? No se puede deshacer.')) return;
+      var rr = await api('eliminarParticipante' + familia, { codigo: b.getAttribute('data-codigo') });
+      if (!rr.ok) { alert(rr.error); return; }
+      await renderInstrumentoAplicacionEdu(familia);
+    };
+  });
+}
+
+function abrirModalGenerarAnonimosEdu(familia) {
+  var cfgFam = FAMILIAS_APLICACION_EDU[familia];
+  var modal = el(
+    '<div class="modal-bg"><div class="modal">' +
+      '<h2>Generar ligas por cantidad — ' + escapeHtml(cfgFam.nombre) + '</h2>' +
+      '<p class="subtle">Crea N ligas sin nombre ni correo asignados todavía — cada persona captura su propia identidad al abrir su liga y empezar a responder. Útil cuando la escuela va a repartir las ligas ella misma (por ejemplo, un código QR o una lista impresa) en vez de que la plataforma mande los correos.</p>' +
+      '<label>Cantidad de ligas *</label><input type="text" id="anonCantidad" placeholder="ej. 30">' +
+      '<label>Escuela / institución (opcional, se aplica a todas)</label><input type="text" id="anonEscuela">' +
+      '<div id="anonMsg"></div>' +
+      '<div class="modal-actions">' +
+        '<button class="secondary" id="anonCancelar">Cancelar</button>' +
+        '<button class="primary" id="anonConfirmar">Generar ligas</button>' +
+      '</div>' +
+    '</div></div>'
+  );
+  document.body.appendChild(modal);
+  modal.querySelector('#anonCancelar').onclick = function () { modal.remove(); };
+  modal.querySelector('#anonConfirmar').onclick = async function () {
+    var cantidad = parseInt(modal.querySelector('#anonCantidad').value, 10);
+    var msgBox = modal.querySelector('#anonMsg');
+    if (!cantidad || cantidad < 1) { msgBox.innerHTML = '<div class="msg error">Escribe una cantidad válida.</div>'; return; }
+    var btn = modal.querySelector('#anonConfirmar');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Generando...';
+    var rr = await api('generarParticipantesAnonimos' + familia, {
+      proyecto: state.proyectoActivo.codigo, cantidad: cantidad,
+      escuela: modal.querySelector('#anonEscuela').value.trim(), baseUrl: _urlBaseAplicacionEdu(familia)
+    });
+    btn.disabled = false; btn.textContent = 'Generar ligas';
+    if (!rr.ok) { msgBox.innerHTML = '<div class="msg error">' + escapeHtml(rr.error) + '</div>'; return; }
+    msgBox.innerHTML = '<div class="msg ok">' + escapeHtml(rr.msg) + '</div>';
+    setTimeout(function () { modal.remove(); renderInstrumentoAplicacionEdu(familia); }, 1200);
+  };
+}
+
+async function descargarLigasAplicacionEdu(familia) {
+  var cfgFam = FAMILIAS_APLICACION_EDU[familia];
+  var rr = await api('descargarLigas' + familia, { proyecto: state.proyectoActivo.codigo });
+  if (!rr.ok) { alert(rr.error || 'No se pudo generar el archivo.'); return; }
+  if (!rr.data.length) { alert('Todavía no hay ligas que descargar.'); return; }
+  try {
+    await _cargarXLSX();
+    var filas = rr.data.map(function (f) {
+      return {
+        'Código': f.codigo, 'Nombre': f.nombre || '', 'Apellido': f.apellido || '', 'Correo': f.correo || '',
+        'Escuela / institución': f.escuela || '', 'Liga': f.liga || '', 'Estatus de aplicación': f.estatusAplicacion || ''
+      };
+    });
+    var ws = XLSX.utils.json_to_sheet(filas);
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Ligas');
+    XLSX.writeFile(wb, 'Ligas_' + familia + '_' + state.proyectoActivo.codigo + '.xlsx');
+  } catch (e) {
+    alert(e.message || 'No se pudo generar el archivo Excel.');
+  }
+}
+
+function abrirModalProgramarEnvioAplicacionEdu(familia) {
+  var cfgFam = FAMILIAS_APLICACION_EDU[familia];
+  var modal = el(
+    '<div class="modal-bg"><div class="modal wide">' +
+      '<h2>Programar envío de ligas — ' + escapeHtml(cfgFam.nombre) + '</h2>' +
+      '<p class="subtle">Se manda un correo con la liga personalizada a cada participante con roster (nombre y correo conocidos) que esté pendiente y ya tenga su liga generada — las ligas anónimas por cantidad no reciben correo, se reparten aparte. El envío se reparte en tandas de máximo 50 destinatarios por día, usando la misma cola de "Correos Programados" del CRM.</p>' +
+      '<label>Asunto</label><input type="text" id="eduAsunto" placeholder="Tu aplicación de ' + escapeHtml(cfgFam.nombre) + '">' +
+      '<label>Cuerpo (usa &lt;&lt;Nombre&gt;&gt;, &lt;&lt;Liga&gt;&gt;, &lt;&lt;Escuela&gt;&gt;)</label>' +
+      '<textarea id="eduCuerpo" rows="8" placeholder="Hola <<Nombre>>, te compartimos tu liga personalizada: <<Liga>>"></textarea>' +
+      '<div id="eduProgMsg"></div>' +
+      '<div class="modal-actions">' +
+        '<button class="secondary" id="eduProgCancelar">Cancelar</button>' +
+        '<button class="primary" id="eduProgConfirmar">Programar envío</button>' +
+      '</div>' +
+    '</div></div>'
+  );
+  document.body.appendChild(modal);
+  modal.querySelector('#eduProgCancelar').onclick = function () { modal.remove(); };
+  modal.querySelector('#eduProgConfirmar').onclick = async function () {
+    var asunto = modal.querySelector('#eduAsunto').value.trim();
+    var cuerpoTexto = modal.querySelector('#eduCuerpo').value.trim();
+    var msgBox = modal.querySelector('#eduProgMsg');
+    if (!asunto || !cuerpoTexto) { msgBox.innerHTML = '<div class="msg error">Completa asunto y cuerpo.</div>'; return; }
+    var btn = modal.querySelector('#eduProgConfirmar');
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Programando...';
+    var cuerpoHtml = escapeHtml(cuerpoTexto).replace(/\n/g, '<br>')
+      .replace(/&lt;&lt;/g, '<<').replace(/&gt;&gt;/g, '>>');
+    var rr = await api('programarEnvio' + familia, { proyecto: state.proyectoActivo.codigo, asunto: asunto, cuerpo: cuerpoHtml });
+    btn.disabled = false; btn.textContent = 'Programar envío';
+    if (!rr.ok) { msgBox.innerHTML = '<div class="msg error">' + escapeHtml(rr.error) + '</div>'; return; }
+    msgBox.innerHTML = '<div class="msg ok">' + escapeHtml(rr.msg) + '</div>';
+    setTimeout(function () { modal.remove(); renderInstrumentoAplicacionEdu(familia); }, 1500);
+  };
+}
+
+// Reporte agregado por proyecto (No. aplicadas, tiempo de respuesta,
+// resultado por dimensión, análisis cualitativo y recomendaciones con voz +
+// IA, y el "termómetro" de posibilidades de incorporación al mercado
+// laboral) — ver apiReporteAplicacionEdu en WebApp.gs.
+function abrirModalReporteAplicacionEdu(familia) {
+  var cfgFam = FAMILIAS_APLICACION_EDU[familia];
+  var modal = el(
+    '<div class="modal-bg"><div class="modal wide">' +
+      '<h2>Reporte — ' + escapeHtml(cfgFam.nombre) + '</h2>' +
+      '<div id="repBody"><p class="subtle">Calculando resultados...</p></div>' +
+      '<div class="modal-actions">' +
+        '<button class="secondary" id="repCerrar">Cerrar</button>' +
+        '<select id="repFormato" style="margin-right:auto"><option value="pdf">PDF</option><option value="docx">Word</option><option value="gdoc">Google Doc</option><option value="xlsx">Excel (por dimensión)</option><option value="csv">CSV (por dimensión)</option></select>' +
+        '<button class="primary" id="repDescargar">Descargar</button>' +
+      '</div>' +
+    '</div></div>'
+  );
+  document.body.appendChild(modal);
+  modal.querySelector('#repCerrar').onclick = function () { modal.remove(); };
+
+  (async function () {
+    var rr = await api('reporte' + familia, { proyecto: state.proyectoActivo.codigo });
+    var body = modal.querySelector('#repBody');
+    if (!rr.ok) { body.innerHTML = '<div class="msg error">' + escapeHtml(rr.error) + '</div>'; return; }
+    var d = rr.data;
+    var colorTermo = { verde: '#1E8449', amarillo: '#B7770A', rojo: '#C0392B', gris: '#6B6B78' }[d.termometro.nivel] || '#6B6B78';
+    var dimsHtml = d.porDimension.map(function (dim) {
+      return '<div style="display:flex;justify-content:space-between;border-top:1px solid #eee;padding:6px 0">' +
+        '<span>' + escapeHtml(dim.nombre) + '</span><span>' + (dim.promedio != null ? (dim.promedio + '/5 (n=' + dim.n + ')') : 'sin datos') + '</span></div>';
+    }).join('');
+    body.innerHTML =
+      '<p><b>Muestras aplicadas:</b> ' + d.noAplicadas + (d.noTotal !== d.noAplicadas ? (' de ' + d.noTotal + ' invitadas') : '') + '</p>' +
+      (d.tiempoPromedioMin != null ? '<p><b>Tiempo promedio en responder:</b> ' + d.tiempoPromedioMin + ' minutos</p>' : '') +
+      '<p><b>Termómetro de posibilidades de incorporación:</b> <span style="color:' + colorTermo + ';font-weight:700">' +
+        (d.promedioGeneral != null ? (d.promedioGeneral + '/5 — ') : '') + escapeHtml(d.termometro.etiqueta) + '</span></p>' +
+      '<h3 style="margin-top:16px">Resultado por dimensión</h3>' + dimsHtml +
+      '<h3 style="margin-top:16px">Análisis cualitativo</h3>' +
+      d.analisisCualitativo.split('\n\n').map(function (p) { return '<p class="subtle">' + escapeHtml(p) + '</p>'; }).join('') +
+      '<h3 style="margin-top:16px">Recomendaciones</h3>' +
+      d.recomendaciones.split('\n\n').map(function (p) { return '<p class="subtle">' + escapeHtml(p) + '</p>'; }).join('');
+  })();
+
+  modal.querySelector('#repDescargar').onclick = async function () {
+    var btn = this; var formato = modal.querySelector('#repFormato').value;
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Generando...';
+    var rr = await api('generarDescargableReporte' + familia, { proyecto: state.proyectoActivo.codigo, formato: formato });
+    btn.disabled = false; btn.textContent = 'Descargar';
+    manejarDescargable(rr);
   };
 }
 
