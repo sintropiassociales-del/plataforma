@@ -4948,21 +4948,33 @@ function _crmInteresadosFiltrados() {
   });
 }
 
+// CRM_Interesados no tiene (a diferencia de Clientes) un campo propio que
+// diga qué muestra completó cada quien — esa información queda mezclada
+// dentro de "Notas" como "[Muestra X] ..." (ver apiCapturarInteresadoMuestra
+// / _anexarNotaInteresado en WebApp.gs). En vez de migrar el Sheet para
+// agregar una columna nueva, basta con detectar esa marca para responder
+// simplemente sí/no — que es todo lo que pidió David para esta tabla.
+function _hizoMuestraInteresado(notas) {
+  return /\[Muestra /.test(String(notas || ''));
+}
+
 function _renderCRMInteresadosResultados() {
   var caja = document.getElementById('crmInteresadosResultados');
   if (!caja) return;
   var filas = _crmInteresadosFiltrados();
   var todosMarcados = filas.length > 0 && filas.every(function (i) { return state.crmInteresadosSeleccion.indexOf(i.codigo) !== -1; });
   var thead = '<tr><th style="width:28px"><input type="checkbox" id="crmSelAllInteresados"' + (todosMarcados ? ' checked' : '') + '></th>' +
-    '<th>Nombre</th><th>Estado</th><th>Municipio</th><th>Interesado en</th><th>Email</th><th></th></tr>';
+    '<th>Nombre</th><th>Estado</th><th>Municipio</th><th>Interesado en</th><th>Muestra</th><th>Email</th><th></th></tr>';
   var trs = filas.map(function (i) {
     var marcado = state.crmInteresadosSeleccion.indexOf(i.codigo) !== -1;
+    var celdaMuestra = _hizoMuestraInteresado(i.notas) ? 'Sí' : '<span class="subtle">No hizo muestra</span>';
     return '<tr>' +
       '<td><input type="checkbox" class="crm-sel-interesado" data-codigo="' + i.codigo + '"' + (marcado ? ' checked' : '') + '></td>' +
       '<td>' + escapeHtml(((i.nombre || '') + ' ' + (i.apellido || '')).trim()) + '</td>' +
       '<td>' + escapeHtml(i.estado || '—') + '</td>' +
       '<td>' + escapeHtml(i.municipio || '—') + '</td>' +
       '<td>' + escapeHtml(i.interes || '—') + '</td>' +
+      '<td>' + celdaMuestra + '</td>' +
       '<td>' + escapeHtml(i.email || '—') + '</td>' +
       '<td><button class="small edit" data-codigo="' + i.codigo + '">Editar</button> ' +
         '<button class="small del" data-codigo="' + i.codigo + '">Eliminar</button></td>' +
