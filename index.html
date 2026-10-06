@@ -4644,7 +4644,7 @@ function _renderCRMClientesResultados() {
   // correo, sin tener que ir página por página.
   var todosMarcados = lista.length > 0 && lista.every(function (c) { return state.crmClientesSeleccion.indexOf(c.codigo) !== -1; });
   var thead = '<tr><th style="width:28px"><input type="checkbox" id="crmSelAllClientes"' + (todosMarcados ? ' checked' : '') + '></th>' +
-    '<th>Organización</th><th>Categoría</th><th>Contacto</th><th>Estatus</th><th>Último seguimiento</th><th></th></tr>';
+    '<th>Organización</th><th>Categoría</th><th>Contacto</th><th>Estatus</th><th>Muestra</th><th>Último seguimiento</th><th></th></tr>';
   var trs = listaPagina.map(function (c) {
     var ultimo = _ultimoSeguimientoDe(c.codigo);
     var celdaUltimo;
@@ -4655,6 +4655,14 @@ function _renderCRMClientesResultados() {
       celdaUltimo = '<strong>' + escapeHtml(ultimo.fecha) + '</strong>' +
         (notasCorta ? '<br><span class="subtle">' + escapeHtml(notasCorta) + '</span>' : '');
     }
+    // "Muestra" = el campo "leadMagnet" ya existente en CRM_Clientes — se
+    // llena solo cuando el prospecto llegó (o volvió) completando una
+    // muestra pública (ver apiCapturarClienteDiagnostico / leadMagnet en el
+    // modal de edición), así que no hizo falta agregar ninguna columna
+    // nueva al Sheet. Vacío = nunca completó una muestra.
+    var celdaMuestra = c.leadMagnet
+      ? escapeHtml(c.leadMagnet)
+      : '<span class="subtle">No hizo muestra</span>';
     var marcado = state.crmClientesSeleccion.indexOf(c.codigo) !== -1;
     return '<tr>' +
       '<td><input type="checkbox" class="crm-sel-cliente" data-codigo="' + c.codigo + '"' + (marcado ? ' checked' : '') + '></td>' +
@@ -4662,6 +4670,7 @@ function _renderCRMClientesResultados() {
       '<td>' + escapeHtml(c.categoria || '—') + '</td>' +
       '<td>' + escapeHtml(c.nombreContacto || '—') + '</td>' +
       '<td>' + _badgeEstatusCRM(c.estatus) + '</td>' +
+      '<td>' + celdaMuestra + '</td>' +
       '<td>' + celdaUltimo + '</td>' +
       '<td><button class="small" data-ver="' + c.codigo + '">Ver / seguimientos</button> ' +
         '<button class="small del" data-del="' + c.codigo + '">Eliminar</button></td>' +
