@@ -2464,34 +2464,36 @@ async function sha256(str) {
   return Array.from(new Uint8Array(buf)).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
 }
 
-function jsonp(action, params) {
+// Manda la acción y sus parámetros por el CUERPO
+// de una petición POST en vez de pegarlos en la URL — Content-Type:
+// text/plain para que el navegador no dispare una petición de
+// verificación (preflight) que Apps Script no sabe responder (mismo
+// patrón ya usado en aplicacion_*.html/juego-sintropia.html). Se usa
+// para TODO lo que llame api() (incluido login/cambiarMiPassword): así
+// la contraseña, el token de sesión y los datos de clientes/proyectos ya
+// no quedan expuestos en la URL (historial del navegador, registros de
+// proxies, encabezado Referer) — ver hallazgo "credenciales por URL" de
+// la auditoría de seguridad.
+function jsonpPost(action, params, timeoutMs) {
   return new Promise(function (resolve) {
-    var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 1e6);
-    var url = WEB_APP_URL + '?action=' + encodeURIComponent(action) + '&callback=' + cbName;
+    var timedOut = false;
+    var timer = setTimeout(function () {
+      timedOut = true;
+      resolve({ ok: false, error: 'La plataforma tardó demasiado en responder. Intenta de nuevo.' });
+    }, timeoutMs || 25000);
+    var body = { action: action };
     params = params || {};
     for (var k in params) {
-      if (params[k] !== undefined && params[k] !== null) {
-        url += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(params[k]);
-      }
+      if (params[k] !== undefined && params[k] !== null) body[k] = params[k];
     }
-    var script = document.createElement('script');
-    var cleaned = false;
-    function cleanup() {
-      if (cleaned) return;
-      cleaned = true;
-      delete window[cbName];
-      if (script.parentNode) script.parentNode.removeChild(script);
-    }
-    window[cbName] = function (data) { cleanup(); resolve(data); };
-    script.onerror = function () {
-      cleanup();
-      resolve({ ok: false, error: 'No se pudo conectar con la plataforma (revisa tu conexión a internet).' });
-    };
-    setTimeout(function () {
-      if (!cleaned) { cleanup(); resolve({ ok: false, error: 'La plataforma tardó demasiado en responder. Intenta de nuevo.' }); }
-    }, 25000);
-    script.src = url;
-    document.body.appendChild(script);
+    fetch(WEB_APP_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
+      .then(function (resp) { return resp.json(); })
+      .then(function (data) { if (timedOut) return; clearTimeout(timer); resolve(data); })
+      .catch(function () {
+        if (timedOut) return;
+        clearTimeout(timer);
+        resolve({ ok: false, error: 'No se pudo conectar con la plataforma (revisa tu conexión a internet).' });
+      });
   });
 }
 
@@ -2499,7 +2501,7 @@ function jsonp(action, params) {
 async function api(action, params) {
   params = params || {};
   params.token = session ? session.token : '';
-  var r = await jsonp(action, params);
+  var r = await jsonpPost(action, params);
   if (!r.ok && r.error && /sesión inválida|expirada/i.test(r.error)) {
     cerrarSesion();
     render();
@@ -2597,7 +2599,7 @@ async function doLogin() {
   btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Entrando...';
 
   var passHash = await sha256(pass);
-  var r = await jsonp('login', { email: email, passHash: passHash });
+  var r = await jsonpPost('login', { email: email, passHash: passHash });
 
   btn.disabled = false; btn.innerHTML = 'Entrar';
 
@@ -4082,12 +4084,24 @@ async function renderInstrumentoAplicacionEdu(familia) {
   var sinLiga = filas.filter(function (f) { return !f.liga; }).length;
   var completadas = filas.filter(function (f) { return f.estatusAplicacion === 'Completado'; }).length;
 
+  // Mismo correo repetido dentro de este proyecto (p. ej. por importar el
+  // mismo archivo dos veces) — se marca en la tabla y se puede limpiar con
+  // "Eliminar duplicados".
+  var conteoCorreos = {};
+  filas.forEach(function (f) {
+    var c = String(f.correo || '').trim().toLowerCase();
+    if (c) conteoCorreos[c] = (conteoCorreos[c] || 0) + 1;
+  });
+  var correosDuplicados = Object.keys(conteoCorreos).filter(function (c) { return conteoCorreos[c] > 1; }).length;
+
   var thead = '<tr><th>Nombre</th><th>Correo</th><th>Escuela</th><th>Liga</th><th>Envío</th><th>Aplicación</th><th>Reflexión</th><th></th></tr>';
   var trs = filas.map(function (f) {
     var nombreMostrar = (f.nombre || f.apellido) ? escapeHtml((f.nombre || '') + ' ' + (f.apellido || '')) : '<span class="subtle">(liga anónima, sin usar)</span>';
-    return '<tr>' +
+    var correoKey = String(f.correo || '').trim().toLowerCase();
+    var esDuplicado = correoKey && conteoCorreos[correoKey] > 1;
+    return '<tr' + (esDuplicado ? ' style="background:#FFF6EC"' : '') + '>' +
       '<td>' + nombreMostrar + '</td>' +
-      '<td>' + escapeHtml(f.correo || '—') + '</td>' +
+      '<td>' + escapeHtml(f.correo || '—') + (esDuplicado ? ' <span class="subtle" style="color:#B7770A" title="Hay más de un participante con este correo en el proyecto">⚠ duplicado</span>' : '') + '</td>' +
       '<td>' + escapeHtml(f.escuela || '—') + '</td>' +
       '<td>' + (f.liga ? '<button class="small secondary btnCopiarLigaEdu" data-liga="' + escapeHtml(f.liga) + '">Copiar liga</button>' : '<span class="subtle">Sin generar</span>') + '</td>' +
       '<td>' + escapeHtml(f.estatusEnvio || '—') + '</td>' +
@@ -4105,6 +4119,7 @@ async function renderInstrumentoAplicacionEdu(familia) {
         '<button class="secondary" id="btnGenerarLigasEdu">Generar ligas' + (sinLiga ? ' (' + sinLiga + ' pendiente(s))' : '') + '</button>' +
         '<button class="secondary" id="btnDescargarLigasEdu">Descargar ligas (CSV/Excel)</button>' +
         '<button class="secondary" id="btnReporteEdu">Ver reporte' + (completadas ? ' (' + completadas + ' completada(s))' : '') + '</button>' +
+        (correosDuplicados ? '<button class="secondary" id="btnDuplicadosEdu" style="border-color:#B7770A;color:#B7770A">Eliminar duplicados (' + correosDuplicados + ')</button>' : '') +
       '</div>' +
       '<button class="primary" id="btnProgramarEnvioEdu" style="margin-top:0"' + (pendientesConLiga ? '' : ' disabled') + '>Programar envío (' + pendientesConLiga + ' listo(s))</button>' +
     '</div>' +
@@ -4126,6 +4141,17 @@ async function renderInstrumentoAplicacionEdu(familia) {
   };
   document.getElementById('btnDescargarLigasEdu').onclick = async function () { await descargarLigasAplicacionEdu(familia); };
   document.getElementById('btnReporteEdu').onclick = function () { abrirModalReporteAplicacionEdu(familia); };
+  var btnDuplicadosEdu = document.getElementById('btnDuplicadosEdu');
+  if (btnDuplicadosEdu) {
+    btnDuplicadosEdu.onclick = async function () {
+      if (!confirm('Se van a eliminar los participantes duplicados de este proyecto (mismo correo), conservando el que tenga más avance. No se puede deshacer. ¿Continuar?')) return;
+      var btn = this; btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Eliminando...';
+      var rr = await api('eliminarDuplicados' + familia, { proyecto: state.proyectoActivo.codigo });
+      var msgBox = document.getElementById('eduMsg');
+      if (msgBox) msgBox.innerHTML = rr.ok ? '<div class="msg ok">' + escapeHtml(rr.msg) + '</div>' : '<div class="msg error">' + escapeHtml(rr.error) + '</div>';
+      await renderInstrumentoAplicacionEdu(familia);
+    };
+  }
   document.getElementById('btnProgramarEnvioEdu').onclick = function () { abrirModalProgramarEnvioAplicacionEdu(familia, filas); };
   Array.prototype.forEach.call(box.querySelectorAll('.btnCopiarLigaEdu'), function (b) {
     b.onclick = function () {
@@ -4270,6 +4296,7 @@ function abrirModalProgramarEnvioAplicacionEdu(familia, filas) {
       '<div id="eduProgMsg"></div>' +
       '<div class="modal-actions">' +
         '<button class="secondary" id="eduProgCancelar">Cancelar</button>' +
+        '<button class="secondary" id="eduVerProgramados" style="margin-right:auto">Ver correos programados</button>' +
         '<button class="primary" id="eduProgConfirmar">Enviar ahora</button>' +
       '</div>' +
     '</div></div>'
@@ -4314,6 +4341,7 @@ function abrirModalProgramarEnvioAplicacionEdu(familia, filas) {
   };
 
   modal.querySelector('#eduProgCancelar').onclick = function () { modal.remove(); };
+  modal.querySelector('#eduVerProgramados').onclick = function () { abrirModalVerCorreosProgramados(); };
   btnConfirmar.onclick = async function () {
     var asunto = asuntoInput.value.trim();
     var cuerpoTexto = cuerpoTa.value.trim();
@@ -4338,6 +4366,47 @@ function abrirModalProgramarEnvioAplicacionEdu(familia, filas) {
     msgBox.innerHTML = '<div class="msg ok">' + escapeHtml(rr.msg) + '</div>';
     setTimeout(function () { modal.remove(); renderInstrumentoAplicacionEdu(familia); }, 1500);
   };
+}
+
+// Mismo listado que usa el correo de Clientes/Interesados (abrirModalEnviarCorreo)
+// pero como función aparte reutilizable, para que el modal de ligas EDU
+// también pueda abrirlo: muestra fecha, tipo, asunto, estatus y — pasando el
+// mouse sobre el ⓘ — el "Resultado" exacto que guardó _procesarCorreosProgramados
+// (cuántos se enviaron, o el mensaje de error si algo falló al mandarlos).
+async function abrirModalVerCorreosProgramados() {
+  var r = await api('listarCorreosProgramados', {});
+  if (!r.ok) { alert(r.error || 'No se pudo cargar la lista.'); return; }
+  var filasHtml = r.data.length
+    ? r.data.map(function (c) {
+        return '<tr>' +
+          '<td>' + escapeHtml(c.fechaProgramada) + '</td>' +
+          '<td>' + escapeHtml(c.tipo) + '</td>' +
+          '<td>' + escapeHtml(c.asunto) + '</td>' +
+          '<td>' + (c.adjuntos || 0) + '</td>' +
+          '<td>' + escapeHtml(c.estatus) + (c.resultado ? ' <span class="subtle" title="' + escapeHtml(c.resultado) + '">ⓘ</span>' : '') + '</td>' +
+          '<td>' + (c.estatus === 'Pendiente' ? '<button type="button" class="small secondary btnCancelarProg" data-codigo="' + escapeHtml(c.codigo) + '">Cancelar</button>' : '') + '</td>' +
+        '</tr>';
+      }).join('')
+    : '<tr><td colspan="6" class="subtle">No hay correos programados.</td></tr>';
+  var modalProg = el(
+    '<div class="modal-bg"><div class="modal wide">' +
+      '<h2>Correos programados</h2>' +
+      '<p class="subtle">El estatus "Pendiente" quiere decir que todavía no llega su fecha/hora de envío, o que el disparador automático (cada 15 min) aún no lo procesa. Pasa el mouse sobre la ⓘ junto al estatus para ver el resultado exacto (cuántos se mandaron, o el error si algo falló).</p>' +
+      '<div style="overflow-x:auto"><table><thead><tr><th>Fecha y hora</th><th>Tipo</th><th>Asunto</th><th>Adjuntos</th><th>Estatus</th><th></th></tr></thead><tbody>' + filasHtml + '</tbody></table></div>' +
+      '<div class="modal-actions"><button class="secondary" id="progCerrar">Cerrar</button></div>' +
+    '</div></div>'
+  );
+  document.body.appendChild(modalProg);
+  modalProg.querySelector('#progCerrar').onclick = function () { modalProg.remove(); };
+  Array.prototype.forEach.call(modalProg.querySelectorAll('.btnCancelarProg'), function (b) {
+    b.onclick = async function () {
+      if (!confirm('¿Cancelar este envío programado?')) return;
+      var rc = await api('cancelarCorreoProgramado', { codigo: b.getAttribute('data-codigo') });
+      if (!rc.ok) { alert(rc.error || 'No se pudo cancelar.'); return; }
+      modalProg.remove();
+      abrirModalVerCorreosProgramados();
+    };
+  });
 }
 
 // Reporte agregado por proyecto (No. aplicadas, tiempo de respuesta,
@@ -4945,7 +5014,15 @@ function _renderCRMInteresadosResultados() {
 function _reemplazarTagsPreview(texto, registro, campos) {
   var resultado = String(texto || '');
   campos.forEach(function (c) {
-    var valor = registro[c.key] != null ? String(registro[c.key]) : '';
+    // escapeHtml() aquí es lo que cierra el hueco de seguridad: "registro"
+    // puede venir de un formulario público (un interesado o participante
+    // sin sesión), así que su nombre/correo/etc. podrían traer HTML
+    // malicioso (ej. "<img src=x onerror=...>"). El cuerpo/asunto que
+    // escribió la persona administradora SÍ puede traer HTML legítimo
+    // (negritas, saltos de línea) y no se toca — solo el VALOR sustituido
+    // se escapa, para que no pueda inyectar una etiqueta nueva dentro de
+    // la vista previa (que se inserta como innerHTML más abajo).
+    var valor = registro[c.key] != null ? escapeHtml(String(registro[c.key])) : '';
     var tagEsc = c.tag.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     // Igual que en el backend: el cuerpo puede traer <<Etiqueta>> literal o
     // &lt;&lt;Etiqueta&gt;&gt; (así queda al leer innerHTML del editor).
@@ -5587,7 +5664,7 @@ function renderCuenta() {
  * ============================================================ */
 (async function init() {
   if (session) {
-    var r = await jsonp('verificarSesion', { token: session.token });
+    var r = await jsonpPost('verificarSesion', { token: session.token });
     if (!r.ok) { cerrarSesion(); render(); return; }
     await cargarProyectos();
   }
