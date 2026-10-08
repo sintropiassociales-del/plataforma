@@ -4512,12 +4512,15 @@ async function renderCRM() {
     '<div class="subtabs">' +
       '<button data-crmsub="clientes" class="' + (state.crmSubview === 'clientes' ? 'active' : '') + '">Clientes / prospectos</button>' +
       '<button data-crmsub="interesados" class="' + (state.crmSubview === 'interesados' ? 'active' : '') + '">Interesados</button>' +
+      '<button data-crmsub="metricas" class="' + (state.crmSubview === 'metricas' ? 'active' : '') + '">Indicadores</button>' +
     '</div>' +
     '<div id="crmContent"><p class="subtle">Cargando...</p></div>';
   Array.prototype.forEach.call(main.querySelectorAll('[data-crmsub]'), function (b) {
     b.onclick = function () { state.crmSubview = b.getAttribute('data-crmsub'); renderCRM(); };
   });
-  if (state.crmSubview === 'clientes') { await renderCRMClientes(); } else { await renderCRMInteresados(); }
+  if (state.crmSubview === 'clientes') { await renderCRMClientes(); }
+  else if (state.crmSubview === 'interesados') { await renderCRMInteresados(); }
+  else { await renderCRMMetricas(); }
 }
 
 /* ---- Clientes / prospectos ---- */
@@ -5024,6 +5027,153 @@ function _renderCRMInteresadosResultados() {
       await renderCRMInteresados();
     };
   });
+}
+
+/* ---------------- Indicadores (dashboard de ventas) ----------------
+ * Tablero de lectura rápida sobre el embudo comercial de Clientes/
+ * prospectos — "qué tanto se contactó, muestreó, correspondió y vendió
+ * este mes", más una fotografía general de la base (no depende del mes).
+ * Todo se calcula en el navegador a partir de lo que ya carga la pestaña
+ * de Clientes (listarCRMClientes / listarTodosCRMSeguimientos) e
+ * Interesados (listarCRMInteresados) — no agrega ninguna llamada nueva al
+ * backend más allá de asegurarse de que esos tres ya estén cargados.
+ * ------------------------------------------------------------------ */
+
+var MESES_ES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
+  'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+function _mesActualISO() {
+  var d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+}
+function _nombreMes(mesISO) {
+  var partes = mesISO.split('-');
+  return MESES_ES[Number(partes[1]) - 1] + ' de ' + partes[0];
+}
+function _esDelMes(fechaISO, mesISO) {
+  return !!fechaISO && String(fechaISO).slice(0, 7) === mesISO;
+}
+function _formatoMXN(n) {
+  return '$' + Math.round(n || 0).toLocaleString('es-MX');
+}
+
+// Centraliza el cálculo para que la pantalla y (si algún día se necesita)
+// cualquier otra vista puedan reusarlo sin duplicar la lógica.
+function _calcularMetricasCRM() {
+  var mes = _mesActualISO();
+  var clientes = state.crmClientes || [];
+  var seguimientos = state.crmSeguimientosTodos || [];
+  var interesados = state.crmInteresados || [];
+
+  // "Contactados este mes": clientes/prospectos distintos con al menos un
+  // seguimiento (de cualquier tipo: llamada, correo, reunión...) registrado
+  // este mes.
+  var contactadosSet = {};
+  seguimientos.forEach(function (s) {
+    if (_esDelMes(s.fechaOrden, mes)) contactadosSet[s.clienteCodigo] = true;
+  });
+  var contactadosEsteMes = Object.keys(contactadosSet).length;
+
+  // "Correos enviados este mes": cada envío (manual o de una campaña) a un
+  // cliente/prospecto queda registrado como su propio seguimiento tipo
+  // "Correo" (ver _enviarCorreoCRMNucleo en WebApp.gs). Los correos a
+  // Interesados no se registran así todavía, así que este número cubre
+  // específicamente Clientes/prospectos.
+  var correosEsteMes = seguimientos.filter(function (s) {
+    return s.tipoContacto === 'Correo' && _esDelMes(s.fechaOrden, mes);
+  }).length;
+
+  // "Muestras realizadas este mes": suma de tres fuentes — clientes nuevos
+  // este mes que llegaron completando una muestra (campo "leadMagnet"),
+  // clientes YA conocidos que completaron OTRA muestra este mes (queda
+  // registrado como seguimiento automático "Completó otra muestra web...",
+  // ver _agregarSeguimientoAutomatico), e interesados nuevos este mes que
+  // completaron una muestra (ver _hizoMuestraInteresado).
+  var muestrasClientesNuevos = clientes.filter(function (c) {
+    return c.leadMagnet && _esDelMes(c.fechaAltaOrden, mes);
+  }).length;
+  var muestrasClientesRepetidas = seguimientos.filter(function (s) {
+    return _esDelMes(s.fechaOrden, mes) && /^Completó otra muestra web/.test(String(s.notas || ''));
+  }).length;
+  var muestrasInteresadosNuevos = interesados.filter(function (i) {
+    return _hizoMuestraInteresado(i.notas) && _esDelMes(i.fechaRegistroOrden, mes);
+  }).length;
+  var muestrasEsteMes = muestrasClientesNuevos + muestrasClientesRepetidas + muestrasInteresadosNuevos;
+
+  // "Ventas este mes": clientes marcados como Estatus = "Venta" cuya Fecha
+  // de venta cae dentro del mes en curso.
+  var ventasDelMes = clientes.filter(function (c) { return c.estatus === 'Venta' && _esDelMes(c.fechaVentaOrden, mes); });
+  var montoVentasEsteMes = ventasDelMes.reduce(function (sum, c) { return sum + (Number(c.montoVenta) || 0); }, 0);
+
+  // Fotografía general de la base — no depende del mes.
+  var clientesActivos = clientes.filter(function (c) { return ESTATUS_OCULTOS_POR_DEFECTO_CRM.indexOf(c.estatus) === -1; }).length;
+  var clientesGanadosTotal = clientes.filter(function (c) { return c.estatus === 'Venta'; }).length;
+  var porEstatus = ESTATUS_CRM.map(function (e) {
+    return { estatus: e, total: clientes.filter(function (c) { return c.estatus === e; }).length };
+  });
+
+  return {
+    mes: mes, contactadosEsteMes: contactadosEsteMes, correosEsteMes: correosEsteMes,
+    muestrasEsteMes: muestrasEsteMes, ventasEsteMes: ventasDelMes.length, montoVentasEsteMes: montoVentasEsteMes,
+    totalClientes: clientes.length, clientesActivos: clientesActivos, clientesGanadosTotal: clientesGanadosTotal,
+    porEstatus: porEstatus
+  };
+}
+
+function _tileMetrica(valor, etiqueta, nota) {
+  return '<div class="card" style="flex:1;min-width:150px;padding:16px 18px">' +
+    '<div style="font-size:30px;font-weight:700;color:var(--purple);line-height:1.1;font-variant-numeric:tabular-nums">' + valor + '</div>' +
+    '<div style="font-size:13px;color:#444;margin-top:4px;font-weight:600">' + etiqueta + '</div>' +
+    (nota ? '<div class="subtle" style="margin-top:2px">' + nota + '</div>' : '') +
+  '</div>';
+}
+
+async function renderCRMMetricas() {
+  var box = document.getElementById('crmContent');
+  if (!box) return;
+  box.innerHTML = '<p class="subtle">Cargando...</p>';
+
+  // Reusa los datos de Clientes/Interesados si ya se cargaron en esta
+  // sesión del panel; si alguien entra directo a "Indicadores" sin haber
+  // visitado antes esas pestañas, los carga aquí.
+  var cargas = [];
+  if (!state.crmClientes.length && !state.crmSeguimientosTodos.length) cargas.push(cargarCRMClientes());
+  if (!state.crmInteresados.length) cargas.push(cargarCRMInteresados());
+  if (cargas.length) await Promise.all(cargas);
+
+  var m = _calcularMetricasCRM();
+  var maxEstatus = Math.max(1, Math.max.apply(null, m.porEstatus.map(function (e) { return e.total; })));
+
+  var filasEstatus = m.porEstatus.map(function (e) {
+    var c = COLORES_ESTATUS_CRM[e.estatus] || { bg: '#F1F1F1', fg: '#666666' };
+    var ancho = Math.round((e.total / maxEstatus) * 100);
+    return '<div style="display:flex;align-items:center;gap:10px;margin:6px 0">' +
+      '<div style="width:140px;font-size:13px;color:#444;flex-shrink:0">' + escapeHtml(e.estatus) + '</div>' +
+      '<div style="flex:1;background:#F1EDFB;border-radius:5px;height:18px;overflow:hidden">' +
+        '<div style="width:' + Math.max(ancho, e.total > 0 ? 3 : 0) + '%;height:100%;background:' + c.fg + ';border-radius:5px"></div>' +
+      '</div>' +
+      '<div style="width:34px;text-align:right;font-weight:700;font-variant-numeric:tabular-nums;font-size:13px">' + e.total + '</div>' +
+    '</div>';
+  }).join('');
+
+  box.innerHTML =
+    '<p class="subtle" style="margin-bottom:14px">Indicadores de ' + escapeHtml(_nombreMes(m.mes)) + ', calculados sobre Clientes/prospectos e Interesados.</p>' +
+    '<h3 style="margin:0 0 8px">Este mes</h3>' +
+    '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:22px">' +
+      _tileMetrica(m.contactadosEsteMes, 'Contactados', 'con al menos 1 seguimiento') +
+      _tileMetrica(m.muestrasEsteMes, 'Muestras realizadas', 'nuevas o repetidas') +
+      _tileMetrica(m.correosEsteMes, 'Correos enviados', 'a Clientes/prospectos') +
+      _tileMetrica(m.ventasEsteMes, 'Ventas', m.montoVentasEsteMes ? _formatoMXN(m.montoVentasEsteMes) + ' en total' : 'sin monto registrado') +
+    '</div>' +
+    '<h3 style="margin:0 0 8px">Panorama general</h3>' +
+    '<div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:22px">' +
+      _tileMetrica(m.totalClientes, 'Clientes/prospectos en la base') +
+      _tileMetrica(m.clientesActivos, 'Activos', 'sin contar Finalizado/Descartado') +
+      _tileMetrica(m.clientesGanadosTotal, 'Clientes ganados', 'histórico (Estatus = Venta)') +
+    '</div>' +
+    '<h3 style="margin:0 0 10px">Por estatus</h3>' +
+    '<div class="card" style="padding:16px 18px">' + filasEstatus + '</div>' +
+    '<p class="subtle" style="margin-top:14px">"Este mes" se refiere siempre al mes en curso (' + escapeHtml(_nombreMes(m.mes)) + '). Si quieres comparar con meses anteriores o ajustar qué cuenta cada indicador, dime y lo afinamos.</p>';
 }
 
 /* ---------------- Mailing (Clientes e Interesados) ---------------- */
