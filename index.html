@@ -42,6 +42,28 @@
   }
   nav.tabs button.active { color: var(--purple); border-bottom-color: var(--orange); }
   main { max-width: 980px; margin: 0 auto; padding: 22px 16px 60px; }
+  /* Pantalla dividida de Clientes/prospectos (ver / seguimientos al lado de
+   * la tabla, en vez de un modal encima) — usa todo el ancho disponible de
+   * la página en vez del límite normal de 980px, que apenas alcanzaba para
+   * la tabla sola y dejaba el panel y la tabla aplastados uno contra otro. */
+  main.ancho-completo { max-width: 1400px; }
+  .crm-split { display: flex; gap: 16px; align-items: flex-start; }
+  .crm-split-tabla { flex: 1 1 0; min-width: 0; }
+  .crm-split-panel {
+    flex: 0 0 420px; max-width: 420px; padding: 16px 18px;
+    position: sticky; top: 12px; max-height: calc(100vh - 100px); overflow-y: auto;
+  }
+  /* En pantallas angostas (tablet vertical o celular) no hay espacio para
+   * dividir en 2 columnas sin aplastar la tabla — se apila: tabla arriba,
+   * ficha del cliente debajo, ambas a todo lo ancho, y el panel deja de
+   * quedar "pegado" (sticky) porque ya no hay una tabla larga al lado con
+   * la que compartir el scroll. */
+  @media (max-width: 860px) {
+    main.ancho-completo { max-width: 980px; }
+    .crm-split { flex-direction: column; }
+    .crm-split-panel { flex: 1 1 auto; max-width: 100%; width: 100%; position: static; max-height: none; }
+  }
+  tr.fila-seleccionada { background: #FAF8FF; }
   .card {
     background: var(--card); border: 1px solid var(--border); border-radius: 10px;
     padding: 20px; margin-bottom: 18px;
@@ -1397,6 +1419,14 @@ var INSTRUMENTOS = {
       { key: 'practica', label: 'Práctica o rutina observada *', tipo: 'textarea', requerido: true },
       { key: 'fuente', label: 'Fuente del dato', tipo: 'select', opciones: FUENTES_MER01 },
       { key: 'sentido', label: 'Sentido que el actor le da (su propia lógica)', tipo: 'textarea' },
+      // Componente histórico (David, oct-2026): entender por qué un actor
+      // elige lo que elige hoy no basta con su lógica actual (campo
+      // "sentido") — hay un condicionamiento social e histórico de fondo:
+      // cómo ha cambiado esta práctica/producto en esta misma localidad a
+      // través del tiempo es lo que explica por qué hoy se decide así y no
+      // de otra forma. Va justo después de "sentido" porque responde la
+      // misma pregunta mirando hacia atrás en vez de hacia la lógica actual.
+      { key: 'historiaLocal', label: 'Transformación histórica local de esta práctica', tipo: 'textarea', placeholder: 'Cómo era esta práctica/producto en esta localidad hace 10-20 años, qué cambió y cómo ese cambio sigue condicionando la decisión de hoy' },
       { key: 'contradiccion', label: 'Contradicción / tensión detectada', tipo: 'textarea' },
       { key: 'ausencia', label: 'Quién está ausente de este hallazgo', tipo: 'textarea' },
       { key: 'relevancia', label: 'Relevancia estratégica', tipo: 'select', opciones: RELEVANCIA_MER01 },
@@ -4668,7 +4698,8 @@ function _renderCRMClientesResultados() {
       ? escapeHtml(c.leadMagnet)
       : '<span class="subtle">No hizo muestra</span>';
     var marcado = state.crmClientesSeleccion.indexOf(c.codigo) !== -1;
-    return '<tr>' +
+    var seleccionado = state.crmClienteSeleccionado === c.codigo;
+    return '<tr' + (seleccionado ? ' class="fila-seleccionada"' : '') + '>' +
       '<td><input type="checkbox" class="crm-sel-cliente" data-codigo="' + c.codigo + '"' + (marcado ? ' checked' : '') + '></td>' +
       '<td>' + escapeHtml(c.organizacion) + '</td>' +
       '<td>' + escapeHtml(c.categoria || '—') + '</td>' +
@@ -4707,12 +4738,18 @@ function _renderCRMClientesResultados() {
   // lo demás) — la tabla queda a la izquierda y, en cuanto se elige un
   // cliente con "Ver / seguimientos", su ficha + seguimientos aparecen a la
   // derecha, uno al lado del otro. Sin ningún cliente elegido, la tabla
-  // ocupa todo el ancho como antes.
+  // ocupa todo el ancho como antes. El contenedor #main se ensancha
+  // (.ancho-completo, ver <style>) solo mientras el panel está abierto, para
+  // que la tabla+panel usen todo el espacio de la página en vez del límite
+  // normal de 980px — y en pantallas angostas (ver @media en <style>) se
+  // apilan en vez de aplastarse.
+  var elMain = document.getElementById('main');
+  if (elMain) elMain.classList.toggle('ancho-completo', !!state.crmClienteSeleccionado);
   if (state.crmClienteSeleccionado) {
     resBox.innerHTML =
-      '<div style="display:flex;gap:16px;align-items:flex-start">' +
-        '<div style="flex:1 1 0;min-width:0">' + tablaHtml + '</div>' +
-        '<div id="crmClienteDetalle" class="card" style="flex:0 0 400px;padding:16px 18px;position:sticky;top:12px;max-height:calc(100vh - 100px);overflow-y:auto"></div>' +
+      '<div class="crm-split">' +
+        '<div class="crm-split-tabla">' + tablaHtml + '</div>' +
+        '<div id="crmClienteDetalle" class="card crm-split-panel"></div>' +
       '</div>';
   } else {
     resBox.innerHTML = tablaHtml;
