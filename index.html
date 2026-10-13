@@ -2404,6 +2404,7 @@ var state = {
   crmFiltroEje: 'Todos',
   crmBusqueda: '',
   crmPaginaClientes: 1, // página actual de la tabla de Clientes / prospectos (25 por página)
+  crmClienteSeleccionado: null, // código del cliente abierto en el panel de detalle/seguimientos, a un lado de la tabla
   crmClientesSeleccion: [],    // códigos de clientes marcados para el mailing
   crmInteresadosSeleccion: [], // códigos de interesados marcados para el mailing
   crmBusquedaInteresados: '',
@@ -4693,13 +4694,29 @@ function _renderCRMClientesResultados() {
     '</div>';
   }
 
-  resBox.innerHTML =
+  var tablaHtml =
     '<p class="subtle">' + lista.length + ' de ' + state.crmClientes.length + ' cliente(s)/prospecto(s)' +
       (ocultosPorDefecto ? ' — no se muestran ' + ocultosPorDefecto + ' finalizado(s)/descartado(s) (usa su chip arriba para verlos)' : '') + '.' +
       (state.crmClientesSeleccion.length ? ' · ' + state.crmClientesSeleccion.length + ' seleccionado(s) para correo.' : '') + '</p>' +
     (lista.length === 0
       ? '<p class="subtle">No hay clientes que coincidan. Puedes agregarlos uno por uno, o usar "Importar archivo" para cargar varios desde un CSV/Excel.</p>'
       : '<div style="overflow-x:auto"><table><thead>' + thead + '</thead><tbody>' + trs + '</tbody></table></div>' + pagerHtml);
+
+  // Pantalla dividida en 2 (David: ver y editar los seguimientos de un
+  // cliente en la misma pantalla, sin que una ventana emergente tape todo
+  // lo demás) — la tabla queda a la izquierda y, en cuanto se elige un
+  // cliente con "Ver / seguimientos", su ficha + seguimientos aparecen a la
+  // derecha, uno al lado del otro. Sin ningún cliente elegido, la tabla
+  // ocupa todo el ancho como antes.
+  if (state.crmClienteSeleccionado) {
+    resBox.innerHTML =
+      '<div style="display:flex;gap:16px;align-items:flex-start">' +
+        '<div style="flex:1 1 0;min-width:0">' + tablaHtml + '</div>' +
+        '<div id="crmClienteDetalle" class="card" style="flex:0 0 400px;padding:16px 18px;position:sticky;top:12px;max-height:calc(100vh - 100px);overflow-y:auto"></div>' +
+      '</div>';
+  } else {
+    resBox.innerHTML = tablaHtml;
+  }
 
   var elPagAnterior = resBox.querySelector('#crmClientesPagAnterior');
   if (elPagAnterior) elPagAnterior.onclick = function () { state.crmPaginaClientes--; _renderCRMClientesResultados(); };
@@ -4729,30 +4746,39 @@ function _renderCRMClientesResultados() {
   });
   Array.prototype.forEach.call(resBox.querySelectorAll('[data-ver]'), function (b) {
     b.onclick = function () {
-      var cliente = state.crmClientes.filter(function (c) { return c.codigo === b.getAttribute('data-ver'); })[0];
-      abrirModalCliente(cliente);
+      state.crmClienteSeleccionado = b.getAttribute('data-ver');
+      _renderCRMClientesResultados();
     };
   });
   Array.prototype.forEach.call(resBox.querySelectorAll('[data-del]'), function (b) {
     b.onclick = async function () {
       if (!confirm('¿Eliminar este cliente/prospecto? Su historial de seguimientos quedará huérfano en el Sheet (ya no se podrá consultar desde aquí). No se puede deshacer.')) return;
-      var r = await api('eliminarFilaCRMClientes', { codigo: b.getAttribute('data-del') });
+      var codigoDel = b.getAttribute('data-del');
+      var r = await api('eliminarFilaCRMClientes', { codigo: codigoDel });
       if (!r.ok) { alert(r.error); return; }
+      if (state.crmClienteSeleccionado === codigoDel) state.crmClienteSeleccionado = null;
       await renderCRMClientes();
     };
   });
+
+  if (state.crmClienteSeleccionado) _renderDetalleCliente();
 }
 
-function abrirModalCliente(cliente) {
-  var editando = !!cliente;
-  var cfg = CRM_TIPOS.crm_clientes;
+/* ---- Panel de detalle + seguimientos (a un lado de la tabla) ---- */
 
+function _renderDetalleCliente() {
+  var panel = document.getElementById('crmClienteDetalle');
+  if (!panel) return;
+  var cliente = state.crmClientes.filter(function (c) { return c.codigo === state.crmClienteSeleccionado; })[0];
+  if (!cliente) { state.crmClienteSeleccionado = null; _renderCRMClientesResultados(); return; }
+
+  var cfg = CRM_TIPOS.crm_clientes;
   var camposHtml = cfg.campos.map(function (c) {
     var id = 'cf_' + c.key;
-    var val = cliente ? (cliente[c.key] != null ? cliente[c.key] : '') : '';
+    var val = cliente[c.key] != null ? cliente[c.key] : '';
     if (c.tipo === 'select') {
       var opts = c.opciones.map(function (o) {
-        return '<option ' + (cliente && cliente[c.key] === o ? 'selected' : '') + '>' + o + '</option>';
+        return '<option ' + (cliente[c.key] === o ? 'selected' : '') + '>' + o + '</option>';
       }).join('');
       return '<label>' + c.label + '</label><select id="' + id + '">' + opts + '</select>';
     }
@@ -4762,43 +4788,32 @@ function abrirModalCliente(cliente) {
     return '<label>' + c.label + '</label><input type="' + c.tipo + '" id="' + id + '" value="' + escapeHtml(val) + '">';
   }).join('');
 
-  var modal = el(
-    '<div class="modal-bg"><div class="modal wide">' +
-      '<h2>' + (editando ? 'Editar cliente — ' + escapeHtml(cliente.organizacion) : 'Agregar cliente / prospecto') + '</h2>' +
-      camposHtml +
-      '<div id="clienteMsg"></div>' +
-      '<div class="modal-actions">' +
-        '<button class="secondary" id="clienteCancelar">Cerrar</button>' +
-        '<button class="primary" id="clienteGuardar">Guardar</button>' +
-      '</div>' +
-      (editando ?
-        '<hr style="margin:20px 0;border:none;border-top:1px solid #eee">' +
-        '<div style="display:flex;justify-content:space-between;align-items:center">' +
-          '<h3 style="margin:0">Seguimientos</h3>' +
-          '<button class="secondary small" id="btnNuevoSeguimiento">+ Agregar seguimiento</button>' +
-        '</div>' +
-        '<p class="subtle">Cada seguimiento queda como su propio registro con fecha y acuerdos — así puedes llevar 30+ sin que esto se haga eterno.</p>' +
-        '<div id="seguimientosBox"><p class="subtle">Cargando...</p></div>'
-        : '') +
-    '</div></div>'
-  );
-  document.body.appendChild(modal);
-  modal.querySelector('#clienteCancelar').onclick = async function () {
-    modal.remove();
-    // Recarga antes de re-pintar la tabla: si dentro del modal se agregó, editó
-    // o borró un seguimiento, la columna "Último seguimiento" debe reflejarlo
-    // de inmediato, no hasta que se recargue la pestaña completa.
-    await cargarCRMClientes();
-    renderCRMClientesTabla();
+  panel.innerHTML =
+    '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:6px">' +
+      '<h2 style="margin:0;font-size:17px">' + escapeHtml(cliente.organizacion) + '</h2>' +
+      '<button class="small secondary" id="btnCerrarDetalleCliente">Cerrar ✕</button>' +
+    '</div>' +
+    camposHtml +
+    '<div id="clienteDetalleMsg"></div>' +
+    '<button class="primary" id="btnGuardarDetalleCliente" style="width:100%">Guardar cambios</button>' +
+    '<hr style="margin:20px 0;border:none;border-top:1px solid #eee">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center">' +
+      '<h3 style="margin:0">Seguimientos</h3>' +
+      '<button class="secondary small" id="btnNuevoSeguimientoPanel">+ Agregar</button>' +
+    '</div>' +
+    '<div id="seguimientosBox"><p class="subtle">Cargando...</p></div>';
+
+  panel.querySelector('#btnCerrarDetalleCliente').onclick = function () {
+    state.crmClienteSeleccionado = null;
+    _renderCRMClientesResultados();
   };
-  modal.querySelector('#clienteGuardar').onclick = async function () {
-    var btn = modal.querySelector('#clienteGuardar');
-    var msgBox = modal.querySelector('#clienteMsg');
-    var params = {};
-    if (editando) params.codigo = cliente.codigo;
+  panel.querySelector('#btnGuardarDetalleCliente').onclick = async function () {
+    var btn = panel.querySelector('#btnGuardarDetalleCliente');
+    var msgBox = panel.querySelector('#clienteDetalleMsg');
+    var params = { codigo: cliente.codigo };
     var faltante = null;
     cfg.campos.forEach(function (c) {
-      var elx = modal.querySelector('#cf_' + c.key);
+      var elx = panel.querySelector('#cf_' + c.key);
       var v = elx.value;
       if (c.tipo !== 'select' && c.tipo !== 'date') v = v.trim();
       if (c.requerido && !v && !faltante) faltante = c.label;
@@ -4808,23 +4823,31 @@ function abrirModalCliente(cliente) {
 
     btn.disabled = true; btn.textContent = 'Guardando...';
     var r = await api('guardarFilaCRMClientes', params);
-    btn.disabled = false; btn.textContent = 'Guardar';
+    btn.disabled = false; btn.textContent = 'Guardar cambios';
     if (!r.ok) { msgBox.innerHTML = '<div class="msg error">' + r.error + '</div>'; return; }
     msgBox.innerHTML = '<div class="msg ok">Guardado.</div>';
+    // Refresca la tabla de atrás (por si cambió algo visible ahí, como el
+    // Estatus) sin cerrar el panel — "que se guarden los cambios" sin perder
+    // de vista los seguimientos, que es justo el punto de tenerlos juntos.
     await cargarCRMClientes();
-    if (!editando) { modal.remove(); renderCRMClientesTabla(); }
+    _renderCRMClientesResultados();
   };
-
-  if (editando) {
-    modal.querySelector('#btnNuevoSeguimiento').onclick = function () {
-      abrirModalSeguimiento(cliente.codigo, null, function () { return _cargarYRenderSeguimientos(cliente.codigo, modal); });
-    };
-    _cargarYRenderSeguimientos(cliente.codigo, modal);
-  }
+  panel.querySelector('#btnNuevoSeguimientoPanel').onclick = function () {
+    abrirModalSeguimiento(cliente.codigo, null, function () { return _refrescarTrasSeguimientoPanel(); });
+  };
+  _cargarYRenderSeguimientosPanel(cliente.codigo);
 }
 
-async function _cargarYRenderSeguimientos(clienteCodigo, modal) {
-  var box = modal.querySelector('#seguimientosBox');
+// Tras agregar/editar/borrar un seguimiento desde el panel: recarga los
+// clientes (la columna "Último seguimiento" de la tabla depende de eso) y
+// vuelve a pintar todo — tabla + panel — sin cerrar el panel.
+async function _refrescarTrasSeguimientoPanel() {
+  await cargarCRMClientes();
+  _renderCRMClientesResultados();
+}
+
+async function _cargarYRenderSeguimientosPanel(clienteCodigo) {
+  var box = document.getElementById('seguimientosBox');
   if (!box) return;
   var r = await api('listarCRMSeguimientos', { cliente: clienteCodigo });
   if (!r.ok) { box.innerHTML = '<div class="msg error">' + r.error + '</div>'; return; }
@@ -4833,7 +4856,7 @@ async function _cargarYRenderSeguimientos(clienteCodigo, modal) {
     box.innerHTML = '<p class="subtle">Todavía no hay seguimientos registrados para este cliente.</p>';
     return;
   }
-  box.innerHTML = '<div style="max-height:280px;overflow-y:auto;border:1px solid #eee;border-radius:8px;padding:2px 12px">' +
+  box.innerHTML = '<div style="max-height:320px;overflow-y:auto;border:1px solid #eee;border-radius:8px;padding:2px 12px">' +
     filas.map(function (s) {
       return '<div style="padding:10px 0;border-bottom:1px solid #f0f0f0">' +
         '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">' +
@@ -4851,7 +4874,7 @@ async function _cargarYRenderSeguimientos(clienteCodigo, modal) {
   Array.prototype.forEach.call(box.querySelectorAll('[data-editseg]'), function (b) {
     b.onclick = function () {
       var seg = filas.filter(function (s) { return s.codigo === b.getAttribute('data-editseg'); })[0];
-      abrirModalSeguimiento(clienteCodigo, seg, function () { return _cargarYRenderSeguimientos(clienteCodigo, modal); });
+      abrirModalSeguimiento(clienteCodigo, seg, function () { return _refrescarTrasSeguimientoPanel(); });
     };
   });
   Array.prototype.forEach.call(box.querySelectorAll('[data-delseg]'), function (b) {
@@ -4859,9 +4882,73 @@ async function _cargarYRenderSeguimientos(clienteCodigo, modal) {
       if (!confirm('¿Eliminar este seguimiento? No se puede deshacer.')) return;
       var r2 = await api('eliminarFilaCRMSeguimientos', { codigo: b.getAttribute('data-delseg') });
       if (!r2.ok) { alert(r2.error); return; }
-      await _cargarYRenderSeguimientos(clienteCodigo, modal);
+      // También actualiza la columna "Último seguimiento" de la tabla, que
+      // depende de state.crmSeguimientosTodos (recargado completo aquí).
+      await _refrescarTrasSeguimientoPanel();
     };
   });
+}
+
+// Nota: este modal ahora solo se usa para "+ Agregar cliente" (alta de uno
+// nuevo). Ver/editar un cliente existente y sus seguimientos ya no abre este
+// modal — usa el panel lateral (_renderDetalleCliente), para que no tape el
+// resto de la pantalla (ver _renderDetalleCliente más arriba).
+function abrirModalCliente(cliente) {
+  var cfg = CRM_TIPOS.crm_clientes;
+
+  var camposHtml = cfg.campos.map(function (c) {
+    var id = 'cf_' + c.key;
+    var val = '';
+    if (c.tipo === 'select') {
+      var opts = c.opciones.map(function (o) {
+        return '<option>' + o + '</option>';
+      }).join('');
+      return '<label>' + c.label + '</label><select id="' + id + '">' + opts + '</select>';
+    }
+    if (c.tipo === 'textarea') {
+      return '<label>' + c.label + '</label><textarea id="' + id + '">' + escapeHtml(val) + '</textarea>';
+    }
+    return '<label>' + c.label + '</label><input type="' + c.tipo + '" id="' + id + '" value="' + escapeHtml(val) + '">';
+  }).join('');
+
+  var modal = el(
+    '<div class="modal-bg"><div class="modal wide">' +
+      '<h2>Agregar cliente / prospecto</h2>' +
+      camposHtml +
+      '<div id="clienteMsg"></div>' +
+      '<div class="modal-actions">' +
+        '<button class="secondary" id="clienteCancelar">Cerrar</button>' +
+        '<button class="primary" id="clienteGuardar">Guardar</button>' +
+      '</div>' +
+    '</div></div>'
+  );
+  document.body.appendChild(modal);
+  modal.querySelector('#clienteCancelar').onclick = function () {
+    modal.remove();
+  };
+  modal.querySelector('#clienteGuardar').onclick = async function () {
+    var btn = modal.querySelector('#clienteGuardar');
+    var msgBox = modal.querySelector('#clienteMsg');
+    var params = {};
+    var faltante = null;
+    cfg.campos.forEach(function (c) {
+      var elx = modal.querySelector('#cf_' + c.key);
+      var v = elx.value;
+      if (c.tipo !== 'select' && c.tipo !== 'date') v = v.trim();
+      if (c.requerido && !v && !faltante) faltante = c.label;
+      params[c.key] = v;
+    });
+    if (faltante) { msgBox.innerHTML = '<div class="msg error">El campo "' + faltante.replace(' *', '') + '" no puede estar vacío.</div>'; return; }
+
+    btn.disabled = true; btn.textContent = 'Guardando...';
+    var r = await api('guardarFilaCRMClientes', params);
+    btn.disabled = false; btn.textContent = 'Guardar';
+    if (!r.ok) { msgBox.innerHTML = '<div class="msg error">' + r.error + '</div>'; return; }
+    msgBox.innerHTML = '<div class="msg ok">Guardado.</div>';
+    await cargarCRMClientes();
+    modal.remove();
+    renderCRMClientesTabla();
+  };
 }
 
 function abrirModalSeguimiento(clienteCodigo, seguimiento, alGuardar) {
