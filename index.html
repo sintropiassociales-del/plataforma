@@ -115,7 +115,25 @@
   }
   .modal { background: #fff; border-radius: 10px; padding: 22px; max-width: 560px; width: 100%; }
   .modal.wide { max-width: 920px; }
+  .modal.xwide { max-width: 1120px; }
   .modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; }
+  /* Barra "<Anterior / Siguiente>" del modal "Ver completo" de Clientes /
+   * prospectos — deja ver en qué posición de la lista filtrada está el
+   * cliente abierto, para hojear varios sin cerrar el modal. */
+  .modal-nav {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-top: 18px; padding-top: 14px; border-top: 1px solid #eee;
+  }
+  /* Barra de filtros de Clientes/prospectos — separada visualmente de los
+   * botones de acción (Agregar/Importar/Exportar/Enviar correo) en su
+   * propia franja con fondo e borde, para que no se vean como un solo
+   * bloque de controles encimados (David: "que sea más organizado"). */
+  .crm-filtros-bar {
+    display: flex; gap: 10px; flex-wrap: wrap; align-items: center;
+    background: #FAF9FC; border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 12px; margin-top: 10px;
+  }
+  .crm-filtros-bar select, .crm-filtros-bar input[type=text] { width: auto; flex: 1 1 200px; min-width: 160px; }
   .toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 6px; }
   .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid #fff; border-top-color: transparent;
     border-radius: 50%; animation: spin 0.7s linear infinite; vertical-align: middle; margin-right: 6px; }
@@ -2432,6 +2450,7 @@ var state = {
   crmInteresados: [],
   crmFiltroEstatus: 'Todos',
   crmFiltroEje: 'Todos',
+  crmFiltroCategoria: 'Todos',
   crmBusqueda: '',
   crmPaginaClientes: 1, // página actual de la tabla de Clientes / prospectos (25 por página)
   crmClienteSeleccionado: null, // código del cliente abierto en el panel de detalle/seguimientos, a un lado de la tabla
@@ -4575,20 +4594,22 @@ function renderCRMClientesTabla() {
     }).join('');
     box.innerHTML =
       '<div id="crmClientesShell">' +
-        '<div class="toolbar" style="justify-content:space-between;flex-wrap:wrap;gap:8px">' +
-          '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
-            '<button class="secondary" id="btnNuevoCliente">+ Agregar cliente</button>' +
-            '<button class="secondary" id="btnImportarClientes">Importar archivo</button>' +
-            '<button class="secondary" id="btnExportarClientes">Exportar a Excel</button>' +
-            '<button class="primary" id="btnEnviarCorreoClientes">Enviar correo</button>' +
-          '</div>' +
-          '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">' +
-            '<select id="filtroEjeCliente">' +
-              '<option value="Todos">Todos los ejes de interés</option>' +
-              EJES_INTERES_CRM.map(function (e) { return '<option value="' + escapeHtml(e) + '">' + escapeHtml(e) + '</option>'; }).join('') +
-            '</select>' +
-            '<input type="text" id="buscarCliente" placeholder="Buscar por organización, contacto o correo..." style="max-width:280px">' +
-          '</div>' +
+        '<div class="toolbar" style="gap:8px">' +
+          '<button class="secondary" id="btnNuevoCliente">+ Agregar cliente</button>' +
+          '<button class="secondary" id="btnImportarClientes">Importar archivo</button>' +
+          '<button class="secondary" id="btnExportarClientes">Exportar a Excel</button>' +
+          '<button class="primary" id="btnEnviarCorreoClientes">Enviar correo</button>' +
+        '</div>' +
+        '<div class="crm-filtros-bar">' +
+          '<select id="filtroCategoriaCliente">' +
+            '<option value="Todos">Todas las categorías</option>' +
+            CATEGORIAS_CRM.map(function (c) { return '<option value="' + escapeHtml(c) + '">' + escapeHtml(c) + '</option>'; }).join('') +
+          '</select>' +
+          '<select id="filtroEjeCliente">' +
+            '<option value="Todos">Todos los ejes de interés</option>' +
+            EJES_INTERES_CRM.map(function (e) { return '<option value="' + escapeHtml(e) + '">' + escapeHtml(e) + '</option>'; }).join('') +
+          '</select>' +
+          '<input type="text" id="buscarCliente" placeholder="Buscar por organización, contacto o correo...">' +
         '</div>' +
         '<div class="familias" id="crmChips" style="margin-top:10px">' + chips + '</div>' +
         '<div id="crmClientesResultados"></div>' +
@@ -4609,6 +4630,9 @@ function renderCRMClientesTabla() {
     var buscarInput = document.getElementById('buscarCliente');
     buscarInput.value = state.crmBusqueda;
     buscarInput.oninput = function () { state.crmBusqueda = buscarInput.value; state.crmPaginaClientes = 1; _renderCRMClientesResultados(); };
+    var filtroCategoriaSel = document.getElementById('filtroCategoriaCliente');
+    filtroCategoriaSel.value = state.crmFiltroCategoria;
+    filtroCategoriaSel.onchange = function () { state.crmFiltroCategoria = filtroCategoriaSel.value; state.crmPaginaClientes = 1; _renderCRMClientesResultados(); };
     var filtroEjeSel = document.getElementById('filtroEjeCliente');
     filtroEjeSel.value = state.crmFiltroEje;
     filtroEjeSel.onchange = function () { state.crmFiltroEje = filtroEjeSel.value; state.crmPaginaClientes = 1; _renderCRMClientesResultados(); };
@@ -4628,11 +4652,14 @@ function _marcarChipCRMActivo() {
   });
 }
 
-function _renderCRMClientesResultados() {
-  var resBox = document.getElementById('crmClientesResultados');
-  if (!resBox) return;
+// Filtro (estatus/categoría/eje) + búsqueda + orden, compartido entre la
+// tabla y el modal "Ver completo" (para que sus flechas <Anterior/
+// Siguiente> hojeen exactamente la misma lista que ya se ve filtrada en
+// pantalla, sin duplicar esta lógica en dos lados).
+function _listaFiltradaCRMClientes() {
   var filtro = state.crmFiltroEstatus;
   var filtroEje = state.crmFiltroEje;
+  var filtroCategoria = state.crmFiltroCategoria;
   var busqueda = _normalizarTexto(state.crmBusqueda);
   var lista = state.crmClientes.filter(function (c) {
     if (filtro === 'Todos') {
@@ -4643,6 +4670,7 @@ function _renderCRMClientesResultados() {
     } else if (c.estatus !== filtro) {
       return false;
     }
+    if (filtroCategoria !== 'Todos' && c.categoria !== filtroCategoria) return false;
     if (filtroEje !== 'Todos' && c.ejeInteres !== filtroEje) return false;
     if (!busqueda) return true;
     var campo = _normalizarTexto((c.organizacion || '') + ' ' + (c.nombreContacto || '') + ' ' + (c.correo || ''));
@@ -4661,6 +4689,14 @@ function _renderCRMClientesResultados() {
   // su orden original — según haya actividad nueva o se creen clientes
   // nuevos, van subiendo solos.
   lista.sort(function (a, b) { return _fechaActividadCliente(b).localeCompare(_fechaActividadCliente(a)); });
+  return lista;
+}
+
+function _renderCRMClientesResultados() {
+  var resBox = document.getElementById('crmClientesResultados');
+  if (!resBox) return;
+  var filtro = state.crmFiltroEstatus;
+  var lista = _listaFiltradaCRMClientes();
 
   // Paginación: 25 por página (David: con 174 prospectos, todo en una sola
   // lista era muy larga). state.crmPaginaClientes se resetea a 1 cada vez
@@ -4707,7 +4743,8 @@ function _renderCRMClientesResultados() {
       '<td>' + _badgeEstatusCRM(c.estatus) + '</td>' +
       '<td>' + celdaMuestra + '</td>' +
       '<td>' + celdaUltimo + '</td>' +
-      '<td><button class="small" data-ver="' + c.codigo + '">Ver / seguimientos</button> ' +
+      '<td style="white-space:nowrap"><button class="small" data-ver="' + c.codigo + '">Ver / seguimientos</button> ' +
+        '<button class="small secondary" data-vercompleto="' + c.codigo + '">Ver completo</button> ' +
         '<button class="small del" data-del="' + c.codigo + '">Eliminar</button></td>' +
     '</tr>';
   }).join('');
@@ -4785,6 +4822,16 @@ function _renderCRMClientesResultados() {
     b.onclick = function () {
       state.crmClienteSeleccionado = b.getAttribute('data-ver');
       _renderCRMClientesResultados();
+    };
+  });
+  // "Ver completo": mismo contenido que el panel lateral (ficha + seguimientos)
+  // pero en un modal ampliado con <Anterior/Siguiente> para hojear — la lista
+  // de códigos se congela al abrir (lista.map), para que el orden no se mueva
+  // solo si cambia algo (p. ej. el último seguimiento de alguien) mientras se
+  // hojea de un cliente a otro.
+  Array.prototype.forEach.call(resBox.querySelectorAll('[data-vercompleto]'), function (b) {
+    b.onclick = function () {
+      abrirModalClienteCompleto(b.getAttribute('data-vercompleto'), lista.map(function (c) { return c.codigo; }));
     };
   });
   Array.prototype.forEach.call(resBox.querySelectorAll('[data-del]'), function (b) {
@@ -4883,8 +4930,14 @@ async function _refrescarTrasSeguimientoPanel() {
   _renderCRMClientesResultados();
 }
 
-async function _cargarYRenderSeguimientosPanel(clienteCodigo) {
-  var box = document.getElementById('seguimientosBox');
+// boxId/onCambio permiten reusar esta misma función desde el modal "Ver
+// completo" (ver abrirModalClienteCompleto, más abajo), que tiene su propio
+// contenedor de seguimientos y su propia forma de refrescarse tras un
+// cambio — por defecto se comporta igual que antes (panel lateral).
+async function _cargarYRenderSeguimientosPanel(clienteCodigo, boxId, onCambio) {
+  boxId = boxId || 'seguimientosBox';
+  onCambio = onCambio || _refrescarTrasSeguimientoPanel;
+  var box = document.getElementById(boxId);
   if (!box) return;
   var r = await api('listarCRMSeguimientos', { cliente: clienteCodigo });
   if (!r.ok) { box.innerHTML = '<div class="msg error">' + r.error + '</div>'; return; }
@@ -4911,7 +4964,7 @@ async function _cargarYRenderSeguimientosPanel(clienteCodigo) {
   Array.prototype.forEach.call(box.querySelectorAll('[data-editseg]'), function (b) {
     b.onclick = function () {
       var seg = filas.filter(function (s) { return s.codigo === b.getAttribute('data-editseg'); })[0];
-      abrirModalSeguimiento(clienteCodigo, seg, function () { return _refrescarTrasSeguimientoPanel(); });
+      abrirModalSeguimiento(clienteCodigo, seg, function () { return onCambio(); });
     };
   });
   Array.prototype.forEach.call(box.querySelectorAll('[data-delseg]'), function (b) {
@@ -4921,15 +4974,142 @@ async function _cargarYRenderSeguimientosPanel(clienteCodigo) {
       if (!r2.ok) { alert(r2.error); return; }
       // También actualiza la columna "Último seguimiento" de la tabla, que
       // depende de state.crmSeguimientosTodos (recargado completo aquí).
-      await _refrescarTrasSeguimientoPanel();
+      await onCambio();
     };
   });
 }
 
-// Nota: este modal ahora solo se usa para "+ Agregar cliente" (alta de uno
-// nuevo). Ver/editar un cliente existente y sus seguimientos ya no abre este
-// modal — usa el panel lateral (_renderDetalleCliente), para que no tape el
-// resto de la pantalla (ver _renderDetalleCliente más arriba).
+/* ---- "Ver completo": mismo contenido que el panel lateral (ficha editable
+ * + seguimientos), pero en un modal ampliado que tapa la pantalla — para
+ * cuando conviene verlo más grande que la franja lateral de 420px, o
+ * hojear varios clientes seguidos con <Anterior/Siguiente> sin tener que
+ * cerrar y volver a abrir el panel uno por uno. codigosLista es la lista ya
+ * filtrada/buscada (ver _listaFiltradaCRMClientes), congelada al momento de
+ * abrir el modal. ---- */
+function abrirModalClienteCompleto(codigoInicial, codigosLista) {
+  var cfg = CRM_TIPOS.crm_clientes;
+  var modal = el('<div class="modal-bg"><div class="modal xwide"><div id="clienteCompletoBody"></div></div></div>');
+  document.body.appendChild(modal);
+  var idxActual = Math.max(0, codigosLista.indexOf(codigoInicial));
+
+  function pintar(idx) {
+    idxActual = idx;
+    var codigo = codigosLista[idxActual];
+    var cliente = state.crmClientes.filter(function (c) { return c.codigo === codigo; })[0];
+    var body = modal.querySelector('#clienteCompletoBody');
+
+    var navHtml = '<div class="modal-nav">' +
+      '<button class="secondary" id="ccAnterior"' + (idxActual <= 0 ? ' disabled' : '') + '>&larr; Anterior</button>' +
+      '<span class="subtle">' + (idxActual + 1) + ' de ' + codigosLista.length + '</span>' +
+      '<button class="secondary" id="ccSiguiente"' + (idxActual >= codigosLista.length - 1 ? ' disabled' : '') + '>Siguiente &rarr;</button>' +
+    '</div>';
+
+    if (!cliente) {
+      // Puede pasar si se elimina el cliente mientras el modal está abierto
+      // (p. ej. hojeando con las flechas después de borrar uno en otra
+      // pestaña) — nunca truena, solo avisa y deja seguir hojeando.
+      body.innerHTML =
+        '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:10px">' +
+          '<h2 style="margin:0">Cliente ya no disponible</h2>' +
+          '<button class="small secondary" id="ccCerrar">Cerrar ✕</button>' +
+        '</div>' +
+        '<p class="subtle">Este cliente/prospecto ya no existe (puede que se haya eliminado).</p>' +
+        navHtml;
+      body.querySelector('#ccCerrar').onclick = function () { modal.remove(); };
+      body.querySelector('#ccAnterior').onclick = function () { pintar(idxActual - 1); };
+      body.querySelector('#ccSiguiente').onclick = function () { pintar(idxActual + 1); };
+      return;
+    }
+
+    var camposHtml = cfg.campos.map(function (c) {
+      var id = 'ccf_' + c.key;
+      var val = cliente[c.key] != null ? cliente[c.key] : '';
+      if (c.tipo === 'select') {
+        var opts = c.opciones.map(function (o) {
+          return '<option ' + (cliente[c.key] === o ? 'selected' : '') + '>' + o + '</option>';
+        }).join('');
+        return '<div><label>' + c.label + '</label><select id="' + id + '">' + opts + '</select></div>';
+      }
+      if (c.tipo === 'textarea') {
+        return '<div style="flex:1 1 100%"><label>' + c.label + '</label><textarea id="' + id + '">' + escapeHtml(val) + '</textarea></div>';
+      }
+      return '<div><label>' + c.label + '</label><input type="' + c.tipo + '" id="' + id + '" value="' + escapeHtml(val) + '"></div>';
+    }).join('');
+
+    body.innerHTML =
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:10px">' +
+        '<h2 style="margin:0">' + escapeHtml(cliente.organizacion) + '</h2>' +
+        '<button class="small secondary" id="ccCerrar">Cerrar ✕</button>' +
+      '</div>' +
+      '<div class="row" style="flex-wrap:wrap">' + camposHtml + '</div>' +
+      '<div id="ccMsg"></div>' +
+      '<button class="primary" id="ccGuardar">Guardar cambios</button>' +
+      '<hr style="margin:20px 0;border:none;border-top:1px solid #eee">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center">' +
+        '<h3 style="margin:0">Seguimientos</h3>' +
+        '<button class="secondary small" id="ccNuevoSeguimiento">+ Agregar</button>' +
+      '</div>' +
+      '<div id="seguimientosBoxModal"><p class="subtle">Cargando...</p></div>' +
+      navHtml;
+
+    body.querySelector('#ccCerrar').onclick = function () { modal.remove(); };
+    body.querySelector('#ccGuardar').onclick = async function () {
+      var btn = body.querySelector('#ccGuardar');
+      var msgBox = body.querySelector('#ccMsg');
+      var params = { codigo: cliente.codigo };
+      var faltante = null;
+      cfg.campos.forEach(function (c) {
+        var elx = body.querySelector('#ccf_' + c.key);
+        var v = elx.value;
+        if (c.tipo !== 'select' && c.tipo !== 'date') v = v.trim();
+        if (c.requerido && !v && !faltante) faltante = c.label;
+        params[c.key] = v;
+      });
+      if (faltante) { msgBox.innerHTML = '<div class="msg error">El campo "' + faltante.replace(' *', '') + '" no puede estar vacío.</div>'; return; }
+
+      btn.disabled = true; btn.textContent = 'Guardando...';
+      var r = await api('guardarFilaCRMClientes', params);
+      btn.disabled = false; btn.textContent = 'Guardar cambios';
+      if (!r.ok) { msgBox.innerHTML = '<div class="msg error">' + r.error + '</div>'; return; }
+      // Refresca la tabla de atrás (por si cambió algo visible ahí, como el
+      // Estatus u Organización) y este mismo modal (para que el título y
+      // los campos reflejen lo recién guardado), sin cerrarlo.
+      await cargarCRMClientes();
+      _renderCRMClientesResultados();
+      pintar(idxActual);
+      var msgBoxTrasRepintar = modal.querySelector('#ccMsg');
+      if (msgBoxTrasRepintar) msgBoxTrasRepintar.innerHTML = '<div class="msg ok">Guardado.</div>';
+    };
+
+    // Tras agregar/editar/borrar un seguimiento desde el modal: recarga los
+    // clientes (columna "Último seguimiento" de la tabla) y refresca tanto
+    // la tabla de atrás como la lista de seguimientos de ESTE modal, sin
+    // cerrarlo — mismo espíritu que _refrescarTrasSeguimientoPanel, pero
+    // sin reconstruir todo el modal de cero.
+    function _refrescarSeguimientosModal() {
+      return cargarCRMClientes().then(function () {
+        _renderCRMClientesResultados();
+        return _cargarYRenderSeguimientosPanel(cliente.codigo, 'seguimientosBoxModal', _refrescarSeguimientosModal);
+      });
+    }
+    body.querySelector('#ccNuevoSeguimiento').onclick = function () {
+      abrirModalSeguimiento(cliente.codigo, null, function () { return _refrescarSeguimientosModal(); });
+    };
+    _cargarYRenderSeguimientosPanel(cliente.codigo, 'seguimientosBoxModal', _refrescarSeguimientosModal);
+
+    var btnAnterior = body.querySelector('#ccAnterior');
+    if (!btnAnterior.disabled) btnAnterior.onclick = function () { pintar(idxActual - 1); };
+    var btnSiguiente = body.querySelector('#ccSiguiente');
+    if (!btnSiguiente.disabled) btnSiguiente.onclick = function () { pintar(idxActual + 1); };
+  }
+
+  pintar(idxActual);
+}
+
+// Nota: este modal de alta rápida se usa para "+ Agregar cliente" (un
+// cliente nuevo). Ver/editar uno existente ya no abre este modal — usa el
+// panel lateral (_renderDetalleCliente) o, para una vista más grande con
+// navegación, el modal "Ver completo" (abrirModalClienteCompleto, arriba).
 function abrirModalCliente(cliente) {
   var cfg = CRM_TIPOS.crm_clientes;
 
