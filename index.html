@@ -86,9 +86,27 @@
   input[readonly].campo-solo-lectura {
     background: #F3F1F8; color: #666; cursor: not-allowed;
   }
-  .nota-solo-lectura { font-size: 11.5px; color: #6B6B78; margin: -8px 0 10px; }
+  /* Antes tenía margin-top negativo para "pegar" la nota al input de
+     arriba; en el grid de muchos campos (ver .campos-grid) eso hacía que la
+     nota se encimara con el campo siguiente cuando una fila tenía alturas
+     distintas. Margen positivo chico: separación limpia, sin encimarse. */
+  .nota-solo-lectura { font-size: 11.5px; color: #6B6B78; margin: 4px 0 0; line-height: 1.3; }
   .row { display: flex; gap: 14px; flex-wrap: wrap; }
   .row > div { flex: 1; min-width: 180px; }
+  /* Grid para fichas con muchos campos (p. ej. "Ver completo" de
+     Clientes/Prospectos, ~17 campos). A diferencia de .row (flexbox): con
+     flex-wrap, la ÚLTIMA fila —si no se llena del todo— se estira para
+     ocupar todo el ancho disponible entre los pocos campos que le toquen,
+     lo que da la sensación de que el formulario "no está centrado" o que
+     el diseño es irregular. Con grid-template-columns + auto-fill, las
+     columnas vacías de una fila incompleta se dejan vacías en vez de
+     repartirse entre los campos reales, así que todas las filas quedan
+     alineadas con el mismo ancho de columna. minmax(230px,...) además da
+     espacio de sobra para que no se corten textos largos (nombres de
+     organización, opciones de los <select>). */
+  .campos-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px 18px; align-items: start; }
+  .campos-grid > div { min-width: 0; }
+  .campos-grid > div.campo-ancho { grid-column: 1 / -1; }
   button.primary {
     background: var(--purple); color: #fff; border: none; padding: 10px 18px;
     border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; margin-top: 14px;
@@ -5073,7 +5091,7 @@ function abrirModalClienteCompleto(codigoInicial, codigosLista) {
         return '<div><label>' + c.label + '</label><select id="' + id + '">' + opts + '</select></div>';
       }
       if (c.tipo === 'textarea') {
-        return '<div style="flex:1 1 100%"><label>' + c.label + '</label><textarea id="' + id + '">' + escapeHtml(val) + '</textarea></div>';
+        return '<div class="campo-ancho"><label>' + c.label + '</label><textarea id="' + id + '">' + escapeHtml(val) + '</textarea></div>';
       }
       return '<div><label>' + c.label + '</label><input type="' + c.tipo + '" id="' + id + '" value="' + escapeHtml(val) + '"></div>';
     }).join('');
@@ -5083,7 +5101,7 @@ function abrirModalClienteCompleto(codigoInicial, codigosLista) {
         '<h2 style="margin:0">' + escapeHtml(cliente.organizacion) + '</h2>' +
         '<button class="small secondary" id="ccCerrar">Cerrar ✕</button>' +
       '</div>' +
-      '<div class="row" style="flex-wrap:wrap">' + camposHtml + '</div>' +
+      '<div class="campos-grid">' + camposHtml + '</div>' +
       '<div id="ccMsg"></div>' +
       '<button class="primary" id="ccGuardar">Guardar cambios</button>' +
       '<hr style="margin:20px 0;border:none;border-top:1px solid #eee">' +
