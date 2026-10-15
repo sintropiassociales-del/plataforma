@@ -78,6 +78,15 @@
     font-family: inherit; background: #fff;
   }
   textarea { min-height: 60px; resize: vertical; }
+  /* Campos que se llenan solos (p.ej. "Lead magnet descargado") y no deben
+     editarse a mano — de lo contrario un "Guardar cambios" por cualquier
+     otro motivo puede sobrescribirlos en blanco. readonly, no disabled: así
+     el valor se sigue mandando al guardar (se resguarda a sí mismo) y el
+     texto se puede seleccionar/copiar. */
+  input[readonly].campo-solo-lectura {
+    background: #F3F1F8; color: #666; cursor: not-allowed;
+  }
+  .nota-solo-lectura { font-size: 11.5px; color: #6B6B78; margin: -8px 0 10px; }
   .row { display: flex; gap: 14px; flex-wrap: wrap; }
   .row > div { flex: 1; min-width: 180px; }
   button.primary {
@@ -361,7 +370,7 @@ var CRM_TIPOS = {
       { key: 'estado', label: 'Estado / región', tipo: 'text' },
       { key: 'sitioWeb', label: 'Sitio web', tipo: 'text' },
       { key: 'fuente', label: 'Fuente', tipo: 'select', opciones: FUENTES_CRM },
-      { key: 'leadMagnet', label: 'Lead magnet descargado', tipo: 'text' },
+      { key: 'leadMagnet', label: 'Lead magnet descargado', tipo: 'text', soloLectura: true },
       { key: 'consentimiento', label: 'Consentimiento (opt-in)', tipo: 'select', opciones: SINO_CRM },
       { key: 'estatus', label: 'Estatus', tipo: 'select', opciones: ESTATUS_CRM },
       { key: 'servicioVendido', label: '¿Qué se le vendió? (si Estatus = Venta)', tipo: 'text' },
@@ -4715,6 +4724,34 @@ function _renderCRMClientesResultados() {
   var todosMarcados = lista.length > 0 && lista.every(function (c) { return state.crmClientesSeleccion.indexOf(c.codigo) !== -1; });
   var thead = '<tr><th style="width:28px"><input type="checkbox" id="crmSelAllClientes"' + (todosMarcados ? ' checked' : '') + '></th>' +
     '<th>Organización</th><th>Categoría</th><th>Contacto</th><th>Estatus</th><th>Muestra</th><th>Último seguimiento</th><th></th></tr>';
+  // "Muestra" debería reflejar el campo "leadMagnet" de CRM_Clientes (se
+  // llena cuando el prospecto llegó, o volvió, completando una muestra
+  // pública — ver apiCapturarClienteDiagnostico en WebApp.gs). El problema:
+  // ese campo es un cuadro de texto editable más en la ficha ("Lead magnet
+  // descargado"), y "Guardar cambios" siempre reescribe la fila completa —
+  // así que si alguien guarda la ficha por cualquier otro motivo (cambiar el
+  // Estatus, agregar una nota) mientras ese cuadro está vacío, lo borra,
+  // aunque el cliente sí haya completado una muestra después. Por eso no
+  // basta con mirar c.leadMagnet: se cruza también contra el historial de
+  // seguimientos — cada vez que alguien YA existente vuelve a completar una
+  // muestra queda un seguimiento automático "Completó otra muestra web:
+  // "<nombre>"" (ver _agregarSeguimientoAutomatico en WebApp.gs), que nadie
+  // borra nunca. Mismo principio que _hizoMuestraInteresado usa para
+  // Interesados, solo que aquí si recuperamos el nombre de la muestra.
+  var ultimaMuestraRepetidaPorCliente = {};
+  (state.crmSeguimientosTodos || []).forEach(function (s) {
+    var m = /^Completó otra muestra web: "([^"]+)"/.exec(String(s.notas || ''));
+    if (!m) return;
+    // ">=" y no ">": si dos muestras del mismo cliente caen el mismo día (es
+    // el caso real de UNID Campeche), nos quedamos con la última que
+    // aparece en la lista — que, por cómo WebApp.gs va agregando filas al
+    // final de la hoja, es la más reciente de las dos.
+    var actual = ultimaMuestraRepetidaPorCliente[s.clienteCodigo];
+    if (!actual || String(s.fechaOrden || '') >= String(actual.fechaOrden || '')) {
+      ultimaMuestraRepetidaPorCliente[s.clienteCodigo] = { nombre: m[1], fechaOrden: s.fechaOrden };
+    }
+  });
+
   var trs = listaPagina.map(function (c) {
     var ultimo = _ultimoSeguimientoDe(c.codigo);
     var celdaUltimo;
@@ -4725,14 +4762,12 @@ function _renderCRMClientesResultados() {
       celdaUltimo = '<strong>' + escapeHtml(ultimo.fecha) + '</strong>' +
         (notasCorta ? '<br><span class="subtle">' + escapeHtml(notasCorta) + '</span>' : '');
     }
-    // "Muestra" = el campo "leadMagnet" ya existente en CRM_Clientes — se
-    // llena solo cuando el prospecto llegó (o volvió) completando una
-    // muestra pública (ver apiCapturarClienteDiagnostico / leadMagnet en el
-    // modal de edición), así que no hizo falta agregar ninguna columna
-    // nueva al Sheet. Vacío = nunca completó una muestra.
+    var otraMuestra = ultimaMuestraRepetidaPorCliente[c.codigo];
     var celdaMuestra = c.leadMagnet
       ? escapeHtml(c.leadMagnet)
-      : '<span class="subtle">No hizo muestra</span>';
+      : (otraMuestra
+          ? escapeHtml(otraMuestra.nombre)
+          : '<span class="subtle">No hizo muestra</span>');
     var marcado = state.crmClientesSeleccion.indexOf(c.codigo) !== -1;
     var seleccionado = state.crmClienteSeleccionado === c.codigo;
     return '<tr' + (seleccionado ? ' class="fila-seleccionada"' : '') + '>' +
@@ -4860,6 +4895,10 @@ function _renderDetalleCliente() {
   var camposHtml = cfg.campos.map(function (c) {
     var id = 'cf_' + c.key;
     var val = cliente[c.key] != null ? cliente[c.key] : '';
+    if (c.soloLectura) {
+      return '<label>' + c.label + '</label><input type="text" class="campo-solo-lectura" id="' + id + '" value="' + escapeHtml(val) + '" readonly title="Se llena solo cuando alguien completa una muestra pública.">' +
+        '<div class="nota-solo-lectura">Se llena solo; no se edita aquí.</div>';
+    }
     if (c.tipo === 'select') {
       var opts = c.opciones.map(function (o) {
         return '<option ' + (cliente[c.key] === o ? 'selected' : '') + '>' + o + '</option>';
@@ -5024,6 +5063,9 @@ function abrirModalClienteCompleto(codigoInicial, codigosLista) {
     var camposHtml = cfg.campos.map(function (c) {
       var id = 'ccf_' + c.key;
       var val = cliente[c.key] != null ? cliente[c.key] : '';
+      if (c.soloLectura) {
+        return '<div><label>' + c.label + '</label><input type="text" class="campo-solo-lectura" id="' + id + '" value="' + escapeHtml(val) + '" readonly title="Se llena solo cuando alguien completa una muestra pública."><div class="nota-solo-lectura">Se llena solo; no se edita aquí.</div></div>';
+      }
       if (c.tipo === 'select') {
         var opts = c.opciones.map(function (o) {
           return '<option ' + (cliente[c.key] === o ? 'selected' : '') + '>' + o + '</option>';
@@ -5116,6 +5158,10 @@ function abrirModalCliente(cliente) {
   var camposHtml = cfg.campos.map(function (c) {
     var id = 'cf_' + c.key;
     var val = '';
+    if (c.soloLectura) {
+      return '<label>' + c.label + '</label><input type="text" class="campo-solo-lectura" id="' + id + '" value="" readonly title="Se llena solo cuando este cliente complete una muestra pública.">' +
+        '<div class="nota-solo-lectura">Se llena solo; no se edita aquí.</div>';
+    }
     if (c.tipo === 'select') {
       var opts = c.opciones.map(function (o) {
         return '<option>' + o + '</option>';
