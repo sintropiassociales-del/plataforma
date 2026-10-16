@@ -2,8 +2,28 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>Plataforma Sintropía</title>
+
+<!-- ---- "Versión 1" instalable (PWA): agrega esta página a la pantalla de
+     inicio del iPhone desde Safari ("Compartir" -> "Agregar a pantalla de
+     inicio") y se abre a pantalla completa, con ícono propio, como una app
+     — sin pasar por Xcode ni por ninguna cuenta de desarrollador. manifest.json
+     y los íconos (icon-180.png, icon-192.png, icon-512.png) deben subirse
+     junto a este index.html, en la misma carpeta del repo. ---- -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#631EEB">
+<!-- Específico de iOS/Safari: sin esto, "Agregar a pantalla de inicio" abre
+     la página dentro de Safari (con barra de direcciones) en vez de a
+     pantalla completa como una app. -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Sintropía CRM">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png">
+<link rel="apple-touch-icon" sizes="167x167" href="icon-167.png">
+<link rel="apple-touch-icon" sizes="152x152" href="icon-152.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+
 <style>
   :root {
     --purple: #631EEB;
