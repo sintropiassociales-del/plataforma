@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Integridad y Confianza Sintropía (ICS) — cuestionario para candidatos de Reclutamiento y Selección, por Sintropía Social.">
+<title>Integridad y Confianza Sintropía — Sintropía Social</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --purple: #631EEB; --purple-dark: #4E17B8; --orange: #FF7929;
+    --bg: #F5F3FC; --card: #FFFFFF; --text: #2C2C2C; --subtle: #6B6B78; --border: #E6E2F5;
+    --error: #C0392B; --error-bg: #FDECEA; --ok: #1E8449; --ok-bg: #EAF7EE;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Open Sans', -apple-system, "Segoe UI", Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.55; }
+  header.top { background: var(--purple); color: #fff; padding: 26px 18px 44px; text-align: center; border-radius: 0 0 22px 22px; }
+  header.top .marca { font-size: 20px; font-weight: 800; letter-spacing: .3px; }
+  header.top .marca span { color: var(--orange); }
+  header.top .subt { font-size: 13.5px; opacity: .92; margin-top: 6px; max-width: 480px; margin-left: auto; margin-right: auto; }
+  main { max-width: 700px; margin: -26px auto 40px; padding: 0 16px; }
+  .card { background: var(--card); border-radius: 14px; padding: 26px 24px; margin-bottom: 16px; box-shadow: 0 6px 20px rgba(99,30,235,.08); border: 1px solid var(--border); }
+  h1 { font-size: 21px; margin: 0 0 8px; }
+  h2 { font-size: 18px; margin: 0 0 10px; color: var(--purple-dark); }
+  p.subtle, .subtle { color: var(--subtle); font-size: 13.5px; }
+  .intro-caja { background: #FAF8FF; border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin: 14px 0; }
+  .progreso { display: flex; gap: 6px; margin: 18px 0 22px; }
+  .progreso .paso { flex: 1; height: 6px; border-radius: 4px; background: var(--border); }
+  .progreso .paso.hecho { background: var(--orange); }
+  .progreso .paso.actual { background: var(--purple); }
+  .fila-botones { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+  button { font-family: inherit; font-size: 14.5px; font-weight: 700; border-radius: 999px; padding: 12px 24px; border: none; cursor: pointer; }
+  button.primary { background: var(--purple); color: #fff; }
+  button.primary:hover { background: var(--purple-dark); }
+  button.secondary { background: #fff; color: var(--purple); border: 1.5px solid var(--purple); }
+  button:disabled { opacity: .5; cursor: default; }
+  .msg { padding: 10px 13px; border-radius: 9px; font-size: 13.5px; margin: 12px 0; }
+  .msg.error { background: var(--error-bg); color: var(--error); }
+  .msg.ok { background: var(--ok-bg); color: var(--ok); }
+  .item-likert { border-top: 1px solid var(--border); padding: 16px 0; }
+  .item-likert:first-of-type { border-top: none; padding-top: 4px; }
+  .item-texto { font-size: 14.5px; font-weight: 600; margin-bottom: 10px; }
+  .escala-likert { display: flex; gap: 6px; flex-wrap: wrap; }
+  .op-likert { flex: 1; min-width: 78px; border: 1.5px solid var(--border); border-radius: 9px; background: #fff;
+    color: var(--subtle); font-weight: 600; font-size: 11.5px; padding: 9px 4px; cursor: pointer; text-align: center;
+    transition: background .12s, border-color .12s, color .12s; }
+  .op-likert .num { display: block; font-size: 15px; font-weight: 800; }
+  .op-likert.marcada { background: var(--purple); border-color: var(--purple); color: #fff; }
+  .pantalla-centrada { text-align: center; padding: 40px 10px; }
+  .pantalla-centrada .icono { font-size: 44px; margin-bottom: 10px; }
+  .spinner { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--purple); border-radius: 50%; animation: girar 0.8s linear infinite; margin: 20px auto; }
+  @keyframes girar { to { transform: rotate(360deg); } }
+  footer.pie { text-align: center; padding: 20px 16px 40px; font-size: 12px; color: var(--subtle); }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="marca">Sintropía <span>Social</span></div>
+  <div class="subt">Integridad y Confianza Sintropía (ICS) — proceso de Reclutamiento y Selección</div>
+</header>
+
+<main>
+  <div id="app" class="card">
+    <div class="spinner"></div>
+    <p class="subtle" style="text-align:center">Cargando...</p>
+  </div>
+</main>
+
+<footer class="pie">Sintropía Social — tus respuestas se usan únicamente como apoyo dentro de tu proceso de selección.</footer>
+
+<script>
+var WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxZbLiOP7QXvrgUIDhhVciVGY-Yval3YBvqBHOpQfK8El2wHXNNBtZvsnkbwMaJUss/exec';
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function jsonp(action, params) {
+  return new Promise(function (resolve) {
+    var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+    var url = WEB_APP_URL + '?action=' + encodeURIComponent(action) + '&callback=' + cbName;
+    params = params || {};
+    for (var k in params) { if (params[k] !== undefined && params[k] !== null) url += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(params[k]); }
+    var script = document.createElement('script');
+    var cleaned = false;
+    function cleanup() { if (cleaned) return; cleaned = true; delete window[cbName]; if (script.parentNode) script.parentNode.removeChild(script); }
+    window[cbName] = function (data) { cleanup(); resolve(data); };
+    script.onerror = function () { cleanup(); resolve({ ok: false, error: 'No se pudo conectar. Revisa tu conexión a internet e intenta de nuevo.' }); };
+    setTimeout(function () { if (!cleaned) { cleanup(); resolve({ ok: false, error: 'La plataforma tardó demasiado en responder. Intenta de nuevo.' }); } }, 25000);
+    script.src = url;
+    document.body.appendChild(script);
+  });
+}
+function api(action, params) { params = params || {}; params.token = state.token; return jsonp(action, params); }
+
+/* ============================================================
+ * Contenido íntegro del ICS (34 reactivos: 6 por cada una de las 4
+ * dimensiones de contenido MR/AN/CH/MC, 6 de la dimensión de perfil ON y
+ * 4 de consistencia), tal como fue aprobado en la pestaña "5. Integridad
+ * y Confianza" de la doc "Baterías Psicométricas Sintropía (RyS)" — el
+ * orden aquí debe coincidir EXACTAMENTE con ICS_ITEMS en WebApp.gs (misma
+ * posición = mismo reactivo), porque el backend califica por índice, no
+ * por texto.
+ * ============================================================ */
+var OPCIONES_LIKERT = ['Totalmente en desacuerdo', 'En desacuerdo', 'Neutral', 'De acuerdo', 'Totalmente de acuerdo'];
+var ITEMS_ICS = [
+  // MR — Manejo de Recursos (1-6)
+  'Si encontrara un error a mi favor en mi pago de nómina, lo reportaría aunque nadie se diera cuenta.',
+  'Tomar artículos pequeños de la oficina (plumas, papel, insumos) para uso personal no se me hace un problema real.',
+  'Registro mis horas de entrada y salida con la misma honestidad aunque nadie esté revisando ese día.',
+  'Si tuviera acceso a la caja chica, no vería mal "tomar prestado" algo de dinero con la intención de regresarlo después.',
+  'Entrego o reporto cualquier dinero, propina o producto que no me corresponde, aunque sea una cantidad pequeña.',
+  'Usar el tiempo o los recursos de la empresa para resolver asuntos personales urgentes me parece aceptable casi siempre.',
+  // AN — Apego a Normas (7-12)
+  'Sigo los procedimientos de seguridad de mi área aunque esto tome más tiempo que la forma "rápida" de hacerlo.',
+  'Llego a mi horario de entrada aun cuando sé que mi supervisor no está presente para notarlo.',
+  'Si una regla me parece poco práctica, prefiero saltármela sin avisar a nadie, en vez de seguirla o pedir que la cambien.',
+  'Me parece normal "cuadrar" o maquillar un reporte para que se vea mejor ante mi jefe.',
+  'Reviso que mi área cumpla las medidas de seguridad aunque esto no sea parte formal de mi puesto.',
+  'Si nadie está revisando, es más fácil saltarse un paso del proceso que seguirlo completo.',
+  // CH — Comunicación Honesta (13-18)
+  'Cuando cometo un error en mi trabajo, lo reporto aunque me cueste una llamada de atención.',
+  'Si puedo evitar que se note un error mío sin que nadie salga perjudicado, prefiero no mencionarlo.',
+  'Doy la misma información completa a mi jefe y a mis compañeros, sin dejar partes importantes fuera.',
+  'Para quedar bien con un cliente o jefe, en ocasiones exagero un resultado o avance.',
+  'Prefiero decir una verdad incómoda a mi equipo que quedarme callado para evitar un conflicto.',
+  'Si mentir un poco evita un conflicto o una sanción, lo considero una opción válida.',
+  // MC — Manejo Ético de Conflictos (19-24)
+  'Cuando tengo un conflicto con un compañero, busco resolverlo hablando directamente con la persona.',
+  'Si alguien me falta al respeto en el trabajo, siento que tengo derecho a responder con la misma agresividad.',
+  'Evito comentarios o bromas que puedan incomodar o humillar a un compañero, aunque "sea broma".',
+  'Me parece normal que alguien con más jerarquía presione o intimide a quienes tienen menos poder para conseguir resultados.',
+  'Si veo que alguien está siendo excluido o molestado por el grupo, intervengo o lo reporto.',
+  'Participar en las bromas pesadas o la "novatada" hacia un compañero nuevo no me parece grave.',
+  // ON — Orientación Normativa (25-30)
+  'Ante un conflicto entre lo que dice el manual y lo que la costumbre del equipo ha hecho siempre, sigo lo que dice el manual.',
+  'Si un compañero cercano me pide cubrir una falta de asistencia por una emergencia familiar, prefiero resolverlo por el canal formal de permisos antes que de manera informal entre nosotros.',
+  'Cuando mi jefe directo me pide algo que no sigue el procedimiento oficial pero ayuda al equipo, lo hago de todos modos.',
+  'Prefiero que las decisiones del equipo se basen en la política escrita, aun si eso incomoda a alguien del grupo.',
+  'Si ayudar a un compañero significa romper una regla menor de la empresa, elijo ayudar a mi compañero.',
+  'La lealtad a mi equipo o a mi familia pesa más para mí que una regla formal cuando ambas entran en conflicto.',
+  // Escala de consistencia (31-34) — no se reporta como dimensión
+  'Nunca en mi vida he incumplido ni la regla más pequeña en ningún trabajo.',
+  'Jamás se me ha pasado por la cabeza quedarme con algo que no es mío, ni un lápiz.',
+  'Nunca he exagerado ni un poco al contar un logro propio.',
+  'No existe ninguna situación en la que yo rompería una regla de la empresa, sin excepción.'
+];
+var TAM_BLOQUE = 6;
+var NUM_BLOQUES = Math.ceil(ITEMS_ICS.length / TAM_BLOQUE);
+
+var qs = new URLSearchParams(location.search);
+var state = { token: qs.get('token') || '', info: null, paso: 'cargando', respuestas: new Array(ITEMS_ICS.length).fill(null) };
+var app = document.getElementById('app');
+
+function render() {
+  if (state.paso === 'error') return renderError();
+  if (state.paso === 'yaCompletado') return renderYaCompletado();
+  if (state.paso === 'bienvenida') return renderBienvenida();
+  if (state.paso === 'enviando') return renderEnviando();
+  if (state.paso === 'gracias') return renderGracias();
+  return renderBloque(state.paso);
+}
+function renderError(msgTexto) {
+  app.innerHTML = '<div class="pantalla-centrada"><div class="icono">⚠️</div><h1>No pudimos abrir este enlace</h1>' +
+    '<p class="subtle">' + escapeHtml(msgTexto || 'Este enlace no es válido o ya no está disponible. Pide a tu contacto en Sintropía Social que te lo comparta de nuevo.') + '</p></div>';
+}
+function renderYaCompletado() {
+  app.innerHTML = '<div class="pantalla-centrada"><div class="icono">✅</div><h1>Ya completaste este cuestionario</h1>' +
+    '<p class="subtle">Gracias por tu participación — tus respuestas ya quedaron registradas. Ya puedes cerrar esta ventana.</p></div>';
+}
+function renderBienvenida() {
+  app.innerHTML =
+    '<h1>Integridad y Confianza Sintropía</h1>' +
+    '<div class="intro-caja"><p style="margin:0 0 8px">Este cuestionario forma parte de tu proceso de reclutamiento. No es un detector de mentiras ni evalúa si has hecho algo malo en el pasado — mide actitudes frente a situaciones comunes en el trabajo. No hay respuestas correctas o incorrectas; responde con lo que de verdad harías o pensarías, no con lo que crees que "se espera" que digas.</p>' +
+    '<p style="margin:0 0 8px">Son 34 afirmaciones cortas. Para cada una, indica qué tan de acuerdo estás, del 1 (totalmente en desacuerdo) al 5 (totalmente de acuerdo). Toma entre 10 y 12 minutos.</p>' +
+    '<p style="margin:0">El resultado es un insumo más dentro del proceso de selección, junto con tu entrevista, tus referencias y tu experiencia — no es un examen que se aprueba o se reprueba.</p></div>' +
+    '<p class="subtle">Este enlace es personal e intransferible y está vigente hasta el ' + escapeHtml(state.info.expira) + '.</p>' +
+    '<div class="fila-botones"><button class="primary" id="btnComenzar">Comenzar</button></div>';
+  document.getElementById('btnComenzar').onclick = function () { state.paso = 0; render(); };
+}
+function renderEnviando() {
+  app.innerHTML = '<div class="spinner"></div><p class="subtle" style="text-align:center">Enviando tus respuestas...</p>';
+}
+function renderGracias() {
+  app.innerHTML = '<div class="pantalla-centrada"><div class="icono">🎉</div><h1>Gracias</h1>' +
+    '<p class="subtle">Tus respuestas quedaron guardadas. El equipo de Sintropía Social continuará con tu proceso. Ya puedes cerrar esta ventana.</p></div>';
+}
+
+function renderBloque(idx) {
+  var inicio = idx * TAM_BLOQUE, fin = Math.min(inicio + TAM_BLOQUE, ITEMS_ICS.length);
+  var itemsHtml = '';
+  for (var i = inicio; i < fin; i++) {
+    var valorActual = state.respuestas[i];
+    itemsHtml += '<div class="item-likert"><div class="item-texto">' + (i + 1) + '. ' + escapeHtml(ITEMS_ICS[i]) + '</div>' +
+      '<div class="escala-likert">' + OPCIONES_LIKERT.map(function (op, n) {
+        var v = n + 1;
+        return '<div class="op-likert' + (valorActual === v ? ' marcada' : '') + '" data-item="' + i + '" data-valor="' + v + '"><span class="num">' + v + '</span>' + op + '</div>';
+      }).join('') + '</div></div>';
+  }
+  app.innerHTML =
+    '<div class="progreso">' + Array.from({ length: NUM_BLOQUES }, function (_, i) {
+      return '<div class="paso ' + (i < idx ? 'hecho' : (i === idx ? 'actual' : '')) + '"></div>';
+    }).join('') + '</div>' +
+    '<p class="subtle">Parte ' + (idx + 1) + ' de ' + NUM_BLOQUES + ' — del 1 (totalmente en desacuerdo) al 5 (totalmente de acuerdo).</p>' +
+    '<div id="secMsg"></div>' + itemsHtml +
+    '<div class="fila-botones">' +
+      (idx > 0 ? '<button class="secondary" id="btnAtras">Atrás</button>' : '') +
+      '<button class="primary" id="btnSiguiente">' + (idx + 1 < NUM_BLOQUES ? 'Continuar' : 'Finalizar') + '</button>' +
+    '</div>';
+
+  app.querySelectorAll('.op-likert').forEach(function (el) {
+    el.onclick = function () {
+      var i = Number(el.getAttribute('data-item')), v = Number(el.getAttribute('data-valor'));
+      state.respuestas[i] = v;
+      app.querySelectorAll('.item-likert').forEach(function (bloque) {
+        var primero = bloque.querySelector('.op-likert');
+        if (Number(primero.getAttribute('data-item')) !== i) return;
+        bloque.querySelectorAll('.op-likert').forEach(function (o) { o.classList.toggle('marcada', Number(o.getAttribute('data-valor')) === v); });
+      });
+    };
+  });
+  if (idx > 0) document.getElementById('btnAtras').onclick = function () { state.paso = idx - 1; render(); };
+  document.getElementById('btnSiguiente').onclick = async function () {
+    var faltan = false;
+    for (var i = inicio; i < fin; i++) if (state.respuestas[i] == null) faltan = true;
+    if (faltan) { document.getElementById('secMsg').innerHTML = '<div class="msg error">Responde las ' + (fin - inicio) + ' afirmaciones de esta parte antes de continuar.</div>'; return; }
+    if (idx + 1 < NUM_BLOQUES) { state.paso = idx + 1; render(); return; }
+    await enviar();
+  };
+}
+
+async function enviar() {
+  state.paso = 'enviando'; render();
+  var r = await api('enviarICS', { respuestas: JSON.stringify(state.respuestas) });
+  if (!r.ok) {
+    state.paso = NUM_BLOQUES - 1; render();
+    document.getElementById('secMsg').innerHTML = '<div class="msg error">' + escapeHtml(r.error || 'No se pudo enviar. Intenta de nuevo.') + '</div>';
+    return;
+  }
+  state.paso = 'gracias'; render();
+}
+
+async function init() {
+  if (!state.token) { state.paso = 'error'; render(); return; }
+  var r = await api('infoICS', {});
+  if (!r.ok) { renderError(r.error); return; }
+  state.info = r;
+  state.paso = r.completado ? 'yaCompletado' : 'bienvenida';
+  render();
+}
+init();
+</script>
+</body>
+</html>

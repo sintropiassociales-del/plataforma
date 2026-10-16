@@ -480,13 +480,19 @@ var FAMILIAS = {
   RS: 'Reclutamiento y Selección',
   ENT: 'Entrevistas',
   SE: 'Estudios Socioeconómicos',
-  CRM: 'CRM'
+  CRM: 'CRM',
+  PSI: 'Psicometrías'
 };
 // Igual que FAMILIA_ORDEN, pero solo para la página de administración
-// "Instrumentos" (catálogo completo instalable): ahí también aparece CRM,
-// que no vive dentro de INSTRUMENTOS/FAMILIA_ORDEN porque no está ligado a
-// ningún proyecto.
-var FAMILIA_ORDEN_ADMIN = FAMILIA_ORDEN.concat(['CRM']);
+// "Instrumentos" (catálogo completo instalable): ahí también aparecen CRM
+// y PSI, que no viven dentro de INSTRUMENTOS/FAMILIA_ORDEN porque no están
+// ligados a un proyecto de la forma genérica (CRM) o porque, aunque sus
+// instrumentos sí pertenecen a un proyecto de RS, en el catálogo de
+// Instrumentos se agrupan aparte para que las baterías psicométricas
+// (PCS/PTS/RAS/RCS/ICS) tengan su propia categoría en vez de mezclarse con
+// las fichas y formatos de RS-01 a RS-12. Se coloca justo después de RS
+// porque es la familia de la que se desprende.
+var FAMILIA_ORDEN_ADMIN = ['DIA', 'TER', 'MER', 'PLA', 'IND', 'EVA', 'OPE', 'SAL', 'PED', 'EDU', 'EST', 'CUA', 'RS', 'PSI', 'ENT', 'SE', 'CRM'];
 
 var INSTRUMENTOS = {
   dia01: {
@@ -1047,6 +1053,38 @@ var INSTRUMENTOS = {
       { key: 'idCandidato', label: 'ID_CANDIDATO (RS-06) *', tipo: 'text', requerido: true, placeholder: 'ej. CAND-01' },
       { key: 'fechaAplicacion', label: 'Fecha de aplicación *', tipo: 'date', requerido: true },
       { key: 'ordenColores', label: 'Orden de colores (1º → 8º, separados por " → ")', tipo: 'text', requerido: true }
+    ]
+  },
+  ics: {
+    familia: 'RS',
+    titulo: 'Integridad y Confianza Sintropía (ICS)',
+    listar: 'listarICS', guardar: 'guardarFilaICS', eliminar: 'eliminarFilaICS',
+    validar: 'validarICS', descargar: 'generarDescargableICS',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'idCandidato', label: 'ID_CANDIDATO' },
+      { key: 'fechaAplicacion', label: 'Fecha de aplicación' },
+      { key: 'bandaMR', label: 'Banda MR' },
+      { key: 'bandaAN', label: 'Banda AN' },
+      { key: 'bandaCH', label: 'Banda CH' },
+      { key: 'bandaMC', label: 'Banda MC' },
+      { key: 'etiquetaON', label: 'Etiqueta ON' },
+      { key: 'notaConsistencia', label: 'Nota de consistencia' }
+    ],
+    campos: [
+      { key: 'idCandidato', label: 'ID_CANDIDATO (RS-06) *', tipo: 'text', requerido: true, placeholder: 'ej. CAND-01' },
+      { key: 'fechaAplicacion', label: 'Fecha de aplicación *', tipo: 'date', requerido: true },
+      { key: 'puntajeMR', label: 'MR — Manejo de Recursos (0-100)', tipo: 'number' },
+      { key: 'bandaMR', label: 'Banda MR', tipo: 'select', opciones: ['Bajo', 'Medio', 'Alto'] },
+      { key: 'puntajeAN', label: 'AN — Apego a Normas (0-100)', tipo: 'number' },
+      { key: 'bandaAN', label: 'Banda AN', tipo: 'select', opciones: ['Bajo', 'Medio', 'Alto'] },
+      { key: 'puntajeCH', label: 'CH — Comunicación Honesta (0-100)', tipo: 'number' },
+      { key: 'bandaCH', label: 'Banda CH', tipo: 'select', opciones: ['Bajo', 'Medio', 'Alto'] },
+      { key: 'puntajeMC', label: 'MC — Manejo Ético de Conflictos (0-100)', tipo: 'number' },
+      { key: 'bandaMC', label: 'Banda MC', tipo: 'select', opciones: ['Bajo', 'Medio', 'Alto'] },
+      { key: 'puntajeON', label: 'ON — Orientación Normativa (0-100)', tipo: 'number' },
+      { key: 'etiquetaON', label: 'Etiqueta ON', tipo: 'select', opciones: ['Predominantemente relacional/comunitario', 'Mixto / depende del contexto', 'Predominantemente institucional/formal'] },
+      { key: 'notaConsistencia', label: 'Nota de consistencia (deseabilidad social alta)', tipo: 'select', opciones: ['No', 'Sí'] }
     ]
   },
   ent01: {
@@ -2531,6 +2569,7 @@ var INSTRUMENTOS_INSTALABLES = [
   { clave: 'PTS', nombre: 'Preferencias de Trabajo Sintropía (PTS) — batería psicométrica RyS', tipos: ['pts'] },
   { clave: 'RAS', nombre: 'Razonamiento Aplicado Sintropía (RAS) — batería psicométrica RyS', tipos: ['ras'] },
   { clave: 'RCS', nombre: 'Reflexión de Color Sintropía (RCS) — batería psicométrica RyS', tipos: ['rcs'] },
+  { clave: 'ICS', nombre: 'Integridad y Confianza Sintropía (ICS) — batería psicométrica RyS', tipos: ['ics'] },
   { clave: 'ENT01', nombre: 'INS-ENT-01 — Ficha de preparación de entrevista', tipos: ['ent01'] },
   { clave: 'ENT02', nombre: 'INS-ENT-02 — Guía de entrevista estructurada', tipos: ['ent02'] },
   { clave: 'ENT03', nombre: 'INS-ENT-03 — Guía de entrevista por competencias (STAR)', tipos: ['ent03'] },
@@ -2649,6 +2688,12 @@ function _familiaDeInstalable(item) {
   if (item.clave === 'MUESTRASWEB') return 'CRM';
   if (item.clave === 'IMES') return 'EVA';
   if (item.clave === 'IMESU') return 'EVA';
+  // Las 5 baterías psicométricas de RyS (PCS/PTS/RAS/RCS/ICS) viven dentro
+  // de un proyecto de Reclutamiento y Selección (INSTRUMENTOS[...].familia
+  // = 'RS', para que sus pestañas de resultados aparezcan junto a RS-01..12
+  // dentro de ese proyecto) pero en el catálogo admin "Instrumentos" se
+  // agrupan aparte, en su propia categoría "Psicometrías".
+  if (item.clave === 'PCS' || item.clave === 'PTS' || item.clave === 'RAS' || item.clave === 'RCS' || item.clave === 'ICS') return 'PSI';
   if (item.tipos && item.tipos.length && INSTRUMENTOS[item.tipos[0]]) return INSTRUMENTOS[item.tipos[0]].familia;
   return 'OTRO';
 }
@@ -3228,14 +3273,11 @@ var RYS_FAMILIAS_PANEL = [
   { clave: 'PCS', nombre: 'PCS — Perfil Conductual' },
   { clave: 'PTS', nombre: 'PTS — Preferencias de Trabajo' },
   { clave: 'RAS', nombre: 'RAS — Razonamiento Aplicado' },
-  { clave: 'RCS', nombre: 'RCS — Reflexión de Color' }
+  { clave: 'RCS', nombre: 'RCS — Reflexión de Color' },
+  { clave: 'ICS', nombre: 'ICS — Integridad y Confianza' }
 ];
-var RYS_PAGINAS = { PCS: 'aplicacion_pcs.html', PTS: 'aplicacion_pts.html', RAS: 'aplicacion_ras.html', RCS: 'aplicacion_rcs.html' };
-
-function _urlRYS(familia, token) {
-  var base = location.href.replace(/index\.html(\?.*)?(#.*)?$/, '').replace(/\/?$/, '/');
-  return base + RYS_PAGINAS[familia] + '?token=' + encodeURIComponent(token);
-}
+var NOMBRE_RYS_PANEL_POR_CLAVE = {};
+RYS_FAMILIAS_PANEL.forEach(function (f) { NOMBRE_RYS_PANEL_POR_CLAVE[f.clave] = f.nombre; });
 
 async function renderPanelBateriasRYS() {
   var panel = document.getElementById('panelBateriasRYS');
@@ -3245,10 +3287,12 @@ async function renderPanelBateriasRYS() {
   var rCand = await api('listarRS06', { proyecto: state.proyectoActivo.codigo });
   if (!rCand.ok) { panel.innerHTML = '<p class="msg error">' + escapeHtml(rCand.error) + '</p>'; return; }
   var conConsentimiento = (rCand.data || []).filter(function (f) { return f.consentimiento === 'Sí'; });
+  var candidatosPorId = {};
+  conConsentimiento.forEach(function (c) { candidatosPorId[c.codigo] = c; });
 
   panel.innerHTML =
-    '<h3 style="margin-bottom:4px">Baterías psicométricas (PCS · PTS · RAS · RCS)</h3>' +
-    '<p class="subtle" style="margin-top:0">Genera un enlace seguro por candidato y por batería — el candidato contesta directo, sin recibir correo ni ver su puntaje; al terminar, el resultado se guarda aquí y además se envía por correo a dirección como Word. Solo puede generarse si el candidato ya tiene consentimiento otorgado en RS-06. Resultado exploratorio y complementario — nunca debe usarse como único criterio de contratación o descarte.</p>' +
+    '<h3 style="margin-bottom:4px">Baterías psicométricas (PCS · PTS · RAS · RCS · ICS)</h3>' +
+    '<p class="subtle" style="margin-top:0">Genera un enlace seguro por candidato y por batería — el candidato contesta directo, sin ver su puntaje; al terminar, la liga deja de funcionar de inmediato y el resultado se guarda aquí y además se envía por correo a dirección como Word. La liga puede copiarse y compartirse a mano, o mandarse por correo al candidato (de inmediato o programado por lotes) desde "Programar envío de ligas" más abajo. Solo puede generarse si el candidato ya tiene consentimiento otorgado en RS-06. Resultado exploratorio y complementario — nunca debe usarse como único criterio de contratación o descarte.</p>' +
     (conConsentimiento.length === 0
       ? '<p class="subtle">Ningún candidato de RS-06 tiene consentimiento otorgado todavía.</p>'
       : '<table><thead><tr><th>Candidato</th><th>Nombre</th>' +
@@ -3261,7 +3305,14 @@ async function renderPanelBateriasRYS() {
                 '<div class="enlaceResultadoRYS" data-candidato="' + escapeHtml(c.codigo) + '" data-familia="' + f.clave + '" style="margin-top:4px"></div></td>';
             }).join('') + '</tr>';
         }).join('') + '</tbody></table>') +
+    '<div class="toolbar" style="justify-content:flex-start;margin-top:14px">' +
+      '<button class="secondary" id="btnProgramarEnvioRYS">Programar envío de ligas</button>' +
+      '<button class="secondary" id="btnVerProgramadosRYS">Ver correos programados</button>' +
+    '</div>' +
     '<div id="listaEnlacesRYS" style="margin-top:18px"></div>';
+
+  document.getElementById('btnProgramarEnvioRYS').onclick = function () { abrirModalProgramarEnvioRYS(candidatosPorId); };
+  document.getElementById('btnVerProgramadosRYS').onclick = function () { abrirModalVerCorreosProgramados(); };
 
   Array.prototype.forEach.call(panel.querySelectorAll('.btnGenRYS'), function (btn) {
     btn.onclick = async function () {
@@ -3271,7 +3322,7 @@ async function renderPanelBateriasRYS() {
       btn.disabled = false; btn.textContent = 'Generar liga';
       var caja = panel.querySelector('.enlaceResultadoRYS[data-candidato="' + candidato + '"][data-familia="' + familia + '"]');
       if (!r.ok) { caja.innerHTML = '<span class="msg error" style="display:inline-block">' + escapeHtml(r.error) + '</span>'; return; }
-      var url = _urlRYS(familia, r.token);
+      var url = r.liga; // la arma el backend (apiGenerarEnlaceRYS) — misma liga que se manda por correo
       caja.innerHTML =
         '<input type="text" readonly value="' + escapeHtml(url) + '" style="width:260px;font-size:11px" onclick="this.select()"> ' +
         '<button class="small secondary btnCopiarRYS">Copiar</button><br>' +
@@ -3294,11 +3345,12 @@ async function renderPanelBateriasRYS() {
     var r = await api('listarEnlacesRYS', { proyecto: state.proyectoActivo.codigo });
     if (!r.ok || !r.data.length) { caja.innerHTML = ''; return; }
     caja.innerHTML = '<p class="subtle" style="margin-bottom:4px">Ligas generadas en este proyecto</p>' +
-      '<table><thead><tr><th>Código</th><th>Batería</th><th>Candidato</th><th>Vence</th><th>Estatus</th><th>Completado</th><th></th></tr></thead><tbody>' +
+      '<table><thead><tr><th>Código</th><th>Batería</th><th>Candidato</th><th>Vence</th><th>Estatus</th><th>Completado</th><th>Envío</th><th></th></tr></thead><tbody>' +
       r.data.map(function (e) {
         return '<tr><td>' + escapeHtml(e.codigo) + '</td><td>' + escapeHtml(e.instrumento) + '</td><td>' + escapeHtml(e.idCandidato) + '</td>' +
           '<td>' + escapeHtml(e.fechaExpiracion) + '</td><td>' + escapeHtml(e.estatus) + '</td>' +
           '<td>' + (e.completado === 'Sí' ? 'Sí (' + escapeHtml(e.fechaCompletado) + ')' : 'No') + '</td>' +
+          '<td>' + escapeHtml(e.estatusEnvio || '—') + '</td>' +
           '<td>' + (e.estatus === 'Activo' ? '<button class="small secondary btnRevocarRYS" data-codigo="' + escapeHtml(e.codigo) + '">Revocar</button>' : '') + '</td></tr>';
       }).join('') + '</tbody></table>';
     Array.prototype.forEach.call(caja.querySelectorAll('.btnRevocarRYS'), function (b) {
@@ -3310,6 +3362,152 @@ async function renderPanelBateriasRYS() {
       };
     });
   }
+}
+
+// Etiquetas <<...>> disponibles al programar/enviar el correo de las
+// baterías RyS — mismo orden y claves que CAMPOS_MERGE_RYS en WebApp.gs.
+var CAMPOS_MERGE_RYS_FRONT = [
+  { key: 'nombre', tag: 'Nombre' },
+  { key: 'correo', tag: 'Correo' },
+  { key: 'instrumento', tag: 'Batería (clave)' },
+  { key: 'nombreInstrumento', tag: 'Nombre de la batería' },
+  { key: 'liga', tag: 'Liga' },
+  { key: 'proyecto', tag: 'Proyecto' },
+  { key: 'expira', tag: 'Fecha de vencimiento' }
+];
+
+// Mismo patrón que abrirModalProgramarEnvioAplicacionEdu (ver arriba), pero
+// la fuente de elegibles es apiListarEnlacesRYS (no la lista de
+// participantes EDU) y la "muestra" para la vista previa se construye
+// cruzando esa respuesta con candidatosPorId (nombre/correo de RS-06), ya
+// que apiListarEnlacesRYS no repite ese dato por cada fila.
+function abrirModalProgramarEnvioRYS(candidatosPorId) {
+  var modal = el(
+    '<div class="modal-bg"><div class="modal wide">' +
+      '<h2>Programar envío de ligas — Baterías psicométricas</h2>' +
+      '<p class="subtle" id="rysEnvioIntro">Cargando candidatos listos para recibir su liga por correo…</p>' +
+      '<label>Asunto</label><input type="text" id="rysAsunto" placeholder="Tu prueba psicométrica de Sintropía Social">' +
+      '<label>Cuerpo (usa las etiquetas de abajo — se reemplazan por el dato real de cada candidato)</label>' +
+      '<textarea id="rysCuerpo" rows="8" placeholder="Hola <<Nombre>>, te compartimos tu liga para <<Nombre de la batería>>: <<Liga>>"></textarea>' +
+      '<p class="subtle" style="margin:8px 0 4px">Clic para insertar una etiqueta donde tengas el cursor:</p>' +
+      '<div id="rysChips"></div>' +
+      '<div id="rysVistaPrevia" style="margin-top:14px"></div>' +
+      '<div class="toolbar" style="justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:16px;align-items:center">' +
+        '<label style="margin:0;display:flex;align-items:center;gap:6px;font-weight:500"><input type="checkbox" id="rysRepartirChk" style="width:auto"> Repartir en varios días (tandas)</label>' +
+        '<span id="rysPorDiaWrap" style="display:none;align-items:center;gap:6px">' +
+          '<label style="margin:0">Por día</label>' +
+          '<select id="rysPorDia" style="width:auto">' +
+            [10, 20, 30, 50, 100, 200, 300, 400].map(function (n) { return '<option value="' + n + '"' + (n === 50 ? ' selected' : '') + '>' + n + '</option>'; }).join('') +
+          '</select>' +
+        '</span>' +
+      '</div>' +
+      '<p class="subtle" id="rysExplicacionModo" style="margin-top:4px">Sin marcar: manda de inmediato a todos los que estén listos (hasta donde alcance la cuota diaria de correo de esta cuenta de Google). Marcado: lo programa repartido en tandas por día.</p>' +
+      '<div id="rysProgMsg"></div>' +
+      '<div class="modal-actions">' +
+        '<button class="secondary" id="rysProgCancelar">Cancelar</button>' +
+        '<button class="secondary" id="rysVerProgramados" style="margin-right:auto">Ver correos programados</button>' +
+        '<button class="primary" id="rysProgConfirmar" disabled>Enviar ahora</button>' +
+      '</div>' +
+    '</div></div>'
+  );
+  document.body.appendChild(modal);
+
+  var chipsHtml = CAMPOS_MERGE_RYS_FRONT.map(function (c) {
+    return '<button type="button" class="small secondary tagchip" data-tag="' + escapeHtml('<<' + c.tag + '>>') + '" style="margin:2px">' +
+      escapeHtml(c.tag) + '</button>';
+  }).join('');
+  modal.querySelector('#rysChips').innerHTML = chipsHtml;
+
+  var asuntoInput = modal.querySelector('#rysAsunto');
+  var cuerpoTa = modal.querySelector('#rysCuerpo');
+  var repartirChk = modal.querySelector('#rysRepartirChk');
+  var porDiaWrap = modal.querySelector('#rysPorDiaWrap');
+  var btnConfirmar = modal.querySelector('#rysProgConfirmar');
+  var muestra = null;
+
+  function actualizarVistaPrevia() {
+    var caja = modal.querySelector('#rysVistaPrevia');
+    if (!muestra) { caja.innerHTML = ''; return; }
+    var asuntoPrev = _reemplazarTagsPreview(asuntoInput.value, muestra, CAMPOS_MERGE_RYS_FRONT);
+    var cuerpoHtmlPrev = _eduCuerpoTextoAHtml(cuerpoTa.value);
+    var cuerpoPrev = _reemplazarTagsPreview(cuerpoHtmlPrev, muestra, CAMPOS_MERGE_RYS_FRONT);
+    caja.innerHTML =
+      '<p class="subtle" style="margin-bottom:4px">Vista previa para: ' + escapeHtml(muestra.nombre || muestra.idCandidato) + ' — ' + escapeHtml(muestra.nombreInstrumento) + '</p>' +
+      '<p class="subtle" style="margin:0 0 8px"><b>Asunto:</b> ' + (escapeHtml(asuntoPrev) || '(sin asunto)') + '</p>' +
+      '<div style="border:1px solid #eee;border-radius:8px;padding:16px;background:#fafafa">' +
+        _envolverHtmlCorreoPreview(cuerpoPrev || '<span class="subtle">(sin cuerpo)</span>') +
+      '</div>';
+  }
+  asuntoInput.oninput = actualizarVistaPrevia;
+  cuerpoTa.oninput = actualizarVistaPrevia;
+
+  Array.prototype.forEach.call(modal.querySelectorAll('.tagchip'), function (chip) {
+    chip.onclick = function () {
+      _insertarEnTextarea(cuerpoTa, chip.getAttribute('data-tag'));
+      actualizarVistaPrevia();
+    };
+  });
+
+  repartirChk.onchange = function () {
+    var repartir = repartirChk.checked;
+    porDiaWrap.style.display = repartir ? 'inline-flex' : 'none';
+    btnConfirmar.textContent = repartir ? 'Programar envío' : 'Enviar ahora';
+  };
+
+  modal.querySelector('#rysProgCancelar').onclick = function () { modal.remove(); };
+  modal.querySelector('#rysVerProgramados').onclick = function () { abrirModalVerCorreosProgramados(); };
+
+  // apiListarEnlacesRYS no trae nombre/correo del candidato (RS-06 es otra
+  // hoja) — se cruzan aquí con candidatosPorId, que ya trajo
+  // renderPanelBateriasRYS. Solo cuentan como "listos" los enlaces activos
+  // (uno completado/revocado ya no funciona), con correo conocido y
+  // pendientes de envío.
+  (async function () {
+    var r = await api('listarEnlacesRYS', { proyecto: state.proyectoActivo.codigo });
+    var intro = modal.querySelector('#rysEnvioIntro');
+    if (!r.ok) { intro.innerHTML = '<span class="msg error">' + escapeHtml(r.error) + '</span>'; return; }
+    var listos = (r.data || []).filter(function (e) {
+      var cand = candidatosPorId[e.idCandidato];
+      return e.estatus === 'Activo' && e.liga && cand && cand.correo && (e.estatusEnvio === 'Pendiente' || !e.estatusEnvio);
+    }).map(function (e) {
+      var cand = candidatosPorId[e.idCandidato];
+      return {
+        codigo: e.codigo, nombre: cand.nombre, correo: cand.correo, instrumento: e.instrumento,
+        nombreInstrumento: NOMBRE_RYS_PANEL_POR_CLAVE[e.instrumento] || e.instrumento,
+        liga: e.liga, proyecto: state.proyectoActivo.codigo, expira: e.fechaExpiracion, idCandidato: e.idCandidato
+      };
+    });
+    muestra = listos[0] || null;
+    intro.innerHTML = 'Se manda un correo con la liga personalizada a cada candidato con consentimiento y correo conocido en RS-06, cuya liga ya esté generada y activa (una liga completada o revocada deja de funcionar y no se manda). ' +
+      (listos.length ? 'Hay <b>' + listos.length + '</b> liga(s) lista(s) para enviarse.' : 'Por ahora no hay ligas listas para enviarse.');
+    btnConfirmar.disabled = listos.length === 0;
+    actualizarVistaPrevia();
+  })();
+
+  btnConfirmar.onclick = async function () {
+    var asunto = asuntoInput.value.trim();
+    var cuerpoTexto = cuerpoTa.value.trim();
+    var msgBox = modal.querySelector('#rysProgMsg');
+    if (!asunto || !cuerpoTexto) { msgBox.innerHTML = '<div class="msg error">Completa asunto y cuerpo.</div>'; return; }
+    var repartir = repartirChk.checked;
+    var porDiaSel = modal.querySelector('#rysPorDia').value;
+    var confirmMsg = repartir
+      ? '¿Programar el envío repartido en tandas de ' + porDiaSel + ' por día?'
+      : '¿Enviar ahora mismo a todos los candidatos listos? No se puede deshacer.';
+    if (!confirm(confirmMsg)) return;
+
+    btnConfirmar.disabled = true;
+    btnConfirmar.innerHTML = '<span class="spinner"></span>' + (repartir ? 'Programando...' : 'Enviando...');
+    var cuerpoHtml = _eduCuerpoTextoAHtml(cuerpoTexto);
+    var accion = repartir ? 'programarEnvioRYS' : 'enviarAhoraRYS';
+    var paramsEnvio = { proyecto: state.proyectoActivo.codigo, asunto: asunto, cuerpo: cuerpoHtml };
+    if (repartir) paramsEnvio.porDia = porDiaSel;
+    var rr = await api(accion, paramsEnvio);
+    btnConfirmar.disabled = false; btnConfirmar.textContent = repartir ? 'Programar envío' : 'Enviar ahora';
+    if (!rr.ok) { msgBox.innerHTML = '<div class="msg error">' + escapeHtml(rr.error) + '</div>'; return; }
+    msgBox.innerHTML = '<div class="msg ok">' + escapeHtml(rr.msg) + '</div>';
+    setTimeout(function () { modal.remove(); renderPanelBateriasRYS(); }, 1500);
+  };
 }
 
 /* ---------------- INS-IMES: captura y vista propias ---------------- */
