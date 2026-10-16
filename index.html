@@ -945,6 +945,110 @@ var INSTRUMENTOS = {
       { key: 'cerradoPor', label: 'Cerrado por *', tipo: 'text', requerido: true }
     ]
   },
+  pcs: {
+    familia: 'RS',
+    titulo: 'Perfil Conductual Sintropía (PCS)',
+    listar: 'listarPCS', guardar: 'guardarFilaPCS', eliminar: 'eliminarFilaPCS',
+    validar: 'validarPCS', descargar: 'generarDescargablePCS',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'idCandidato', label: 'ID_CANDIDATO' },
+      { key: 'fechaAplicacion', label: 'Fecha de aplicación' },
+      { key: 'dimensionDominante', label: 'Dimensión dominante' },
+      { key: 'bandaD', label: 'Banda D' },
+      { key: 'bandaI', label: 'Banda I' },
+      { key: 'bandaS', label: 'Banda S' },
+      { key: 'bandaC', label: 'Banda C' }
+    ],
+    campos: [
+      { key: 'idCandidato', label: 'ID_CANDIDATO (RS-06) *', tipo: 'text', requerido: true, placeholder: 'ej. CAND-01' },
+      { key: 'fechaAplicacion', label: 'Fecha de aplicación *', tipo: 'date', requerido: true },
+      { key: 'puntajeD', label: 'D — Dominancia (0-100)', tipo: 'number' },
+      { key: 'bandaD', label: 'Banda D', tipo: 'select', opciones: ['Bajo', 'Medio', 'Alto'] },
+      { key: 'puntajeI', label: 'I — Influencia (0-100)', tipo: 'number' },
+      { key: 'bandaI', label: 'Banda I', tipo: 'select', opciones: ['Bajo', 'Medio', 'Alto'] },
+      { key: 'puntajeS', label: 'S — Estabilidad (0-100)', tipo: 'number' },
+      { key: 'bandaS', label: 'Banda S', tipo: 'select', opciones: ['Bajo', 'Medio', 'Alto'] },
+      { key: 'puntajeC', label: 'C — Cumplimiento (0-100)', tipo: 'number' },
+      { key: 'bandaC', label: 'Banda C', tipo: 'select', opciones: ['Bajo', 'Medio', 'Alto'] },
+      { key: 'dimensionDominante', label: 'Dimensión dominante', tipo: 'text' }
+    ]
+  },
+  pts: {
+    familia: 'RS',
+    titulo: 'Preferencias de Trabajo Sintropía (PTS)',
+    listar: 'listarPTS', guardar: 'guardarFilaPTS', eliminar: 'eliminarFilaPTS',
+    validar: 'validarPTS', descargar: 'generarDescargablePTS',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'idCandidato', label: 'ID_CANDIDATO' },
+      { key: 'fechaAplicacion', label: 'Fecha de aplicación' },
+      { key: 'bandaOrden', label: 'Banda Orden' },
+      { key: 'bandaAutonomia', label: 'Banda Autonomía' },
+      { key: 'bandaRitmo', label: 'Banda Ritmo' },
+      { key: 'bandaResultados', label: 'Banda Resultados' }
+    ],
+    campos: [
+      { key: 'idCandidato', label: 'ID_CANDIDATO (RS-06) *', tipo: 'text', requerido: true, placeholder: 'ej. CAND-01' },
+      { key: 'fechaAplicacion', label: 'Fecha de aplicación *', tipo: 'date', requerido: true },
+      { key: 'puntajeOrden', label: 'Orden (0-100)', tipo: 'number' },
+      { key: 'bandaOrden', label: 'Banda Orden', tipo: 'select', opciones: ['Bajo', 'Medio', 'Alto'] },
+      { key: 'puntajeAutonomia', label: 'Autonomía (0-100)', tipo: 'number' },
+      { key: 'bandaAutonomia', label: 'Banda Autonomía', tipo: 'select', opciones: ['Bajo', 'Medio', 'Alto'] },
+      { key: 'puntajeRitmo', label: 'Ritmo y variedad (0-100)', tipo: 'number' },
+      { key: 'bandaRitmo', label: 'Banda Ritmo y variedad', tipo: 'select', opciones: ['Bajo', 'Medio', 'Alto'] },
+      { key: 'puntajeReconocimiento', label: 'Reconocimiento (0-100)', tipo: 'number' },
+      { key: 'bandaReconocimiento', label: 'Banda Reconocimiento', tipo: 'select', opciones: ['Bajo', 'Medio', 'Alto'] },
+      { key: 'puntajeServicio', label: 'Servicio (0-100)', tipo: 'number' },
+      { key: 'bandaServicio', label: 'Banda Servicio', tipo: 'select', opciones: ['Bajo', 'Medio', 'Alto'] },
+      { key: 'puntajeResultados', label: 'Resultados (0-100)', tipo: 'number' },
+      { key: 'bandaResultados', label: 'Banda Resultados', tipo: 'select', opciones: ['Bajo', 'Medio', 'Alto'] }
+    ]
+  },
+  ras: {
+    familia: 'RS',
+    titulo: 'Razonamiento Aplicado Sintropía (RAS)',
+    listar: 'listarRAS', guardar: 'guardarFilaRAS', eliminar: 'eliminarFilaRAS',
+    validar: 'validarRAS', descargar: 'generarDescargableRAS',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'idCandidato', label: 'ID_CANDIDATO' },
+      { key: 'fechaAplicacion', label: 'Fecha de aplicación' },
+      { key: 'porcentajeVerbal', label: '% Verbal' },
+      { key: 'porcentajeNumerico', label: '% Numérico' },
+      { key: 'porcentajeAbstracto', label: '% Abstracto' },
+      { key: 'porcentajeGeneral', label: '% General' }
+    ],
+    campos: [
+      { key: 'idCandidato', label: 'ID_CANDIDATO (RS-06) *', tipo: 'text', requerido: true, placeholder: 'ej. CAND-01' },
+      { key: 'fechaAplicacion', label: 'Fecha de aplicación *', tipo: 'date', requerido: true },
+      { key: 'porcentajeVerbal', label: '% Verbal', tipo: 'number' },
+      { key: 'etiquetaVerbal', label: 'Etiqueta Verbal', tipo: 'text' },
+      { key: 'porcentajeNumerico', label: '% Numérico', tipo: 'number' },
+      { key: 'etiquetaNumerico', label: 'Etiqueta Numérico', tipo: 'text' },
+      { key: 'porcentajeAbstracto', label: '% Abstracto', tipo: 'number' },
+      { key: 'etiquetaAbstracto', label: 'Etiqueta Abstracto', tipo: 'text' },
+      { key: 'porcentajeGeneral', label: '% General', tipo: 'number' },
+      { key: 'etiquetaGeneral', label: 'Etiqueta General', tipo: 'text' }
+    ]
+  },
+  rcs: {
+    familia: 'RS',
+    titulo: 'Reflexión de Color Sintropía (RCS)',
+    listar: 'listarRCS', guardar: 'guardarFilaRCS', eliminar: 'eliminarFilaRCS',
+    validar: 'validarRCS', descargar: 'generarDescargableRCS',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'idCandidato', label: 'ID_CANDIDATO' },
+      { key: 'fechaAplicacion', label: 'Fecha de aplicación' },
+      { key: 'ordenColores', label: 'Orden de colores' }
+    ],
+    campos: [
+      { key: 'idCandidato', label: 'ID_CANDIDATO (RS-06) *', tipo: 'text', requerido: true, placeholder: 'ej. CAND-01' },
+      { key: 'fechaAplicacion', label: 'Fecha de aplicación *', tipo: 'date', requerido: true },
+      { key: 'ordenColores', label: 'Orden de colores (1º → 8º, separados por " → ")', tipo: 'text', requerido: true }
+    ]
+  },
   ent01: {
     familia: 'ENT',
     titulo: 'INS-ENT-01 Ficha de preparación de entrevista',
@@ -2423,6 +2527,10 @@ var INSTRUMENTOS_INSTALABLES = [
   { clave: 'RS10', nombre: 'INS-RS-10 — Matriz de candidatos finalistas', tipos: ['rs10'] },
   { clave: 'RS11', nombre: 'INS-RS-11 — Informe de recomendación', tipos: ['rs11'] },
   { clave: 'RS12', nombre: 'INS-RS-12 — Cierre de vacante', tipos: ['rs12'] },
+  { clave: 'PCS', nombre: 'Perfil Conductual Sintropía (PCS) — batería psicométrica RyS', tipos: ['pcs'] },
+  { clave: 'PTS', nombre: 'Preferencias de Trabajo Sintropía (PTS) — batería psicométrica RyS', tipos: ['pts'] },
+  { clave: 'RAS', nombre: 'Razonamiento Aplicado Sintropía (RAS) — batería psicométrica RyS', tipos: ['ras'] },
+  { clave: 'RCS', nombre: 'Reflexión de Color Sintropía (RCS) — batería psicométrica RyS', tipos: ['rcs'] },
   { clave: 'ENT01', nombre: 'INS-ENT-01 — Ficha de preparación de entrevista', tipos: ['ent01'] },
   { clave: 'ENT02', nombre: 'INS-ENT-02 — Guía de entrevista estructurada', tipos: ['ent02'] },
   { clave: 'ENT03', nombre: 'INS-ENT-03 — Guía de entrevista por competencias (STAR)', tipos: ['ent03'] },
@@ -3008,7 +3116,8 @@ function renderInstrumento(tipo) {
     (filas.length === 0
       ? '<p class="subtle">Todavía no hay filas capturadas. Puedes agregarlas una por una, o usar "Importar archivo" para cargar varias desde un CSV/Excel. Si al validar o generar aparece un error de pestaña no encontrada, pide a tu administrador que lo instale en "Instrumentos".</p>'
       : '<table><thead>' + thead + '</thead><tbody>' + trs + '</tbody></table>') +
-    (tipo === 'se01' ? '<div id="panelEnlacesSE" style="margin-top:26px"></div>' : '');
+    (tipo === 'se01' ? '<div id="panelEnlacesSE" style="margin-top:26px"></div>' : '') +
+    (tipo === 'rs07' ? '<div id="panelBateriasRYS" style="margin-top:26px"></div>' : '');
 
   document.getElementById('btnAgregarFila').onclick = function () { abrirModalFila(tipo, null); };
   document.getElementById('btnImportar').onclick = function () { abrirModalImportar(tipo); };
@@ -3031,6 +3140,7 @@ function renderInstrumento(tipo) {
     };
   });
   if (tipo === 'se01') renderPanelEnlacesCandidatoSE(filas);
+  if (tipo === 'rs07') renderPanelBateriasRYS();
 }
 
 /* ---------------- SE-01: enlace de autollenado para candidatos ---------------- */
@@ -3104,6 +3214,99 @@ async function renderPanelEnlacesCandidatoSE(filasSE01) {
         var r2 = await api('candidatoSERevocarEnlace', { proyecto: state.proyectoActivo.codigo, codigo: b.getAttribute('data-codigo') });
         if (!r2.ok) { alert(r2.error); return; }
         cargarListaEnlacesSE();
+      };
+    });
+  }
+}
+
+/* ---------------- Baterías psicométricas RyS (PCS/PTS/RAS/RCS): enlace
+ * seguro de aplicación por candidato, surgido desde INS-RS-07 (ficha
+ * individual) — mismo patrón que el panel de enlaces SE-01, pero cubre las
+ * 4 baterías a la vez y nunca envía nada al candidato por correo: al
+ * completarse, el resultado llega por correo a dirección como Word. ---------------- */
+var RYS_FAMILIAS_PANEL = [
+  { clave: 'PCS', nombre: 'PCS — Perfil Conductual' },
+  { clave: 'PTS', nombre: 'PTS — Preferencias de Trabajo' },
+  { clave: 'RAS', nombre: 'RAS — Razonamiento Aplicado' },
+  { clave: 'RCS', nombre: 'RCS — Reflexión de Color' }
+];
+var RYS_PAGINAS = { PCS: 'aplicacion_pcs.html', PTS: 'aplicacion_pts.html', RAS: 'aplicacion_ras.html', RCS: 'aplicacion_rcs.html' };
+
+function _urlRYS(familia, token) {
+  var base = location.href.replace(/index\.html(\?.*)?(#.*)?$/, '').replace(/\/?$/, '/');
+  return base + RYS_PAGINAS[familia] + '?token=' + encodeURIComponent(token);
+}
+
+async function renderPanelBateriasRYS() {
+  var panel = document.getElementById('panelBateriasRYS');
+  if (!panel) return;
+  panel.innerHTML = '<p class="subtle">Cargando candidatos…</p>';
+
+  var rCand = await api('listarRS06', { proyecto: state.proyectoActivo.codigo });
+  if (!rCand.ok) { panel.innerHTML = '<p class="msg error">' + escapeHtml(rCand.error) + '</p>'; return; }
+  var conConsentimiento = (rCand.data || []).filter(function (f) { return f.consentimiento === 'Sí'; });
+
+  panel.innerHTML =
+    '<h3 style="margin-bottom:4px">Baterías psicométricas (PCS · PTS · RAS · RCS)</h3>' +
+    '<p class="subtle" style="margin-top:0">Genera un enlace seguro por candidato y por batería — el candidato contesta directo, sin recibir correo ni ver su puntaje; al terminar, el resultado se guarda aquí y además se envía por correo a dirección como Word. Solo puede generarse si el candidato ya tiene consentimiento otorgado en RS-06. Resultado exploratorio y complementario — nunca debe usarse como único criterio de contratación o descarte.</p>' +
+    (conConsentimiento.length === 0
+      ? '<p class="subtle">Ningún candidato de RS-06 tiene consentimiento otorgado todavía.</p>'
+      : '<table><thead><tr><th>Candidato</th><th>Nombre</th>' +
+        RYS_FAMILIAS_PANEL.map(function (f) { return '<th>' + escapeHtml(f.clave) + '</th>'; }).join('') +
+        '</tr></thead><tbody>' +
+        conConsentimiento.map(function (c) {
+          return '<tr><td>' + escapeHtml(c.codigo) + '</td><td>' + escapeHtml(c.nombre) + '</td>' +
+            RYS_FAMILIAS_PANEL.map(function (f) {
+              return '<td><button class="small secondary btnGenRYS" data-candidato="' + escapeHtml(c.codigo) + '" data-familia="' + f.clave + '">Generar liga</button>' +
+                '<div class="enlaceResultadoRYS" data-candidato="' + escapeHtml(c.codigo) + '" data-familia="' + f.clave + '" style="margin-top:4px"></div></td>';
+            }).join('') + '</tr>';
+        }).join('') + '</tbody></table>') +
+    '<div id="listaEnlacesRYS" style="margin-top:18px"></div>';
+
+  Array.prototype.forEach.call(panel.querySelectorAll('.btnGenRYS'), function (btn) {
+    btn.onclick = async function () {
+      var candidato = btn.getAttribute('data-candidato'), familia = btn.getAttribute('data-familia');
+      btn.disabled = true; btn.textContent = 'Generando...';
+      var r = await api('generarEnlaceRYS', { proyecto: state.proyectoActivo.codigo, idCandidato: candidato, instrumento: familia });
+      btn.disabled = false; btn.textContent = 'Generar liga';
+      var caja = panel.querySelector('.enlaceResultadoRYS[data-candidato="' + candidato + '"][data-familia="' + familia + '"]');
+      if (!r.ok) { caja.innerHTML = '<span class="msg error" style="display:inline-block">' + escapeHtml(r.error) + '</span>'; return; }
+      var url = _urlRYS(familia, r.token);
+      caja.innerHTML =
+        '<input type="text" readonly value="' + escapeHtml(url) + '" style="width:260px;font-size:11px" onclick="this.select()"> ' +
+        '<button class="small secondary btnCopiarRYS">Copiar</button><br>' +
+        '<span class="subtle">Vence: ' + escapeHtml(r.expira) + (r.reutilizado ? ' (ya existía)' : '') + '</span>';
+      caja.querySelector('.btnCopiarRYS').onclick = function () {
+        navigator.clipboard.writeText(url).then(function () {
+          var b2 = caja.querySelector('.btnCopiarRYS'); b2.textContent = 'Copiado ✓';
+          setTimeout(function () { var b3 = caja.querySelector('.btnCopiarRYS'); if (b3) b3.textContent = 'Copiar'; }, 2000);
+        });
+      };
+      cargarListaEnlacesRYS();
+    };
+  });
+
+  await cargarListaEnlacesRYS();
+
+  async function cargarListaEnlacesRYS() {
+    var caja = document.getElementById('listaEnlacesRYS');
+    if (!caja) return;
+    var r = await api('listarEnlacesRYS', { proyecto: state.proyectoActivo.codigo });
+    if (!r.ok || !r.data.length) { caja.innerHTML = ''; return; }
+    caja.innerHTML = '<p class="subtle" style="margin-bottom:4px">Ligas generadas en este proyecto</p>' +
+      '<table><thead><tr><th>Código</th><th>Batería</th><th>Candidato</th><th>Vence</th><th>Estatus</th><th>Completado</th><th></th></tr></thead><tbody>' +
+      r.data.map(function (e) {
+        return '<tr><td>' + escapeHtml(e.codigo) + '</td><td>' + escapeHtml(e.instrumento) + '</td><td>' + escapeHtml(e.idCandidato) + '</td>' +
+          '<td>' + escapeHtml(e.fechaExpiracion) + '</td><td>' + escapeHtml(e.estatus) + '</td>' +
+          '<td>' + (e.completado === 'Sí' ? 'Sí (' + escapeHtml(e.fechaCompletado) + ')' : 'No') + '</td>' +
+          '<td>' + (e.estatus === 'Activo' ? '<button class="small secondary btnRevocarRYS" data-codigo="' + escapeHtml(e.codigo) + '">Revocar</button>' : '') + '</td></tr>';
+      }).join('') + '</tbody></table>';
+    Array.prototype.forEach.call(caja.querySelectorAll('.btnRevocarRYS'), function (b) {
+      b.onclick = async function () {
+        if (!confirm('¿Revocar esta liga? El candidato ya no podrá usarla.')) return;
+        var r2 = await api('revocarEnlaceRYS', { proyecto: state.proyectoActivo.codigo, codigo: b.getAttribute('data-codigo') });
+        if (!r2.ok) { alert(r2.error); return; }
+        cargarListaEnlacesRYS();
       };
     });
   }

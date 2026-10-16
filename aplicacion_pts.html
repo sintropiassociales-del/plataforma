@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Preferencias de Trabajo Sintropía (PTS) — cuestionario para candidatos de Reclutamiento y Selección, por Sintropía Social.">
+<title>Preferencias de Trabajo Sintropía — Sintropía Social</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --purple: #631EEB; --purple-dark: #4E17B8; --orange: #FF7929;
+    --bg: #F5F3FC; --card: #FFFFFF; --text: #2C2C2C; --subtle: #6B6B78; --border: #E6E2F5;
+    --error: #C0392B; --error-bg: #FDECEA; --ok: #1E8449; --ok-bg: #EAF7EE;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Open Sans', -apple-system, "Segoe UI", Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.55; }
+  header.top { background: var(--purple); color: #fff; padding: 26px 18px 44px; text-align: center; border-radius: 0 0 22px 22px; }
+  header.top .marca { font-size: 20px; font-weight: 800; letter-spacing: .3px; }
+  header.top .marca span { color: var(--orange); }
+  header.top .subt { font-size: 13.5px; opacity: .92; margin-top: 6px; max-width: 480px; margin-left: auto; margin-right: auto; }
+  main { max-width: 700px; margin: -26px auto 40px; padding: 0 16px; }
+  .card { background: var(--card); border-radius: 14px; padding: 26px 24px; margin-bottom: 16px; box-shadow: 0 6px 20px rgba(99,30,235,.08); border: 1px solid var(--border); }
+  h1 { font-size: 21px; margin: 0 0 8px; }
+  h2 { font-size: 18px; margin: 0 0 10px; color: var(--purple-dark); }
+  p.subtle, .subtle { color: var(--subtle); font-size: 13.5px; }
+  .intro-caja { background: #FAF8FF; border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin: 14px 0; }
+  .progreso { display: flex; gap: 6px; margin: 18px 0 22px; }
+  .progreso .paso { flex: 1; height: 6px; border-radius: 4px; background: var(--border); }
+  .progreso .paso.hecho { background: var(--orange); }
+  .progreso .paso.actual { background: var(--purple); }
+  .fila-botones { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+  button { font-family: inherit; font-size: 14.5px; font-weight: 700; border-radius: 999px; padding: 12px 24px; border: none; cursor: pointer; }
+  button.primary { background: var(--purple); color: #fff; }
+  button.primary:hover { background: var(--purple-dark); }
+  button.secondary { background: #fff; color: var(--purple); border: 1.5px solid var(--purple); }
+  button:disabled { opacity: .5; cursor: default; }
+  .msg { padding: 10px 13px; border-radius: 9px; font-size: 13.5px; margin: 12px 0; }
+  .msg.error { background: var(--error-bg); color: var(--error); }
+  .msg.ok { background: var(--ok-bg); color: var(--ok); }
+  .item-likert { border-top: 1px solid var(--border); padding: 16px 0; }
+  .item-likert:first-of-type { border-top: none; padding-top: 4px; }
+  .item-texto { font-size: 14.5px; font-weight: 600; margin-bottom: 10px; }
+  .escala-likert { display: flex; gap: 6px; flex-wrap: wrap; }
+  .op-likert { flex: 1; min-width: 78px; border: 1.5px solid var(--border); border-radius: 9px; background: #fff;
+    color: var(--subtle); font-weight: 600; font-size: 11.5px; padding: 9px 4px; cursor: pointer; text-align: center;
+    transition: background .12s, border-color .12s, color .12s; }
+  .op-likert .num { display: block; font-size: 15px; font-weight: 800; }
+  .op-likert.marcada { background: var(--purple); border-color: var(--purple); color: #fff; }
+  .pantalla-centrada { text-align: center; padding: 40px 10px; }
+  .pantalla-centrada .icono { font-size: 44px; margin-bottom: 10px; }
+  .spinner { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--purple); border-radius: 50%; animation: girar 0.8s linear infinite; margin: 20px auto; }
+  @keyframes girar { to { transform: rotate(360deg); } }
+  footer.pie { text-align: center; padding: 20px 16px 40px; font-size: 12px; color: var(--subtle); }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="marca">Sintropía <span>Social</span></div>
+  <div class="subt">Preferencias de Trabajo Sintropía (PTS) — proceso de Reclutamiento y Selección</div>
+</header>
+
+<main>
+  <div id="app" class="card">
+    <div class="spinner"></div>
+    <p class="subtle" style="text-align:center">Cargando...</p>
+  </div>
+</main>
+
+<footer class="pie">Sintropía Social — tus respuestas se usan únicamente como apoyo dentro de tu proceso de selección.</footer>
+
+<script>
+var WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxZbLiOP7QXvrgUIDhhVciVGY-Yval3YBvqBHOpQfK8El2wHXNNBtZvsnkbwMaJUss/exec';
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function jsonp(action, params) {
+  return new Promise(function (resolve) {
+    var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+    var url = WEB_APP_URL + '?action=' + encodeURIComponent(action) + '&callback=' + cbName;
+    params = params || {};
+    for (var k in params) { if (params[k] !== undefined && params[k] !== null) url += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(params[k]); }
+    var script = document.createElement('script');
+    var cleaned = false;
+    function cleanup() { if (cleaned) return; cleaned = true; delete window[cbName]; if (script.parentNode) script.parentNode.removeChild(script); }
+    window[cbName] = function (data) { cleanup(); resolve(data); };
+    script.onerror = function () { cleanup(); resolve({ ok: false, error: 'No se pudo conectar. Revisa tu conexión a internet e intenta de nuevo.' }); };
+    setTimeout(function () { if (!cleaned) { cleanup(); resolve({ ok: false, error: 'La plataforma tardó demasiado en responder. Intenta de nuevo.' }); } }, 25000);
+    script.src = url;
+    document.body.appendChild(script);
+  });
+}
+function api(action, params) { params = params || {}; params.token = state.token; return jsonp(action, params); }
+
+/* ============================================================
+ * Contenido íntegro del PTS (30 reactivos, 5 por dimensión), tal como
+ * fue aprobado en la doc "Baterías Psicométricas Sintropía (RyS)" — el
+ * orden aquí debe coincidir EXACTAMENTE con PTS_ITEMS en WebApp.gs
+ * (misma posición = mismo reactivo), porque el backend califica por
+ * índice, no por texto.
+ * ============================================================ */
+var OPCIONES_LIKERT = ['Totalmente en desacuerdo', 'En desacuerdo', 'Neutral', 'De acuerdo', 'Totalmente de acuerdo'];
+var ITEMS_PTS = [
+  'Trabajo mejor cuando tengo un proceso claro que seguir, paso a paso.',
+  'Me gusta tener mi espacio y mis materiales organizados de una forma específica.',
+  'Prefiero planear mi semana con anticipación en vez de resolver sobre la marcha.',
+  'Me adapto sin problema a empezar una tarea sin instrucciones detalladas.',
+  'No me molesta que los procesos cambien de un día para otro.',
+  'Prefiero que me den un objetivo claro y decidir yo mismo cómo llegar a él.',
+  'Me incomoda que alguien supervise de cerca cada paso de mi trabajo.',
+  'Disfruto más resolver un problema a mi manera que seguir instrucciones exactas.',
+  'Prefiero que me digan exactamente qué hacer en vez de decidir yo el método.',
+  'Me siento más seguro cuando alguien revisa mi trabajo antes de avanzar al siguiente paso.',
+  'Prefiero un trabajo donde cada día sea distinto al anterior.',
+  'Me aburro si hago la misma tarea de la misma forma por mucho tiempo.',
+  'Disfruto tener varias actividades distintas ocurriendo al mismo tiempo.',
+  'Prefiero un ritmo de trabajo constante y predecible antes que uno cambiante.',
+  'Me cuesta concentrarme cuando tengo que cambiar de tarea muy seguido.',
+  'Me motiva que mi trabajo sea visible y reconocido por otros.',
+  'Disfruto cuando mis logros se comentan frente al equipo o la organización.',
+  'Me importa que mi esfuerzo quede documentado y se note quién lo hizo.',
+  'Prefiero que mi trabajo se note por sus resultados, sin necesidad de que se mencione quién lo hizo.',
+  'No me incomoda trabajar en tareas que nadie más ve ni reconoce directamente.',
+  'Disfruto las tareas donde ayudo directamente a resolver el problema de otra persona.',
+  'Me resulta satisfactorio cuando alguien sale de una conversación conmigo sintiéndose mejor atendido.',
+  'Prefiero un trabajo donde mi función central sea atender o apoyar a otros.',
+  'Prefiero tareas centradas en datos o procesos antes que en atender directamente a personas.',
+  'Me cuesta mantener la paciencia cuando debo atender muchas solicitudes de otras personas en el día.',
+  'Me motiva más tener una meta numérica clara que una tarea abierta.',
+  'Disfruto revisar al final del día o la semana cuánto avancé contra un objetivo.',
+  'Prefiero un trabajo donde el éxito se pueda medir con datos concretos.',
+  'Me motiva más el proceso de hacer bien una tarea que el resultado final medible.',
+  'Prefiero objetivos abiertos y flexibles antes que metas numéricas fijas.'
+];
+var TAM_BLOQUE = 6;
+var NUM_BLOQUES = Math.ceil(ITEMS_PTS.length / TAM_BLOQUE);
+
+var qs = new URLSearchParams(location.search);
+var state = { token: qs.get('token') || '', info: null, paso: 'cargando', respuestas: new Array(ITEMS_PTS.length).fill(null) };
+var app = document.getElementById('app');
+
+function render() {
+  if (state.paso === 'error') return renderError();
+  if (state.paso === 'yaCompletado') return renderYaCompletado();
+  if (state.paso === 'bienvenida') return renderBienvenida();
+  if (state.paso === 'enviando') return renderEnviando();
+  if (state.paso === 'gracias') return renderGracias();
+  return renderBloque(state.paso);
+}
+function renderError(msgTexto) {
+  app.innerHTML = '<div class="pantalla-centrada"><div class="icono">⚠️</div><h1>No pudimos abrir este enlace</h1>' +
+    '<p class="subtle">' + escapeHtml(msgTexto || 'Este enlace no es válido o ya no está disponible. Pide a tu contacto en Sintropía Social que te lo comparta de nuevo.') + '</p></div>';
+}
+function renderYaCompletado() {
+  app.innerHTML = '<div class="pantalla-centrada"><div class="icono">✅</div><h1>Ya completaste este cuestionario</h1>' +
+    '<p class="subtle">Gracias por tu participación — tus respuestas ya quedaron registradas. Ya puedes cerrar esta ventana.</p></div>';
+}
+function renderBienvenida() {
+  app.innerHTML =
+    '<h1>Preferencias de Trabajo Sintropía</h1>' +
+    '<div class="intro-caja"><p style="margin:0 0 8px">30 afirmaciones cortas sobre cómo prefieres trabajar. No hay respuestas correctas — responde pensando en lo que de verdad prefieres, no en lo que crees que se espera de ti.</p>' +
+    '<p style="margin:0">Del 1 (totalmente en desacuerdo) al 5 (totalmente de acuerdo). Toma entre 7 y 9 minutos.</p></div>' +
+    '<p class="subtle">Este enlace es personal e intransferible y está vigente hasta el ' + escapeHtml(state.info.expira) + '.</p>' +
+    '<div class="fila-botones"><button class="primary" id="btnComenzar">Comenzar</button></div>';
+  document.getElementById('btnComenzar').onclick = function () { state.paso = 0; render(); };
+}
+function renderEnviando() {
+  app.innerHTML = '<div class="spinner"></div><p class="subtle" style="text-align:center">Enviando tus respuestas...</p>';
+}
+function renderGracias() {
+  app.innerHTML = '<div class="pantalla-centrada"><div class="icono">🎉</div><h1>Gracias</h1>' +
+    '<p class="subtle">Tus respuestas quedaron guardadas. El equipo de Sintropía Social continuará con tu proceso. Ya puedes cerrar esta ventana.</p></div>';
+}
+
+function renderBloque(idx) {
+  var inicio = idx * TAM_BLOQUE, fin = Math.min(inicio + TAM_BLOQUE, ITEMS_PTS.length);
+  var itemsHtml = '';
+  for (var i = inicio; i < fin; i++) {
+    var valorActual = state.respuestas[i];
+    itemsHtml += '<div class="item-likert"><div class="item-texto">' + (i + 1) + '. ' + escapeHtml(ITEMS_PTS[i]) + '</div>' +
+      '<div class="escala-likert">' + OPCIONES_LIKERT.map(function (op, n) {
+        var v = n + 1;
+        return '<div class="op-likert' + (valorActual === v ? ' marcada' : '') + '" data-item="' + i + '" data-valor="' + v + '"><span class="num">' + v + '</span>' + op + '</div>';
+      }).join('') + '</div></div>';
+  }
+  app.innerHTML =
+    '<div class="progreso">' + Array.from({ length: NUM_BLOQUES }, function (_, i) {
+      return '<div class="paso ' + (i < idx ? 'hecho' : (i === idx ? 'actual' : '')) + '"></div>';
+    }).join('') + '</div>' +
+    '<p class="subtle">Parte ' + (idx + 1) + ' de ' + NUM_BLOQUES + ' — del 1 (totalmente en desacuerdo) al 5 (totalmente de acuerdo).</p>' +
+    '<div id="secMsg"></div>' + itemsHtml +
+    '<div class="fila-botones">' +
+      (idx > 0 ? '<button class="secondary" id="btnAtras">Atrás</button>' : '') +
+      '<button class="primary" id="btnSiguiente">' + (idx + 1 < NUM_BLOQUES ? 'Continuar' : 'Finalizar') + '</button>' +
+    '</div>';
+
+  app.querySelectorAll('.op-likert').forEach(function (el) {
+    el.onclick = function () {
+      var i = Number(el.getAttribute('data-item')), v = Number(el.getAttribute('data-valor'));
+      state.respuestas[i] = v;
+      app.querySelectorAll('.item-likert').forEach(function (bloque) {
+        var primero = bloque.querySelector('.op-likert');
+        if (Number(primero.getAttribute('data-item')) !== i) return;
+        bloque.querySelectorAll('.op-likert').forEach(function (o) { o.classList.toggle('marcada', Number(o.getAttribute('data-valor')) === v); });
+      });
+    };
+  });
+  if (idx > 0) document.getElementById('btnAtras').onclick = function () { state.paso = idx - 1; render(); };
+  document.getElementById('btnSiguiente').onclick = async function () {
+    var faltan = false;
+    for (var i = inicio; i < fin; i++) if (state.respuestas[i] == null) faltan = true;
+    if (faltan) { document.getElementById('secMsg').innerHTML = '<div class="msg error">Responde las ' + (fin - inicio) + ' afirmaciones de esta parte antes de continuar.</div>'; return; }
+    if (idx + 1 < NUM_BLOQUES) { state.paso = idx + 1; render(); return; }
+    await enviar();
+  };
+}
+
+async function enviar() {
+  state.paso = 'enviando'; render();
+  var r = await api('enviarPTS', { respuestas: JSON.stringify(state.respuestas) });
+  if (!r.ok) {
+    state.paso = NUM_BLOQUES - 1; render();
+    document.getElementById('secMsg').innerHTML = '<div class="msg error">' + escapeHtml(r.error || 'No se pudo enviar. Intenta de nuevo.') + '</div>';
+    return;
+  }
+  state.paso = 'gracias'; render();
+}
+
+async function init() {
+  if (!state.token) { state.paso = 'error'; render(); return; }
+  var r = await api('infoPTS', {});
+  if (!r.ok) { renderError(r.error); return; }
+  state.info = r;
+  state.paso = r.completado ? 'yaCompletado' : 'bienvenida';
+  render();
+}
+init();
+</script>
+</body>
+</html>

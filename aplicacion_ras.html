@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="description" content="Razonamiento Aplicado Sintropía (RAS) — cuestionario para candidatos de Reclutamiento y Selección, por Sintropía Social.">
+<title>Razonamiento Aplicado Sintropía — Sintropía Social</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --purple: #631EEB; --purple-dark: #4E17B8; --orange: #FF7929;
+    --bg: #F5F3FC; --card: #FFFFFF; --text: #2C2C2C; --subtle: #6B6B78; --border: #E6E2F5;
+    --error: #C0392B; --error-bg: #FDECEA; --ok: #1E8449; --ok-bg: #EAF7EE;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Open Sans', -apple-system, "Segoe UI", Roboto, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.55; }
+  header.top { background: var(--purple); color: #fff; padding: 26px 18px 44px; text-align: center; border-radius: 0 0 22px 22px; }
+  header.top .marca { font-size: 20px; font-weight: 800; letter-spacing: .3px; }
+  header.top .marca span { color: var(--orange); }
+  header.top .subt { font-size: 13.5px; opacity: .92; margin-top: 6px; max-width: 480px; margin-left: auto; margin-right: auto; }
+  main { max-width: 700px; margin: -26px auto 40px; padding: 0 16px; }
+  .card { background: var(--card); border-radius: 14px; padding: 26px 24px; margin-bottom: 16px; box-shadow: 0 6px 20px rgba(99,30,235,.08); border: 1px solid var(--border); }
+  h1 { font-size: 21px; margin: 0 0 8px; }
+  h2 { font-size: 18px; margin: 0 0 10px; color: var(--purple-dark); }
+  p.subtle, .subtle { color: var(--subtle); font-size: 13.5px; }
+  .intro-caja { background: #FAF8FF; border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin: 14px 0; }
+  .progreso { display: flex; gap: 6px; margin: 18px 0 22px; }
+  .progreso .paso { flex: 1; height: 6px; border-radius: 4px; background: var(--border); }
+  .progreso .paso.hecho { background: var(--orange); }
+  .progreso .paso.actual { background: var(--purple); }
+  .fila-botones { display: flex; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+  button { font-family: inherit; font-size: 14.5px; font-weight: 700; border-radius: 999px; padding: 12px 24px; border: none; cursor: pointer; }
+  button.primary { background: var(--purple); color: #fff; }
+  button.primary:hover { background: var(--purple-dark); }
+  button.secondary { background: #fff; color: var(--purple); border: 1.5px solid var(--purple); }
+  button:disabled { opacity: .5; cursor: default; }
+  .msg { padding: 10px 13px; border-radius: 9px; font-size: 13.5px; margin: 12px 0; }
+  .msg.error { background: var(--error-bg); color: var(--error); }
+  .msg.ok { background: var(--ok-bg); color: var(--ok); }
+  .item-opcion { border-top: 1px solid var(--border); padding: 16px 0; }
+  .item-opcion:first-of-type { border-top: none; padding-top: 4px; }
+  .item-texto { font-size: 14.5px; font-weight: 600; margin-bottom: 10px; }
+  .opciones { display: flex; gap: 8px; flex-wrap: wrap; }
+  .op-mc { flex: 1; min-width: 120px; border: 1.5px solid var(--border); border-radius: 9px; background: #fff;
+    color: var(--text); font-weight: 600; font-size: 13.5px; padding: 10px 8px; cursor: pointer; text-align: center;
+    transition: background .12s, border-color .12s, color .12s; }
+  .op-mc.marcada { background: var(--purple); border-color: var(--purple); color: #fff; }
+  .pantalla-centrada { text-align: center; padding: 40px 10px; }
+  .pantalla-centrada .icono { font-size: 44px; margin-bottom: 10px; }
+  .spinner { width: 28px; height: 28px; border: 3px solid var(--border); border-top-color: var(--purple); border-radius: 50%; animation: girar 0.8s linear infinite; margin: 20px auto; }
+  @keyframes girar { to { transform: rotate(360deg); } }
+  footer.pie { text-align: center; padding: 20px 16px 40px; font-size: 12px; color: var(--subtle); }
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="marca">Sintropía <span>Social</span></div>
+  <div class="subt">Razonamiento Aplicado Sintropía (RAS) — proceso de Reclutamiento y Selección</div>
+</header>
+
+<main>
+  <div id="app" class="card">
+    <div class="spinner"></div>
+    <p class="subtle" style="text-align:center">Cargando...</p>
+  </div>
+</main>
+
+<footer class="pie">Sintropía Social — tus respuestas se usan únicamente como apoyo dentro de tu proceso de selección.</footer>
+
+<script>
+var WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxZbLiOP7QXvrgUIDhhVciVGY-Yval3YBvqBHOpQfK8El2wHXNNBtZvsnkbwMaJUss/exec';
+
+function escapeHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+  });
+}
+function jsonp(action, params) {
+  return new Promise(function (resolve) {
+    var cbName = 'cb_' + Date.now() + '_' + Math.floor(Math.random() * 100000);
+    var url = WEB_APP_URL + '?action=' + encodeURIComponent(action) + '&callback=' + cbName;
+    params = params || {};
+    for (var k in params) { if (params[k] !== undefined && params[k] !== null) url += '&' + encodeURIComponent(k) + '=' + encodeURIComponent(params[k]); }
+    var script = document.createElement('script');
+    var cleaned = false;
+    function cleanup() { if (cleaned) return; cleaned = true; delete window[cbName]; if (script.parentNode) script.parentNode.removeChild(script); }
+    window[cbName] = function (data) { cleanup(); resolve(data); };
+    script.onerror = function () { cleanup(); resolve({ ok: false, error: 'No se pudo conectar. Revisa tu conexión a internet e intenta de nuevo.' }); };
+    setTimeout(function () { if (!cleaned) { cleanup(); resolve({ ok: false, error: 'La plataforma tardó demasiado en responder. Intenta de nuevo.' }); } }, 25000);
+    script.src = url;
+    document.body.appendChild(script);
+  });
+}
+function api(action, params) { params = params || {}; params.token = state.token; return jsonp(action, params); }
+
+/* ============================================================
+ * Contenido íntegro del RAS (18 reactivos de opción múltiple, 6 por
+ * área), tal como fue aprobado en la doc "Baterías Psicométricas
+ * Sintropía (RyS)". IMPORTANTE: esta página NUNCA incluye cuál opción
+ * es la correcta — solo el texto y las opciones. El backend
+ * (RAS_ITEMS en WebApp.gs) es la única fuente de la clave de
+ * calificación; el orden de "opciones" aquí debe coincidir EXACTO con
+ * el orden ahí (misma posición = mismo índice de opción).
+ * ============================================================ */
+var SECCIONES_RAS = [
+  {
+    nombre: 'Relaciones entre conceptos', intro: 'Completa cada analogía eligiendo la opción que mejor continúa la relación.',
+    items: [
+      { texto: 'Médico es a hospital como maestro es a ___', opciones: ['salón', 'escuela', 'libro', 'examen'] },
+      { texto: 'Rápido es a lento como ruidoso es a ___', opciones: ['fuerte', 'silencioso', 'música', 'grito'] },
+      { texto: 'Semilla es a árbol como huevo es a ___', opciones: ['nido', 'ave', 'gallina', 'cascarón'] },
+      { texto: 'Libro es a capítulo como año es a ___', opciones: ['día', 'mes', 'calendario', 'fecha'] },
+      { texto: 'Termómetro es a temperatura como reloj es a ___', opciones: ['hora', 'minutero', 'pared', 'alarma'] },
+      { texto: 'Receta es a platillo como plano es a ___', opciones: ['arquitecto', 'edificio', 'papel', 'medida'] }
+    ]
+  },
+  {
+    nombre: 'Secuencias y operaciones numéricas', intro: 'Resuelve cada secuencia u operación y elige el resultado correcto.',
+    items: [
+      { texto: '¿Qué número sigue? 2, 4, 8, 16, ___', opciones: ['20', '24', '32', '18'] },
+      { texto: 'Un producto cuesta $240 con 25% de descuento. ¿Cuánto se paga?', opciones: ['$200', '$180', '$160', '$215'] },
+      { texto: '¿Qué número sigue? 1, 1, 2, 3, 5, 8, ___', opciones: ['11', '12', '13', '10'] },
+      { texto: 'Un equipo avanza 15 unidades por semana. ¿Cuántas semanas necesita para avanzar 90?', opciones: ['5', '6', '7', '8'] },
+      { texto: '¿Qué número sigue? 3, 6, 12, 24, ___', opciones: ['36', '42', '48', '30'] },
+      { texto: 'Se reparten 180 piezas entre 12 personas por igual. ¿Cuántas le tocan a cada una?', opciones: ['12', '15', '18', '20'] }
+    ]
+  },
+  {
+    nombre: 'Patrones y lógica de secuencias', intro: 'Identifica el patrón y elige lo que completa correctamente cada serie.',
+    items: [
+      { texto: '¿Qué letra sigue? A, C, E, G, ___', opciones: ['H', 'I', 'J', 'F'] },
+      { texto: '¿Qué figura sigue? Círculo, Cuadrado, Círculo, Cuadrado, ___', opciones: ['Triángulo', 'Círculo', 'Cuadrado', 'Rombo'] },
+      { texto: 'Completa la serie: 1-2, 2-4, 3-6, 4-8, 5-___', opciones: ['9', '10', '11', '12'] },
+      { texto: '¿Qué letra sigue? Z, X, V, T, ___', opciones: ['S', 'R', 'Q', 'U'] },
+      { texto: 'Completa el patrón: AB, BC, CD, DE, ___', opciones: ['EF', 'FG', 'DF', 'EG'] },
+      { texto: '¿Qué número no pertenece a la serie? 2, 4, 6, 9, 10', opciones: ['2', '6', '9', '10'] }
+    ]
+  }
+];
+var TOTAL_ITEMS = SECCIONES_RAS.reduce(function (n, s) { return n + s.items.length; }, 0);
+
+var qs = new URLSearchParams(location.search);
+var state = { token: qs.get('token') || '', info: null, paso: 'cargando', respuestas: new Array(TOTAL_ITEMS).fill(null) };
+var app = document.getElementById('app');
+
+function render() {
+  if (state.paso === 'error') return renderError();
+  if (state.paso === 'yaCompletado') return renderYaCompletado();
+  if (state.paso === 'bienvenida') return renderBienvenida();
+  if (state.paso === 'enviando') return renderEnviando();
+  if (state.paso === 'gracias') return renderGracias();
+  return renderSeccion(state.paso);
+}
+function renderError(msgTexto) {
+  app.innerHTML = '<div class="pantalla-centrada"><div class="icono">⚠️</div><h1>No pudimos abrir este enlace</h1>' +
+    '<p class="subtle">' + escapeHtml(msgTexto || 'Este enlace no es válido o ya no está disponible. Pide a tu contacto en Sintropía Social que te lo comparta de nuevo.') + '</p></div>';
+}
+function renderYaCompletado() {
+  app.innerHTML = '<div class="pantalla-centrada"><div class="icono">✅</div><h1>Ya completaste este cuestionario</h1>' +
+    '<p class="subtle">Gracias por tu participación — tus respuestas ya quedaron registradas. Ya puedes cerrar esta ventana.</p></div>';
+}
+function renderBienvenida() {
+  app.innerHTML =
+    '<h1>Razonamiento Aplicado Sintropía</h1>' +
+    '<div class="intro-caja"><p style="margin:0 0 8px">18 preguntas de opción múltiple, cada una con una sola respuesta correcta. No es un examen que se apruebe o repruebe — es un apoyo más dentro del proceso.</p>' +
+    '<p style="margin:0">Toma entre 10 y 15 minutos. Responde con calma; no hay penalización por dejar una pregunta sin responder.</p></div>' +
+    '<p class="subtle">Este enlace es personal e intransferible y está vigente hasta el ' + escapeHtml(state.info.expira) + '.</p>' +
+    '<div class="fila-botones"><button class="primary" id="btnComenzar">Comenzar</button></div>';
+  document.getElementById('btnComenzar').onclick = function () { state.paso = 0; render(); };
+}
+function renderEnviando() {
+  app.innerHTML = '<div class="spinner"></div><p class="subtle" style="text-align:center">Enviando tus respuestas...</p>';
+}
+function renderGracias() {
+  app.innerHTML = '<div class="pantalla-centrada"><div class="icono">🎉</div><h1>Gracias</h1>' +
+    '<p class="subtle">Tus respuestas quedaron guardadas. El equipo de Sintropía Social continuará con tu proceso. Ya puedes cerrar esta ventana.</p></div>';
+}
+
+// índice global del primer reactivo de la sección idx
+function indiceInicioSeccion(idx) {
+  var n = 0;
+  for (var i = 0; i < idx; i++) n += SECCIONES_RAS[i].items.length;
+  return n;
+}
+
+function renderSeccion(idx) {
+  var sec = SECCIONES_RAS[idx];
+  var inicio = indiceInicioSeccion(idx);
+  var itemsHtml = sec.items.map(function (it, li) {
+    var gi = inicio + li;
+    var valorActual = state.respuestas[gi];
+    return '<div class="item-opcion"><div class="item-texto">' + (gi + 1) + '. ' + escapeHtml(it.texto) + '</div>' +
+      '<div class="opciones">' + it.opciones.map(function (op, oi) {
+        return '<div class="op-mc' + (valorActual === oi ? ' marcada' : '') + '" data-item="' + gi + '" data-valor="' + oi + '">' + escapeHtml(op) + '</div>';
+      }).join('') + '</div></div>';
+  }).join('');
+  app.innerHTML =
+    '<div class="progreso">' + SECCIONES_RAS.map(function (_, i) {
+      return '<div class="paso ' + (i < idx ? 'hecho' : (i === idx ? 'actual' : '')) + '"></div>';
+    }).join('') + '</div>' +
+    '<h2>' + escapeHtml(sec.nombre) + '</h2>' +
+    '<p class="subtle" style="margin-top:0">' + escapeHtml(sec.intro) + '</p>' +
+    '<div id="secMsg"></div>' + itemsHtml +
+    '<div class="fila-botones">' +
+      (idx > 0 ? '<button class="secondary" id="btnAtras">Atrás</button>' : '') +
+      '<button class="primary" id="btnSiguiente">' + (idx + 1 < SECCIONES_RAS.length ? 'Continuar' : 'Finalizar') + '</button>' +
+    '</div>';
+
+  app.querySelectorAll('.op-mc').forEach(function (el) {
+    el.onclick = function () {
+      var i = Number(el.getAttribute('data-item')), v = Number(el.getAttribute('data-valor'));
+      state.respuestas[i] = v;
+      app.querySelectorAll('.item-opcion').forEach(function (bloque) {
+        var primero = bloque.querySelector('.op-mc');
+        if (Number(primero.getAttribute('data-item')) !== i) return;
+        bloque.querySelectorAll('.op-mc').forEach(function (o) { o.classList.toggle('marcada', Number(o.getAttribute('data-valor')) === v); });
+      });
+    };
+  });
+  if (idx > 0) document.getElementById('btnAtras').onclick = function () { state.paso = idx - 1; render(); };
+  document.getElementById('btnSiguiente').onclick = async function () {
+    var faltan = false;
+    for (var li = 0; li < sec.items.length; li++) if (state.respuestas[inicio + li] == null) faltan = true;
+    if (faltan) { document.getElementById('secMsg').innerHTML = '<div class="msg error">Responde las ' + sec.items.length + ' preguntas de esta sección antes de continuar.</div>'; return; }
+    if (idx + 1 < SECCIONES_RAS.length) { state.paso = idx + 1; render(); return; }
+    await enviar();
+  };
+}
+
+async function enviar() {
+  state.paso = 'enviando'; render();
+  var r = await api('enviarRAS', { respuestas: JSON.stringify(state.respuestas) });
+  if (!r.ok) {
+    state.paso = SECCIONES_RAS.length - 1; render();
+    document.getElementById('secMsg').innerHTML = '<div class="msg error">' + escapeHtml(r.error || 'No se pudo enviar. Intenta de nuevo.') + '</div>';
+    return;
+  }
+  state.paso = 'gracias'; render();
+}
+
+async function init() {
+  if (!state.token) { state.paso = 'error'; render(); return; }
+  var r = await api('infoRAS', {});
+  if (!r.ok) { renderError(r.error); return; }
+  state.info = r;
+  state.paso = r.completado ? 'yaCompletado' : 'bienvenida';
+  render();
+}
+init();
+</script>
+</body>
+</html>
