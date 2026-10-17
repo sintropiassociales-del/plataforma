@@ -148,6 +148,14 @@
   .badge.inactivo { background: #FBEAEA; color: var(--danger); }
   .badge.admin { background: #FFF1E4; color: var(--orange); }
   .badge.operativo { background: #EFEAFB; color: var(--purple); }
+  /* Celda de "Generar liga" del panel de Baterías (PCS/PTS/RAS/RCS/ICS) —
+     mismo contenedor para los 3 estados (sin generar / pendiente /
+     completado) así todas las filas guardan la misma altura y no se ve
+     "escalonado" el renglón según qué columnas ya tengan liga. */
+  .celdaLigaRYS { display: flex; flex-direction: column; gap: 4px; min-width: 150px; min-height: 30px; justify-content: center; }
+  .celdaLigaRYS .filaLigaRYS { display: flex; gap: 6px; align-items: center; }
+  .celdaLigaRYS .inputLigaRYS { flex: 1 1 auto; min-width: 0; width: 100%; max-width: 170px; font-size: 11px; padding: 3px 6px; border: 1px solid var(--border); border-radius: 6px; color: #666; }
+  .celdaLigaRYS .subtleLigaRYS { font-size: 11px; color: #888; }
   .msg { padding: 10px 14px; border-radius: 6px; font-size: 13px; margin-top: 12px; }
   .msg.error { background: #FBEAEA; color: var(--danger); border: 1px solid #F2C4C0; }
   .msg.ok { background: #E4F7EA; color: var(--ok); border: 1px solid #BEE5CB; }
@@ -3403,11 +3411,29 @@ async function renderPanelBateriasRYS() {
   if (!panel) return;
   panel.innerHTML = '<p class="subtle">Cargando candidatos…</p>';
 
-  var rCand = await api('listarCandidatosParaRYS', { proyecto: state.proyectoActivo.codigo });
+  // Se piden candidatos y ligas en paralelo — así la tabla ya nace con el
+  // estatus real de cada celda (pendiente/completado) en vez de arrancar
+  // siempre en blanco y solo "llenarse" cuando alguien da clic; antes,
+  // recargar la página hacía que todo se viera como recién empezado
+  // aunque ya hubiera ligas generadas, lo que agravaba lo disparejo de la
+  // tabla (David: "la experiencia visual no es la mejor").
+  var datos = await Promise.all([
+    api('listarCandidatosParaRYS', { proyecto: state.proyectoActivo.codigo }),
+    api('listarEnlacesRYS', { proyecto: state.proyectoActivo.codigo })
+  ]);
+  var rCand = datos[0], rLig = datos[1];
   if (!rCand.ok) { panel.innerHTML = '<p class="msg error">' + escapeHtml(rCand.error) + '</p>'; return; }
   var conConsentimiento = (rCand.data || []).filter(function (f) { return f.consentimiento === 'Sí'; });
   var candidatosPorId = {};
   conConsentimiento.forEach(function (c) { candidatosPorId[c.codigo] = c; });
+
+  // La última fila de cada par candidato+batería gana (mismo criterio que
+  // _resumenBateriasPorCandidatoRYS en el backend) — así, si se revocó y
+  // se volvió a generar, la celda muestra la liga vigente, no la vieja.
+  var ligaPorCandidatoFamilia = {};
+  if (rLig.ok) {
+    rLig.data.forEach(function (f) { ligaPorCandidatoFamilia[f.idCandidato + '|' + f.instrumento] = f; });
+  }
 
   panel.innerHTML =
     '<h3 style="margin-bottom:4px">Baterías psicométricas (PCS · PTS · RAS · RCS · ICS)</h3>' +
@@ -3420,8 +3446,9 @@ async function renderPanelBateriasRYS() {
         conConsentimiento.map(function (c) {
           return '<tr><td>' + escapeHtml(c.codigo) + '</td><td>' + escapeHtml(c.nombre) + '</td>' +
             RYS_FAMILIAS_PANEL.map(function (f) {
-              return '<td><button class="small secondary btnGenRYS" data-candidato="' + escapeHtml(c.codigo) + '" data-familia="' + f.clave + '">Generar liga</button>' +
-                '<div class="enlaceResultadoRYS" data-candidato="' + escapeHtml(c.codigo) + '" data-familia="' + f.clave + '" style="margin-top:4px"></div></td>';
+              var info = ligaPorCandidatoFamilia[c.codigo + '|' + f.clave] || null;
+              return '<td><div class="celdaLigaRYS" data-candidato="' + escapeHtml(c.codigo) + '" data-familia="' + f.clave + '">' +
+                _celdaLigaRYSHtml(c.codigo, f.clave, info) + '</div></td>';
             }).join('') + '</tr>';
         }).join('') + '</tbody></table>') +
     '<div class="toolbar" style="justify-content:flex-start;margin-top:14px">' +
@@ -3433,28 +3460,67 @@ async function renderPanelBateriasRYS() {
   document.getElementById('btnProgramarEnvioRYS').onclick = function () { abrirModalProgramarEnvioRYS(candidatosPorId); };
   document.getElementById('btnVerProgramadosRYS').onclick = function () { abrirModalVerCorreosProgramados(); };
 
-  Array.prototype.forEach.call(panel.querySelectorAll('.btnGenRYS'), function (btn) {
-    btn.onclick = async function () {
-      var candidato = btn.getAttribute('data-candidato'), familia = btn.getAttribute('data-familia');
-      btn.disabled = true; btn.textContent = 'Generando...';
-      var r = await api('generarEnlaceRYS', { proyecto: state.proyectoActivo.codigo, idCandidato: candidato, instrumento: familia });
-      btn.disabled = false; btn.textContent = 'Generar liga';
-      var caja = panel.querySelector('.enlaceResultadoRYS[data-candidato="' + candidato + '"][data-familia="' + familia + '"]');
-      if (!r.ok) { caja.innerHTML = '<span class="msg error" style="display:inline-block">' + escapeHtml(r.error) + '</span>'; return; }
-      var url = r.liga; // la arma el backend (apiGenerarEnlaceRYS) — misma liga que se manda por correo
-      caja.innerHTML =
-        '<input type="text" readonly value="' + escapeHtml(url) + '" style="width:260px;font-size:11px" onclick="this.select()"> ' +
-        '<button class="small secondary btnCopiarRYS">Copiar</button><br>' +
-        '<span class="subtle">Vence: ' + escapeHtml(r.expira) + (r.reutilizado ? ' (ya existía)' : '') + '</span>';
-      caja.querySelector('.btnCopiarRYS').onclick = function () {
-        navigator.clipboard.writeText(url).then(function () {
-          var b2 = caja.querySelector('.btnCopiarRYS'); b2.textContent = 'Copiado ✓';
-          setTimeout(function () { var b3 = caja.querySelector('.btnCopiarRYS'); if (b3) b3.textContent = 'Copiar'; }, 2000);
+  Array.prototype.forEach.call(panel.querySelectorAll('.celdaLigaRYS'), function (div) {
+    _wireCeldaLigaRYS(div, div.getAttribute('data-candidato'), div.getAttribute('data-familia'));
+  });
+
+  // Arma el contenido de UNA celda (sin el <div> que la envuelve) para los
+  // 3 estados posibles — se usa tanto al construir la tabla la primera vez
+  // como para repintar una celda después de generar su liga, así el
+  // marcado es idéntico sin importar cuándo se construyó (nada de
+  // "botón + caja aparte" apilados de formas distintas según el momento).
+  function _celdaLigaRYSHtml(candidato, familia, info) {
+    var sinLigaVigente = !info || info.estatus === 'Revocado';
+    if (sinLigaVigente) {
+      return '<button type="button" class="small secondary btnGenRYS" data-candidato="' + escapeHtml(candidato) + '" data-familia="' + escapeHtml(familia) + '">Generar liga</button>';
+    }
+    if (info.estatus === 'Completado' || info.completado === 'Sí') {
+      return '<span class="badge" style="background:#E4F7EA;color:var(--ok)">Completado ✓</span>' +
+        (info.fechaCompletado ? '<span class="subtleLigaRYS">' + escapeHtml(info.fechaCompletado) + '</span>' : '') +
+        '<button type="button" class="small secondary btnGenRYS" data-candidato="' + escapeHtml(candidato) + '" data-familia="' + escapeHtml(familia) + '">Generar otra</button>';
+    }
+    // estatus === 'Activo' — liga pendiente de respuesta.
+    return '<span class="badge" style="background:#EFEAFB;color:var(--purple)">Pendiente</span>' +
+      '<div class="filaLigaRYS">' +
+        '<input type="text" readonly class="inputLigaRYS" value="' + escapeHtml(info.liga) + '" onclick="this.select()">' +
+        '<button type="button" class="small secondary btnCopiarRYS">Copiar</button>' +
+      '</div>' +
+      '<span class="subtleLigaRYS">Vence: ' + escapeHtml(info.fechaExpiracion) + '</span>';
+  }
+
+  // Conecta los botones/inputs que acaba de insertar _celdaLigaRYSHtml en
+  // un <div class="celdaLigaRYS"> — se llama una vez al construir la tabla
+  // y de nuevo cada vez que se repinta una celda (ver "Generar liga" más
+  // abajo), para no duplicar la lógica de click en dos lugares.
+  function _wireCeldaLigaRYS(div, candidato, familia) {
+    var btn = div.querySelector('.btnGenRYS');
+    if (btn) {
+      btn.onclick = async function () {
+        var textoOriginal = btn.textContent;
+        btn.disabled = true; btn.textContent = 'Generando...';
+        var r = await api('generarEnlaceRYS', { proyecto: state.proyectoActivo.codigo, idCandidato: candidato, instrumento: familia });
+        if (!r.ok) {
+          btn.disabled = false; btn.textContent = textoOriginal;
+          var previo = div.querySelector('.rysErrorLiga'); if (previo) previo.remove();
+          div.insertAdjacentHTML('beforeend', '<span class="msg error rysErrorLiga" style="display:block;margin-top:4px;padding:4px 8px;font-size:11px">' + escapeHtml(r.error) + '</span>');
+          return;
+        }
+        div.innerHTML = _celdaLigaRYSHtml(candidato, familia, { estatus: 'Activo', completado: 'No', fechaExpiracion: r.expira, liga: r.liga });
+        _wireCeldaLigaRYS(div, candidato, familia);
+        cargarListaEnlacesRYS();
+      };
+    }
+    var btnCopiar = div.querySelector('.btnCopiarRYS');
+    var input = div.querySelector('.inputLigaRYS');
+    if (btnCopiar && input) {
+      btnCopiar.onclick = function () {
+        navigator.clipboard.writeText(input.value).then(function () {
+          btnCopiar.textContent = 'Copiado ✓';
+          setTimeout(function () { btnCopiar.textContent = 'Copiar'; }, 2000);
         });
       };
-      cargarListaEnlacesRYS();
-    };
-  });
+    }
+  }
 
   await cargarListaEnlacesRYS();
 
