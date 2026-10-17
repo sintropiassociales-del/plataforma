@@ -145,6 +145,14 @@ var TOTAL_ITEMS = SECCIONES_RAS.reduce(function (n, s) { return n + s.items.leng
 
 var qs = new URLSearchParams(location.search);
 var state = { token: qs.get('token') || '', info: null, paso: 'cargando', respuestas: new Array(TOTAL_ITEMS).fill(null) };
+// David: "aunque tarde en llegar la interpretación se tiene que enviar la
+// información (de no ser posible) colocar un mensaje" — mientras la
+// respuesta va de camino, se avisa al navegador para que confirme antes
+// de cerrar/recargar la pestaña (el texto exacto del diálogo lo decide
+// cada navegador, no se puede personalizar).
+window.addEventListener('beforeunload', function (e) {
+  if (state.paso === 'enviando') { e.preventDefault(); e.returnValue = ''; }
+});
 var app = document.getElementById('app');
 
 function render() {
@@ -173,7 +181,8 @@ function renderBienvenida() {
   document.getElementById('btnComenzar').onclick = function () { state.paso = 0; render(); };
 }
 function renderEnviando() {
-  app.innerHTML = '<div class="spinner"></div><p class="subtle" style="text-align:center">Enviando tus respuestas...</p>';
+  app.innerHTML = '<div class="spinner"></div><p class="subtle" style="text-align:center">Enviando tus respuestas...</p>' +
+    '<p style="text-align:center;font-weight:700;color:var(--orange);background:#FFF1E4;border-radius:9px;padding:10px 13px;margin:12px 0">No cierres ni recargues esta pestaña hasta que se termine de enviar la información.</p>';
 }
 function renderGracias() {
   app.innerHTML = '<div class="pantalla-centrada"><div class="icono">🎉</div><h1>Gracias</h1>' +
