@@ -658,6 +658,28 @@ var INSTRUMENTOS = {
       { key: 'cv', label: 'CV (enlace de Drive)', tipo: 'text' }
     ]
   },
+  rysbat: {
+    familia: 'PSI',
+    titulo: 'Baterías psicométricas — Base de candidatos',
+    listar: 'listarRYSBAT', guardar: 'guardarFilaRYSBAT', eliminar: 'eliminarFilaRYSBAT',
+    validar: 'validarRYSBAT', descargar: 'generarDescargableRYSBAT',
+    columnas: [
+      { key: 'codigo', label: 'Código' },
+      { key: 'nombre', label: 'Nombre' },
+      { key: 'correo', label: 'Correo' },
+      { key: 'telefono', label: 'Teléfono' },
+      { key: 'consentimiento', label: 'Consentimiento' }
+    ],
+    campos: [
+      { key: 'nombre', label: 'Nombre completo *', tipo: 'text', requerido: true },
+      { key: 'correo', label: 'Correo electrónico *', tipo: 'text', requerido: true },
+      { key: 'telefono', label: 'Teléfono de contacto', tipo: 'text' },
+      { key: 'consentimiento', label: 'Consentimiento de tratamiento de datos', tipo: 'select', opciones: SINO_RS },
+      { key: 'fechaConsentimiento', label: 'Fecha de consentimiento', tipo: 'date' },
+      { key: 'puestoInteres', label: 'Puesto de interés (opcional)', tipo: 'text' },
+      { key: 'notas', label: 'Notas', tipo: 'textarea' }
+    ]
+  },
   rs01: {
     familia: 'RS',
     titulo: 'INS-RS-01 Requisición de personal',
@@ -2572,6 +2594,7 @@ var INSTRUMENTOS_INSTALABLES = [
   { clave: 'RAS', nombre: 'Razonamiento Aplicado Sintropía (RAS) — batería psicométrica RyS', tipos: ['ras'] },
   { clave: 'RCS', nombre: 'Reflexión de Color Sintropía (RCS) — batería psicométrica RyS', tipos: ['rcs'] },
   { clave: 'ICS', nombre: 'Integridad y Confianza Sintropía (ICS) — batería psicométrica RyS', tipos: ['ics'] },
+  { clave: 'RYSBAT', nombre: 'Baterías — Base ligera de candidatos para psicometrías (solo nombre y correo obligatorios) + reporte agregado del proyecto', tipos: ['rysbat'] },
   { clave: 'ENT01', nombre: 'INS-ENT-01 — Ficha de preparación de entrevista', tipos: ['ent01'] },
   { clave: 'ENT02', nombre: 'INS-ENT-02 — Guía de entrevista estructurada', tipos: ['ent02'] },
   { clave: 'ENT03', nombre: 'INS-ENT-03 — Guía de entrevista por competencias (STAR)', tipos: ['ent03'] },
@@ -3164,7 +3187,8 @@ function renderInstrumento(tipo) {
       ? '<p class="subtle">Todavía no hay filas capturadas. Puedes agregarlas una por una, o usar "Importar archivo" para cargar varias desde un CSV/Excel. Si al validar o generar aparece un error de pestaña no encontrada, pide a tu administrador que lo instale en "Instrumentos".</p>'
       : '<table><thead>' + thead + '</thead><tbody>' + trs + '</tbody></table>') +
     (tipo === 'se01' ? '<div id="panelEnlacesSE" style="margin-top:26px"></div>' : '') +
-    (tipo === 'rs07' ? '<div id="panelBateriasRYS" style="margin-top:26px"></div>' : '');
+    (tipo === 'rysbat' ? '<div id="panelAgregadoBaterias" style="margin-top:26px"></div>' : '') +
+    (tipo === 'rs07' || tipo === 'rysbat' ? '<div id="panelBateriasRYS" style="margin-top:26px"></div>' : '');
 
   document.getElementById('btnAgregarFila').onclick = function () { abrirModalFila(tipo, null); };
   document.getElementById('btnImportar').onclick = function () { abrirModalImportar(tipo); };
@@ -3187,7 +3211,8 @@ function renderInstrumento(tipo) {
     };
   });
   if (tipo === 'se01') renderPanelEnlacesCandidatoSE(filas);
-  if (tipo === 'rs07') renderPanelBateriasRYS();
+  if (tipo === 'rysbat') renderPanelAgregadoBaterias();
+  if (tipo === 'rs07' || tipo === 'rysbat') renderPanelBateriasRYS();
 }
 
 /* ---------------- SE-01: enlace de autollenado para candidatos ---------------- */
@@ -3281,12 +3306,102 @@ var RYS_FAMILIAS_PANEL = [
 var NOMBRE_RYS_PANEL_POR_CLAVE = {};
 RYS_FAMILIAS_PANEL.forEach(function (f) { NOMBRE_RYS_PANEL_POR_CLAVE[f.clave] = f.nombre; });
 
+/* ---------------- "Baterías" (RYSBAT): panel agregado del proyecto,
+ * igual en espíritu al reporte de Educación — cuántos candidatos, cuántas
+ * ligas, cuántos terminaron, y acceso al reporte final combinado (Word/
+ * PDF) con el análisis cualitativo del proyecto + el análisis por
+ * candidato. Solo se embebe cuando tipo==='rysbat' (ver renderInstrumento),
+ * justo arriba del panel de "Generar liga" (panelBateriasRYS), que es el
+ * mismo para RS-07 y para Baterías. ---------------- */
+async function renderPanelAgregadoBaterias() {
+  var panel = document.getElementById('panelAgregadoBaterias');
+  if (!panel) return;
+  panel.innerHTML = '<p class="subtle">Cargando resumen del proyecto…</p>';
+  var r = await api('statsBateriasRYS', { proyecto: state.proyectoActivo.codigo });
+  if (!r.ok) { panel.innerHTML = '<p class="msg error">' + escapeHtml(r.error) + '</p>'; return; }
+  var d = r.data;
+  var tarjeta = function (valor, etiqueta) {
+    return '<div style="background:#faf8ff;border:1px solid #e4defa;border-radius:10px;padding:12px 16px;min-width:140px">' +
+      '<div style="font-size:26px;font-weight:700;color:#631EEB">' + valor + '</div>' +
+      '<div class="subtle" style="margin-top:2px">' + etiqueta + '</div></div>';
+  };
+  var porBateriaHtml = d.porBateria.filter(function (b) { return b.generadas > 0; }).map(function (b) {
+    return '<div style="display:flex;justify-content:space-between;border-top:1px solid #eee;padding:6px 0">' +
+      '<span>' + escapeHtml(b.nombreInstrumento) + '</span><span>' + b.completadas + ' de ' + b.generadas + ' completada(s)</span></div>';
+  }).join('');
+  panel.innerHTML =
+    '<h3 style="margin-bottom:4px">Resumen del proyecto — Baterías psicométricas</h3>' +
+    '<p class="subtle" style="margin-top:0">Vista agregada de todo el proyecto (candidatos de RS-06 y de "Baterías" juntos). El reporte final combina este resumen con el análisis mixto (cuantitativo + cualitativo + voz + IA) ya generado automáticamente por cada candidato al terminar sus baterías.</p>' +
+    '<div style="display:flex;gap:14px;flex-wrap:wrap;margin:10px 0 16px">' +
+      tarjeta(d.totalCandidatos, 'Candidatos en la base') +
+      tarjeta(d.conConsentimiento, 'Con consentimiento') +
+      tarjeta(d.candidatosConLiga, 'Con liga generada') +
+      tarjeta(d.candidatosTerminaronTodas, 'Terminaron todas sus baterías') +
+      tarjeta(d.candidatosConPendiente, 'Con liga pendiente') +
+    '</div>' +
+    (porBateriaHtml ? ('<div style="margin-bottom:16px">' + porBateriaHtml + '</div>') : '') +
+    '<button class="primary" id="btnVerReporteBaterias" style="margin-top:0">Ver / descargar reporte final</button>';
+  document.getElementById('btnVerReporteBaterias').onclick = function () { abrirModalReporteBateriasRYS(); };
+}
+
+// Reporte final combinado (resumen agregado del proyecto + sección por
+// candidato con su análisis ya generado) — mismo patrón de modal que
+// abrirModalReporteAplicacionEdu (ver más abajo), pero con una sola
+// acción fija ('reporteBateriasRYS'/'generarDescargableReporteBateriasRYS')
+// en vez de variar por familia.
+function abrirModalReporteBateriasRYS() {
+  var modal = el(
+    '<div class="modal-bg"><div class="modal wide">' +
+      '<h2>Reporte final — Baterías psicométricas</h2>' +
+      '<div id="repBatBody"><p class="subtle">Calculando resultados...</p></div>' +
+      '<div class="modal-actions">' +
+        '<button class="secondary" id="repBatCerrar">Cerrar</button>' +
+        '<select id="repBatFormato" style="margin-right:auto"><option value="pdf">PDF</option><option value="docx">Word</option><option value="gdoc">Google Doc</option><option value="xlsx">Excel (por candidato)</option><option value="csv">CSV (por candidato)</option></select>' +
+        '<button class="primary" id="repBatDescargar">Descargar</button>' +
+      '</div>' +
+    '</div></div>'
+  );
+  document.body.appendChild(modal);
+  modal.querySelector('#repBatCerrar').onclick = function () { modal.remove(); };
+
+  (async function () {
+    var rr = await api('reporteBateriasRYS', { proyecto: state.proyectoActivo.codigo });
+    var body = modal.querySelector('#repBatBody');
+    if (!rr.ok) { body.innerHTML = '<div class="msg error">' + escapeHtml(rr.error) + '</div>'; return; }
+    var d = rr.data;
+    var candidatosHtml = d.candidatos.map(function (c) {
+      return '<div style="border-top:1px solid #eee;padding:10px 0">' +
+        '<p style="margin:0"><b>' + escapeHtml(c.codigo) + ' — ' + escapeHtml(c.nombre) + '</b>' +
+        (c.promedioGeneral != null ? ' <span class="subtle">(promedio general ' + c.promedioGeneral + '/100)</span>' : '') + '</p>' +
+        (c.listo
+          ? ('<p class="subtle" style="margin:4px 0">Baterías incluidas: ' + escapeHtml(c.bateriasIncluidas) + '</p>' +
+             c.textoVoz.split('\n\n').map(function (p) { return '<p class="subtle">' + escapeHtml(p) + '</p>'; }).join('') +
+             (c.textoIA ? ('<p style="margin:4px 0"><b>Complemento de IA:</b></p><p class="subtle">' + escapeHtml(c.textoIA) + '</p>') : ''))
+          : '<p class="subtle">Todavía no ha terminado todas sus baterías asignadas.</p>') +
+        '</div>';
+    }).join('');
+    body.innerHTML =
+      '<h3 style="margin-top:0">Análisis cualitativo general del proyecto</h3>' +
+      d.analisisCualitativo.split('\n\n').map(function (p) { return '<p class="subtle">' + escapeHtml(p) + '</p>'; }).join('') +
+      '<h3 style="margin-top:16px">Resultados por candidato</h3>' +
+      (candidatosHtml || '<p class="subtle">Todavía no hay candidatos en este proyecto.</p>');
+  })();
+
+  modal.querySelector('#repBatDescargar').onclick = async function () {
+    var btn = this; var formato = modal.querySelector('#repBatFormato').value;
+    btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Generando...';
+    var rr = await api('generarDescargableReporteBateriasRYS', { proyecto: state.proyectoActivo.codigo, formato: formato });
+    btn.disabled = false; btn.textContent = 'Descargar';
+    manejarDescargable(rr);
+  };
+}
+
 async function renderPanelBateriasRYS() {
   var panel = document.getElementById('panelBateriasRYS');
   if (!panel) return;
   panel.innerHTML = '<p class="subtle">Cargando candidatos…</p>';
 
-  var rCand = await api('listarRS06', { proyecto: state.proyectoActivo.codigo });
+  var rCand = await api('listarCandidatosParaRYS', { proyecto: state.proyectoActivo.codigo });
   if (!rCand.ok) { panel.innerHTML = '<p class="msg error">' + escapeHtml(rCand.error) + '</p>'; return; }
   var conConsentimiento = (rCand.data || []).filter(function (f) { return f.consentimiento === 'Sí'; });
   var candidatosPorId = {};
@@ -3294,9 +3409,9 @@ async function renderPanelBateriasRYS() {
 
   panel.innerHTML =
     '<h3 style="margin-bottom:4px">Baterías psicométricas (PCS · PTS · RAS · RCS · ICS)</h3>' +
-    '<p class="subtle" style="margin-top:0">Genera un enlace seguro por candidato y por batería — el candidato contesta directo, sin ver su puntaje; al terminar, la liga deja de funcionar de inmediato y el resultado se guarda aquí y además se envía por correo a dirección como Word. La liga puede copiarse y compartirse a mano, o mandarse por correo al candidato (de inmediato o programado por lotes) desde "Programar envío de ligas" más abajo. Solo puede generarse si el candidato ya tiene consentimiento otorgado en RS-06. Resultado exploratorio y complementario — nunca debe usarse como único criterio de contratación o descarte.</p>' +
+    '<p class="subtle" style="margin-top:0">Genera un enlace seguro por candidato y por batería — el candidato contesta directo, sin ver su puntaje; al terminar, la liga deja de funcionar de inmediato y el resultado se guarda aquí y además se envía por correo a dirección como Word. La liga puede copiarse y compartirse a mano, o mandarse por correo al candidato (de inmediato o programado por lotes) desde "Programar envío de ligas" más abajo. Candidatos de RS-06 (Base de candidatos) y de "Baterías" (banco ligero) aparecen juntos aquí. Solo puede generarse si el candidato ya tiene consentimiento otorgado. Resultado exploratorio y complementario — nunca debe usarse como único criterio de contratación o descarte.</p>' +
     (conConsentimiento.length === 0
-      ? '<p class="subtle">Ningún candidato de RS-06 tiene consentimiento otorgado todavía.</p>'
+      ? '<p class="subtle">Ningún candidato tiene consentimiento otorgado todavía.</p>'
       : '<table><thead><tr><th>Candidato</th><th>Nombre</th>' +
         RYS_FAMILIAS_PANEL.map(function (f) { return '<th>' + escapeHtml(f.clave) + '</th>'; }).join('') +
         '</tr></thead><tbody>' +
