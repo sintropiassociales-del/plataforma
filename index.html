@@ -3472,11 +3472,25 @@ async function renderPanelBateriasRYS() {
     '<div class="toolbar" style="justify-content:flex-start;margin-top:14px">' +
       '<button class="secondary" id="btnProgramarEnvioRYS">Programar envío de ligas</button>' +
       '<button class="secondary" id="btnVerProgramadosRYS">Ver correos programados</button>' +
+      '<button class="secondary" id="btnProcesarColaRYS" title="Genera y envía de inmediato los Word de resultados que estén pendientes en la cola, sin esperar al proceso automático">Procesar cola ahora</button>' +
     '</div>' +
     '<div id="listaEnlacesRYS" style="margin-top:18px"></div>';
 
   document.getElementById('btnProgramarEnvioRYS').onclick = function () { abrirModalProgramarEnvioRYS(candidatosPorId); };
   document.getElementById('btnVerProgramadosRYS').onclick = function () { abrirModalVerCorreosProgramados(); };
+  document.getElementById('btnProcesarColaRYS').onclick = async function () {
+    var btn = document.getElementById('btnProcesarColaRYS');
+    btn.disabled = true;
+    var textoOriginal = btn.textContent;
+    btn.textContent = 'Procesando…';
+    try {
+      var r = await api('procesarColaDocumentosRYS', {});
+      alert(r.ok ? r.msg : (r.error || 'No se pudo procesar la cola.'));
+    } finally {
+      btn.disabled = false;
+      btn.textContent = textoOriginal;
+    }
+  };
 
   Array.prototype.forEach.call(panel.querySelectorAll('.celdaLigaRYS'), function (div) {
     _wireCeldaLigaRYS(div, div.getAttribute('data-candidato'), div.getAttribute('data-familia'));
