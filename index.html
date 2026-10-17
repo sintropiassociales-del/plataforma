@@ -152,10 +152,17 @@
      mismo contenedor para los 3 estados (sin generar / pendiente /
      completado) así todas las filas guardan la misma altura y no se ve
      "escalonado" el renglón según qué columnas ya tengan liga. */
-  .celdaLigaRYS { display: flex; flex-direction: column; gap: 4px; min-width: 150px; min-height: 30px; justify-content: center; }
-  .celdaLigaRYS .filaLigaRYS { display: flex; gap: 6px; align-items: center; }
-  .celdaLigaRYS .inputLigaRYS { flex: 1 1 auto; min-width: 0; width: 100%; max-width: 170px; font-size: 11px; padding: 3px 6px; border: 1px solid var(--border); border-radius: 6px; color: #666; }
+  .celdaLigaRYS { display: flex; flex-direction: column; gap: 4px; width: 132px; min-height: 30px; justify-content: center; }
+  .celdaLigaRYS .filaLigaRYS { display: flex; gap: 4px; align-items: center; }
+  .celdaLigaRYS .inputLigaRYS { flex: 1 1 auto; min-width: 0; width: 0; font-size: 10.5px; padding: 3px 5px; border: 1px solid var(--border); border-radius: 6px; color: #666; }
   .celdaLigaRYS .subtleLigaRYS { font-size: 11px; color: #888; }
+  .celdaLigaRYS button.btnGenRYS, .celdaLigaRYS button.btnCopiarRYS { padding: 7px 10px; font-size: 12px; white-space: nowrap; }
+  /* La tabla de Baterías puede llegar a necesitar más ancho del que cabe
+     en el panel (hasta 5 columnas de liga + candidato + nombre) — que
+     desborde DENTRO de su propia caja con scroll horizontal, nunca fuera
+     del margen de la página (David: "se sigue viendo fuera del margen"). */
+  .tablaScrollX { overflow-x: auto; max-width: 100%; }
+  .tablaScrollX table { margin-top: 0; }
   .msg { padding: 10px 14px; border-radius: 6px; font-size: 13px; margin-top: 12px; }
   .msg.error { background: #FBEAEA; color: var(--danger); border: 1px solid #F2C4C0; }
   .msg.ok { background: #E4F7EA; color: var(--ok); border: 1px solid #BEE5CB; }
@@ -3154,6 +3161,16 @@ async function cargarInstrumento(tipo) {
   if (state.view === 'proyectos' && state.proyectoActivo && state.subtab === tipo) renderInstrumento(tipo);
 }
 
+function _badgesBateriasEstatus(valor) {
+  if (!valor || valor === '—') return '<span class="subtle">—</span>';
+  return String(valor).split(' · ').map(function (parte) {
+    var completada = / ✓$/.test(parte);
+    var clave = parte.replace(/ ✓$| …$/, '');
+    return '<span class="badge ' + (completada ? 'activo' : 'operativo') + '" style="margin:1px 3px 1px 0">' +
+      escapeHtml(clave) + (completada ? ' ✓' : ' …') + '</span>';
+  }).join('');
+}
+
 function renderInstrumento(tipo) {
   var box = document.getElementById('subContent');
   if (!box) return;
@@ -3171,6 +3188,7 @@ function renderInstrumento(tipo) {
   var trs = filas.map(function (f) {
     var tds = cfg.columnas.map(function (c) {
       var v = f[c.key];
+      if (c.key === 'bateriasEstatus') { return '<td>' + _badgesBateriasEstatus(v) + '</td>'; }
       return '<td>' + (v === undefined || v === null || v === '' ? '—' : escapeHtml(v)) + '</td>';
     }).join('');
     return '<tr>' + tds +
@@ -3440,7 +3458,7 @@ async function renderPanelBateriasRYS() {
     '<p class="subtle" style="margin-top:0">Genera un enlace seguro por candidato y por batería — el candidato contesta directo, sin ver su puntaje; al terminar, la liga deja de funcionar de inmediato y el resultado se guarda aquí y además se envía por correo a dirección como Word. La liga puede copiarse y compartirse a mano, o mandarse por correo al candidato (de inmediato o programado por lotes) desde "Programar envío de ligas" más abajo. Candidatos de RS-06 (Base de candidatos) y de "Baterías" (banco ligero) aparecen juntos aquí. Solo puede generarse si el candidato ya tiene consentimiento otorgado. Resultado exploratorio y complementario — nunca debe usarse como único criterio de contratación o descarte.</p>' +
     (conConsentimiento.length === 0
       ? '<p class="subtle">Ningún candidato tiene consentimiento otorgado todavía.</p>'
-      : '<table><thead><tr><th>Candidato</th><th>Nombre</th>' +
+      : '<div class="tablaScrollX"><table><thead><tr><th>Candidato</th><th>Nombre</th>' +
         RYS_FAMILIAS_PANEL.map(function (f) { return '<th>' + escapeHtml(f.clave) + '</th>'; }).join('') +
         '</tr></thead><tbody>' +
         conConsentimiento.map(function (c) {
@@ -3450,7 +3468,7 @@ async function renderPanelBateriasRYS() {
               return '<td><div class="celdaLigaRYS" data-candidato="' + escapeHtml(c.codigo) + '" data-familia="' + f.clave + '">' +
                 _celdaLigaRYSHtml(c.codigo, f.clave, info) + '</div></td>';
             }).join('') + '</tr>';
-        }).join('') + '</tbody></table>') +
+        }).join('') + '</tbody></table></div>') +
     '<div class="toolbar" style="justify-content:flex-start;margin-top:14px">' +
       '<button class="secondary" id="btnProgramarEnvioRYS">Programar envío de ligas</button>' +
       '<button class="secondary" id="btnVerProgramadosRYS">Ver correos programados</button>' +
