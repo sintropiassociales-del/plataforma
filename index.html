@@ -463,7 +463,14 @@ function _cfgTipo(tipo) { return INSTRUMENTOS[tipo] || CRM_TIPOS[tipo]; }
 // orden de este arreglo define el orden de los botones de familia; cada
 // instrumento en INSTRUMENTOS declara a qué familia pertenece con
 // `familia: 'DIA'` (etc.) usando estas mismas claves.
-var FAMILIA_ORDEN = ['DIA', 'TER', 'MER', 'PLA', 'IND', 'EVA', 'OPE', 'SAL', 'PED', 'EDU', 'EST', 'CUA', 'RS', 'ENT', 'SE'];
+// PSI (Psicometrías) va justo después de RS porque las 5 baterías
+// (PCS/PTS/RAS/RCS/ICS) solo tienen sentido dentro de un proyecto de
+// Reclutamiento y Selección (comparten RS-06/RS-07 como fuente de
+// candidatos/consentimiento) pero se les dio su propia categoría — tanto
+// aquí (dentro de un proyecto, ver renderProyectoDetalle) como en el
+// catálogo admin "Instrumentos" (ver FAMILIA_ORDEN_ADMIN) — para que no se
+// mezclen con las fichas y formatos de RS-01 a RS-12.
+var FAMILIA_ORDEN = ['DIA', 'TER', 'MER', 'PLA', 'IND', 'EVA', 'OPE', 'SAL', 'PED', 'EDU', 'EST', 'CUA', 'RS', 'PSI', 'ENT', 'SE'];
 var FAMILIAS = {
   DIA: 'Diagnóstico',
   TER: 'Territorio',
@@ -484,14 +491,9 @@ var FAMILIAS = {
   PSI: 'Psicometrías'
 };
 // Igual que FAMILIA_ORDEN, pero solo para la página de administración
-// "Instrumentos" (catálogo completo instalable): ahí también aparecen CRM
-// y PSI, que no viven dentro de INSTRUMENTOS/FAMILIA_ORDEN porque no están
-// ligados a un proyecto de la forma genérica (CRM) o porque, aunque sus
-// instrumentos sí pertenecen a un proyecto de RS, en el catálogo de
-// Instrumentos se agrupan aparte para que las baterías psicométricas
-// (PCS/PTS/RAS/RCS/ICS) tengan su propia categoría en vez de mezclarse con
-// las fichas y formatos de RS-01 a RS-12. Se coloca justo después de RS
-// porque es la familia de la que se desprende.
+// "Instrumentos" (catálogo completo instalable): ahí también aparece CRM,
+// que no vive dentro de INSTRUMENTOS/FAMILIA_ORDEN porque no está ligado a
+// un proyecto de la forma genérica.
 var FAMILIA_ORDEN_ADMIN = ['DIA', 'TER', 'MER', 'PLA', 'IND', 'EVA', 'OPE', 'SAL', 'PED', 'EDU', 'EST', 'CUA', 'RS', 'PSI', 'ENT', 'SE', 'CRM'];
 
 var INSTRUMENTOS = {
@@ -952,7 +954,7 @@ var INSTRUMENTOS = {
     ]
   },
   pcs: {
-    familia: 'RS',
+    familia: 'PSI',
     titulo: 'Perfil Conductual Sintropía (PCS)',
     listar: 'listarPCS', guardar: 'guardarFilaPCS', eliminar: 'eliminarFilaPCS',
     validar: 'validarPCS', descargar: 'generarDescargablePCS',
@@ -981,7 +983,7 @@ var INSTRUMENTOS = {
     ]
   },
   pts: {
-    familia: 'RS',
+    familia: 'PSI',
     titulo: 'Preferencias de Trabajo Sintropía (PTS)',
     listar: 'listarPTS', guardar: 'guardarFilaPTS', eliminar: 'eliminarFilaPTS',
     validar: 'validarPTS', descargar: 'generarDescargablePTS',
@@ -1012,7 +1014,7 @@ var INSTRUMENTOS = {
     ]
   },
   ras: {
-    familia: 'RS',
+    familia: 'PSI',
     titulo: 'Razonamiento Aplicado Sintropía (RAS)',
     listar: 'listarRAS', guardar: 'guardarFilaRAS', eliminar: 'eliminarFilaRAS',
     validar: 'validarRAS', descargar: 'generarDescargableRAS',
@@ -1039,7 +1041,7 @@ var INSTRUMENTOS = {
     ]
   },
   rcs: {
-    familia: 'RS',
+    familia: 'PSI',
     titulo: 'Reflexión de Color Sintropía (RCS)',
     listar: 'listarRCS', guardar: 'guardarFilaRCS', eliminar: 'eliminarFilaRCS',
     validar: 'validarRCS', descargar: 'generarDescargableRCS',
@@ -1056,7 +1058,7 @@ var INSTRUMENTOS = {
     ]
   },
   ics: {
-    familia: 'RS',
+    familia: 'PSI',
     titulo: 'Integridad y Confianza Sintropía (ICS)',
     listar: 'listarICS', guardar: 'guardarFilaICS', eliminar: 'eliminarFilaICS',
     validar: 'validarICS', descargar: 'generarDescargableICS',
@@ -2680,20 +2682,17 @@ function _familiasConInstrumentos() {
 
 // A qué familia pertenece una entrada de INSTRUMENTOS_INSTALABLES (para
 // agrupar la página admin "Instrumentos" por familia, igual que dentro de
-// un proyecto). La mayoría se deriva de INSTRUMENTOS vía su primer "tipo";
-// CRM e IMES son casos especiales porque no siguen ese patrón genérico.
+// un proyecto). La mayoría se deriva de INSTRUMENTOS vía su primer "tipo"
+// (las 5 baterías psicométricas PCS/PTS/RAS/RCS/ICS quedan en 'PSI' por
+// esta vía, igual que dentro de un proyecto — ver INSTRUMENTOS.pcs/pts/
+// ras/rcs/ics.familia); CRM e IMES son casos especiales porque no siguen
+// ese patrón genérico.
 function _familiaDeInstalable(item) {
   if (item.clave === 'CRM') return 'CRM';
   if (item.clave === 'CITASREPO') return 'CRM';
   if (item.clave === 'MUESTRASWEB') return 'CRM';
   if (item.clave === 'IMES') return 'EVA';
   if (item.clave === 'IMESU') return 'EVA';
-  // Las 5 baterías psicométricas de RyS (PCS/PTS/RAS/RCS/ICS) viven dentro
-  // de un proyecto de Reclutamiento y Selección (INSTRUMENTOS[...].familia
-  // = 'RS', para que sus pestañas de resultados aparezcan junto a RS-01..12
-  // dentro de ese proyecto) pero en el catálogo admin "Instrumentos" se
-  // agrupan aparte, en su propia categoría "Psicometrías".
-  if (item.clave === 'PCS' || item.clave === 'PTS' || item.clave === 'RAS' || item.clave === 'RCS' || item.clave === 'ICS') return 'PSI';
   if (item.tipos && item.tipos.length && INSTRUMENTOS[item.tipos[0]]) return INSTRUMENTOS[item.tipos[0]].familia;
   return 'OTRO';
 }
