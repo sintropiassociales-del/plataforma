@@ -3508,6 +3508,12 @@ function abrirModalProgramarEnvioRYS(candidatosPorId) {
       '<textarea id="rysCuerpo" rows="8" placeholder="Hola <<Nombre>>, te compartimos tu liga para <<Nombre de la batería>>: <<Liga>>"></textarea>' +
       '<p class="subtle" style="margin:8px 0 4px">Clic para insertar una etiqueta donde tengas el cursor:</p>' +
       '<div id="rysChips"></div>' +
+      '<p class="subtle" style="margin:14px 0 4px"><b>Destinatarios</b> — elige a quién y de qué batería mandarle la liga:</p>' +
+      '<div style="display:flex;gap:10px;margin-bottom:6px">' +
+        '<button type="button" class="small secondary" id="rysSelTodos">Seleccionar todos</button>' +
+        '<button type="button" class="small secondary" id="rysSelNinguno">Deseleccionar todos</button>' +
+      '</div>' +
+      '<div id="rysDestinatarios" style="max-height:220px;overflow-y:auto;border:1px solid #eee;border-radius:8px;padding:4px 10px"></div>' +
       '<div id="rysVistaPrevia" style="margin-top:14px"></div>' +
       '<div class="toolbar" style="justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:16px;align-items:center">' +
         '<label style="margin:0;display:flex;align-items:center;gap:6px;font-weight:500"><input type="checkbox" id="rysRepartirChk" style="width:auto"> Repartir en varios días (tandas)</label>' +
@@ -3540,16 +3546,33 @@ function abrirModalProgramarEnvioRYS(candidatosPorId) {
   var repartirChk = modal.querySelector('#rysRepartirChk');
   var porDiaWrap = modal.querySelector('#rysPorDiaWrap');
   var btnConfirmar = modal.querySelector('#rysProgConfirmar');
-  var muestra = null;
+  var listos = [];               // todos los elegibles (liga activa, con correo, pendiente de envío)
+  var seleccionados = {};        // codigo -> true/false, lo que el usuario marcó en la lista
+
+  // Muestra de ejemplo cuando todavía no hay ningún candidato listo (o
+  // ninguno seleccionado) — así la vista previa del correo nunca queda en
+  // blanco, aunque sea con datos ficticios, claramente marcados como tal.
+  var MUESTRA_EJEMPLO = {
+    nombre: 'Nombre de ejemplo', correo: 'ejemplo@correo.com', instrumento: 'PCS',
+    nombreInstrumento: NOMBRE_RYS_PANEL_POR_CLAVE.PCS, liga: 'https://sintropiassociales-del.github.io/plataforma/aplicacion_pcs.html?token=EJEMPLO',
+    proyecto: '', expira: '2026-12-31'
+  };
+
+  function muestraActual() {
+    var primeroSeleccionado = listos.filter(function (f) { return seleccionados[f.codigo]; })[0];
+    return { dato: primeroSeleccionado || MUESTRA_EJEMPLO, esEjemplo: !primeroSeleccionado };
+  }
 
   function actualizarVistaPrevia() {
     var caja = modal.querySelector('#rysVistaPrevia');
-    if (!muestra) { caja.innerHTML = ''; return; }
-    var asuntoPrev = _reemplazarTagsPreview(asuntoInput.value, muestra, CAMPOS_MERGE_RYS_FRONT);
+    var m = muestraActual();
+    var asuntoPrev = _reemplazarTagsPreview(asuntoInput.value, m.dato, CAMPOS_MERGE_RYS_FRONT);
     var cuerpoHtmlPrev = _eduCuerpoTextoAHtml(cuerpoTa.value);
-    var cuerpoPrev = _reemplazarTagsPreview(cuerpoHtmlPrev, muestra, CAMPOS_MERGE_RYS_FRONT);
+    var cuerpoPrev = _reemplazarTagsPreview(cuerpoHtmlPrev, m.dato, CAMPOS_MERGE_RYS_FRONT);
     caja.innerHTML =
-      '<p class="subtle" style="margin-bottom:4px">Vista previa para: ' + escapeHtml(muestra.nombre || muestra.idCandidato) + ' — ' + escapeHtml(muestra.nombreInstrumento) + '</p>' +
+      '<p class="subtle" style="margin-bottom:4px">' + (m.esEjemplo
+        ? 'Vista previa con datos de ejemplo (selecciona abajo a un candidato real para ver su vista previa real):'
+        : ('Vista previa para: ' + escapeHtml(m.dato.nombre || m.dato.idCandidato) + ' — ' + escapeHtml(m.dato.nombreInstrumento))) + '</p>' +
       '<p class="subtle" style="margin:0 0 8px"><b>Asunto:</b> ' + (escapeHtml(asuntoPrev) || '(sin asunto)') + '</p>' +
       '<div style="border:1px solid #eee;border-radius:8px;padding:16px;background:#fafafa">' +
         _envolverHtmlCorreoPreview(cuerpoPrev || '<span class="subtle">(sin cuerpo)</span>') +
@@ -3564,6 +3587,38 @@ function abrirModalProgramarEnvioRYS(candidatosPorId) {
       actualizarVistaPrevia();
     };
   });
+
+  function actualizarBotonConfirmar() {
+    var hayAlgunoSeleccionado = listos.some(function (f) { return seleccionados[f.codigo]; });
+    btnConfirmar.disabled = listos.length === 0 || !hayAlgunoSeleccionado;
+  }
+
+  function renderDestinatarios() {
+    var caja = modal.querySelector('#rysDestinatarios');
+    if (!listos.length) { caja.innerHTML = '<p class="subtle" style="margin:6px 0">Por ahora no hay ligas listas para enviarse — genera la liga de cada candidato/batería primero desde la tabla de arriba.</p>'; return; }
+    caja.innerHTML = listos.map(function (f) {
+      return '<label style="display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid #f3f3f3;margin:0;font-weight:400">' +
+        '<input type="checkbox" class="rysDestChk" data-codigo="' + escapeHtml(f.codigo) + '" style="width:auto"' + (seleccionados[f.codigo] ? ' checked' : '') + '>' +
+        '<span>' + escapeHtml(f.nombre) + ' — <b>' + escapeHtml(f.instrumento) + '</b> <span class="subtle">(' + escapeHtml(f.correo) + ')</span></span>' +
+      '</label>';
+    }).join('');
+    Array.prototype.forEach.call(caja.querySelectorAll('.rysDestChk'), function (chk) {
+      chk.onchange = function () {
+        seleccionados[chk.getAttribute('data-codigo')] = chk.checked;
+        actualizarBotonConfirmar();
+        actualizarVistaPrevia();
+      };
+    });
+  }
+
+  modal.querySelector('#rysSelTodos').onclick = function () {
+    listos.forEach(function (f) { seleccionados[f.codigo] = true; });
+    renderDestinatarios(); actualizarBotonConfirmar(); actualizarVistaPrevia();
+  };
+  modal.querySelector('#rysSelNinguno').onclick = function () {
+    listos.forEach(function (f) { seleccionados[f.codigo] = false; });
+    renderDestinatarios(); actualizarBotonConfirmar(); actualizarVistaPrevia();
+  };
 
   repartirChk.onchange = function () {
     var repartir = repartirChk.checked;
@@ -3583,7 +3638,7 @@ function abrirModalProgramarEnvioRYS(candidatosPorId) {
     var r = await api('listarEnlacesRYS', { proyecto: state.proyectoActivo.codigo });
     var intro = modal.querySelector('#rysEnvioIntro');
     if (!r.ok) { intro.innerHTML = '<span class="msg error">' + escapeHtml(r.error) + '</span>'; return; }
-    var listos = (r.data || []).filter(function (e) {
+    listos = (r.data || []).filter(function (e) {
       var cand = candidatosPorId[e.idCandidato];
       return e.estatus === 'Activo' && e.liga && cand && cand.correo && (e.estatusEnvio === 'Pendiente' || !e.estatusEnvio);
     }).map(function (e) {
@@ -3594,10 +3649,11 @@ function abrirModalProgramarEnvioRYS(candidatosPorId) {
         liga: e.liga, proyecto: state.proyectoActivo.codigo, expira: e.fechaExpiracion, idCandidato: e.idCandidato
       };
     });
-    muestra = listos[0] || null;
-    intro.innerHTML = 'Se manda un correo con la liga personalizada a cada candidato con consentimiento y correo conocido en RS-06, cuya liga ya esté generada y activa (una liga completada o revocada deja de funcionar y no se manda). ' +
-      (listos.length ? 'Hay <b>' + listos.length + '</b> liga(s) lista(s) para enviarse.' : 'Por ahora no hay ligas listas para enviarse.');
-    btnConfirmar.disabled = listos.length === 0;
+    listos.forEach(function (f) { seleccionados[f.codigo] = true; }); // todos seleccionados por default
+    intro.innerHTML = 'Se manda un correo con la liga personalizada a cada candidato con consentimiento y correo conocido, cuya liga ya esté generada y activa (una liga completada o revocada deja de funcionar y no se manda). ' +
+      (listos.length ? 'Hay <b>' + listos.length + '</b> liga(s) lista(s) para enviarse — elige abajo a quién mandarle.' : 'Por ahora no hay ligas listas para enviarse.');
+    renderDestinatarios();
+    actualizarBotonConfirmar();
     actualizarVistaPrevia();
   })();
 
@@ -3606,18 +3662,25 @@ function abrirModalProgramarEnvioRYS(candidatosPorId) {
     var cuerpoTexto = cuerpoTa.value.trim();
     var msgBox = modal.querySelector('#rysProgMsg');
     if (!asunto || !cuerpoTexto) { msgBox.innerHTML = '<div class="msg error">Completa asunto y cuerpo.</div>'; return; }
+    // El backend espera la clave compuesta "proyecto|código" (ver
+    // _leerDestinatariosCorreoRYS/_filasElegiblesEnvioRYS en WebApp.gs) —
+    // el código corto de RYS_EnlacesCandidato se autonumera POR PROYECTO,
+    // así que dos proyectos distintos pueden compartir "ENLRYS-01".
+    var codigosSeleccionados = listos.filter(function (f) { return seleccionados[f.codigo]; })
+      .map(function (f) { return state.proyectoActivo.codigo + '|' + f.codigo; });
+    if (!codigosSeleccionados.length) { msgBox.innerHTML = '<div class="msg error">Selecciona al menos un destinatario.</div>'; return; }
     var repartir = repartirChk.checked;
     var porDiaSel = modal.querySelector('#rysPorDia').value;
     var confirmMsg = repartir
-      ? '¿Programar el envío repartido en tandas de ' + porDiaSel + ' por día?'
-      : '¿Enviar ahora mismo a todos los candidatos listos? No se puede deshacer.';
+      ? ('¿Programar el envío a ' + codigosSeleccionados.length + ' destinatario(s) repartido en tandas de ' + porDiaSel + ' por día?')
+      : ('¿Enviar ahora mismo a los ' + codigosSeleccionados.length + ' destinatario(s) seleccionados? No se puede deshacer.');
     if (!confirm(confirmMsg)) return;
 
     btnConfirmar.disabled = true;
     btnConfirmar.innerHTML = '<span class="spinner"></span>' + (repartir ? 'Programando...' : 'Enviando...');
     var cuerpoHtml = _eduCuerpoTextoAHtml(cuerpoTexto);
     var accion = repartir ? 'programarEnvioRYS' : 'enviarAhoraRYS';
-    var paramsEnvio = { proyecto: state.proyectoActivo.codigo, asunto: asunto, cuerpo: cuerpoHtml };
+    var paramsEnvio = { proyecto: state.proyectoActivo.codigo, asunto: asunto, cuerpo: cuerpoHtml, codigos: codigosSeleccionados.join(',') };
     if (repartir) paramsEnvio.porDia = porDiaSel;
     var rr = await api(accion, paramsEnvio);
     btnConfirmar.disabled = false; btnConfirmar.textContent = repartir ? 'Programar envío' : 'Enviar ahora';
