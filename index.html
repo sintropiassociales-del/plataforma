@@ -2640,10 +2640,13 @@ var state = {
   subtab: 'dia01',        // clave dentro de INSTRUMENTOS
   filas: {},              // { dia01: [...], pla01: [...], pla02: [...] }
   usuarios: [],
+  usuariosCargados: false, // true en cuanto cargarUsuarios() trae datos al menos una vez en esta sesión — ver renderUsuarios(forzar)
   crmSubview: 'clientes', // clientes | interesados
   crmClientes: [],
+  crmClientesCargados: false, // true en cuanto cargarCRMClientes() trae datos al menos una vez en esta sesión — ver renderCRMClientes(forzar)
   crmSeguimientosTodos: [], // todos los seguimientos de todos los clientes, para la columna "Último seguimiento"
   crmInteresados: [],
+  crmInteresadosCargados: false, // true en cuanto cargarCRMInteresados() trae datos al menos una vez en esta sesión — ver renderCRMInteresados(forzar)
   crmFiltroEstatus: 'Todos',
   crmFiltroEje: 'Todos',
   crmFiltroCategoria: 'Todos',
@@ -4972,6 +4975,7 @@ async function cargarCRMClientes() {
   var r = resultados[0], rSeg = resultados[1];
   if (r.ok) state.crmClientes = r.data;
   if (rSeg.ok) state.crmSeguimientosTodos = rSeg.data;
+  if (r.ok && rSeg.ok) state.crmClientesCargados = true;
 }
 
 // Devuelve el seguimiento más reciente de un cliente (o null si no tiene
@@ -5000,7 +5004,7 @@ function _fechaActividadCliente(c) {
 
 async function cargarCRMInteresados() {
   var r = await api('listarCRMInteresados', {});
-  if (r.ok) state.crmInteresados = r.data;
+  if (r.ok) { state.crmInteresados = r.data; state.crmInteresadosCargados = true; }
 }
 
 async function renderCRM() {
@@ -5022,8 +5026,14 @@ async function renderCRM() {
 
 /* ---- Clientes / prospectos ---- */
 
-async function renderCRMClientes() {
-  await cargarCRMClientes();
+// forzar=true vuelve a pedir los datos al backend aunque ya se hayan
+// cargado antes en esta sesión (se usa justo después de guardar/eliminar/
+// importar, cuando sabemos que algo cambió). Sin forzar, si ya se cargaron
+// una vez, se reusan — así entrar y salir de "Clientes" varias veces (o
+// cambiar de pestaña arriba y volver) no dispara una llamada nueva a Apps
+// Script cada vez, que es la parte más lenta de cambiar de pantalla.
+async function renderCRMClientes(forzar) {
+  if (forzar || !state.crmClientesCargados) await cargarCRMClientes();
   renderCRMClientesTabla();
 }
 
@@ -5046,6 +5056,7 @@ function renderCRMClientesTabla() {
           '<button class="secondary" id="btnImportarClientes">Importar archivo</button>' +
           '<button class="secondary" id="btnExportarClientes">Exportar a Excel</button>' +
           '<button class="primary" id="btnEnviarCorreoClientes">Enviar correo</button>' +
+          '<button class="secondary" id="btnActualizarClientes" title="Volver a pedir los datos más recientes del Sheet">&#8635; Actualizar</button>' +
         '</div>' +
         '<div class="crm-filtros-bar">' +
           '<select id="filtroCategoriaCliente">' +
@@ -5064,11 +5075,15 @@ function renderCRMClientesTabla() {
 
     document.getElementById('btnNuevoCliente').onclick = function () { abrirModalCliente(null); };
     document.getElementById('btnImportarClientes').onclick = function () {
-      abrirModalImportar('crm_clientes', { proyecto: '', alTerminar: async function () { await renderCRMClientes(); } });
+      abrirModalImportar('crm_clientes', { proyecto: '', alTerminar: async function () { await renderCRMClientes(true); } });
     };
     document.getElementById('btnExportarClientes').onclick = async function () {
       var r = await api('exportarCRMClientes', { formato: 'xlsx' });
       manejarDescargable(r);
+    };
+    document.getElementById('btnActualizarClientes').onclick = async function () {
+      var btn = this; btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Actualizando...';
+      await renderCRMClientes(true);
     };
     document.getElementById('btnEnviarCorreoClientes').onclick = function () {
       if (!state.crmClientesSeleccion.length) { alert('Marca la casilla de al menos un cliente para enviarle un correo.'); return; }
@@ -5314,7 +5329,7 @@ function _renderCRMClientesResultados() {
       var r = await api('eliminarFilaCRMClientes', { codigo: codigoDel });
       if (!r.ok) { alert(r.error); return; }
       if (state.crmClienteSeleccionado === codigoDel) state.crmClienteSeleccionado = null;
-      await renderCRMClientes();
+      await renderCRMClientes(true);
     };
   });
 
@@ -5663,8 +5678,9 @@ function abrirModalSeguimiento(clienteCodigo, seguimiento, alGuardar) {
 
 /* ---- Interesados ---- */
 
-async function renderCRMInteresados() {
-  await cargarCRMInteresados();
+// forzar=true: ver el comentario en renderCRMClientes(forzar), mismo criterio.
+async function renderCRMInteresados(forzar) {
+  if (forzar || !state.crmInteresadosCargados) await cargarCRMInteresados();
   renderCRMInteresadosTabla();
 }
 
@@ -5690,6 +5706,7 @@ function renderCRMInteresadosTabla() {
             '<button class="secondary" id="btnImportarInteresados">Importar archivo</button>' +
             '<button class="secondary" id="btnExportarInteresados">Exportar a Excel</button>' +
             '<button class="primary" id="btnEnviarCorreoInteresados">Enviar correo</button>' +
+            '<button class="secondary" id="btnActualizarInteresados" title="Volver a pedir los datos más recientes del Sheet">&#8635; Actualizar</button>' +
           '</div>' +
           '<input type="text" id="buscarInteresado" placeholder="Buscar por nombre, estado, municipio o email..." style="max-width:260px">' +
         '</div>' +
@@ -5702,14 +5719,18 @@ function renderCRMInteresadosTabla() {
       '</div>';
 
     document.getElementById('btnNuevoInteresado').onclick = function () {
-      abrirModalFila('crm_interesados', null, { proyecto: '', titulo: 'interesado', alGuardar: async function () { await renderCRMInteresados(); } });
+      abrirModalFila('crm_interesados', null, { proyecto: '', titulo: 'interesado', alGuardar: async function () { await renderCRMInteresados(true); } });
     };
     document.getElementById('btnImportarInteresados').onclick = function () {
-      abrirModalImportar('crm_interesados', { proyecto: '', alTerminar: async function () { await renderCRMInteresados(); } });
+      abrirModalImportar('crm_interesados', { proyecto: '', alTerminar: async function () { await renderCRMInteresados(true); } });
     };
     document.getElementById('btnExportarInteresados').onclick = async function () {
       var r = await api('exportarCRMInteresados', { formato: 'xlsx' });
       manejarDescargable(r);
+    };
+    document.getElementById('btnActualizarInteresados').onclick = async function () {
+      var btn = this; btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Actualizando...';
+      await renderCRMInteresados(true);
     };
     document.getElementById('btnEnviarCorreoInteresados').onclick = function () {
       if (!state.crmInteresadosSeleccion.length) { alert('Marca la casilla de al menos un interesado para enviarle un correo.'); return; }
@@ -5804,7 +5825,7 @@ function _renderCRMInteresadosResultados() {
     b.onclick = function () {
       var codigo = b.getAttribute('data-codigo');
       var fila = filas.filter(function (f) { return f.codigo === codigo; })[0];
-      abrirModalFila('crm_interesados', fila, { proyecto: '', titulo: 'interesado', alGuardar: async function () { await renderCRMInteresados(); } });
+      abrirModalFila('crm_interesados', fila, { proyecto: '', titulo: 'interesado', alGuardar: async function () { await renderCRMInteresados(true); } });
     };
   });
   Array.prototype.forEach.call(caja.querySelectorAll('button.del'), function (b) {
@@ -5812,7 +5833,7 @@ function _renderCRMInteresadosResultados() {
       if (!confirm('¿Eliminar este interesado? No se puede deshacer.')) return;
       var r = await api('eliminarFilaCRMInteresados', { codigo: b.getAttribute('data-codigo') });
       if (!r.ok) { alert(r.error); return; }
-      await renderCRMInteresados();
+      await renderCRMInteresados(true);
     };
   });
 }
@@ -5925,8 +5946,8 @@ async function renderCRMMetricas() {
   // sesión del panel; si alguien entra directo a "Indicadores" sin haber
   // visitado antes esas pestañas, los carga aquí.
   var cargas = [];
-  if (!state.crmClientes.length && !state.crmSeguimientosTodos.length) cargas.push(cargarCRMClientes());
-  if (!state.crmInteresados.length) cargas.push(cargarCRMInteresados());
+  if (!state.crmClientesCargados) cargas.push(cargarCRMClientes());
+  if (!state.crmInteresadosCargados) cargas.push(cargarCRMInteresados());
   if (cargas.length) await Promise.all(cargas);
 
   var m = _calcularMetricasCRM();
@@ -6394,11 +6415,12 @@ async function abrirModalEnviarCorreo(tipo, codigos) {
 /* ---------------- USUARIOS (solo Administrador) ---------------- */
 async function cargarUsuarios() {
   var r = await api('listarUsuarios', {});
-  if (r.ok) state.usuarios = r.data;
+  if (r.ok) { state.usuarios = r.data; state.usuariosCargados = true; }
 }
 
-async function renderUsuarios() {
-  await cargarUsuarios();
+// forzar=true: ver el comentario en renderCRMClientes(forzar), mismo criterio.
+async function renderUsuarios(forzar) {
+  if (forzar || !state.usuariosCargados) await cargarUsuarios();
   var main = document.getElementById('main');
   var filas = state.usuarios.map(function (u) {
     return '<tr>' +
@@ -6418,19 +6440,26 @@ async function renderUsuarios() {
     '<div class="card">' +
       '<div class="toolbar" style="justify-content:space-between">' +
         '<h2 style="margin:0">Usuarios de la plataforma</h2>' +
-        '<button class="secondary" id="btnNuevoUsuario">+ Nuevo usuario</button>' +
+        '<div style="display:flex;gap:8px">' +
+          '<button class="secondary" id="btnNuevoUsuario">+ Nuevo usuario</button>' +
+          '<button class="secondary" id="btnActualizarUsuarios" title="Volver a pedir los datos más recientes del Sheet">&#8635; Actualizar</button>' +
+        '</div>' +
       '</div>' +
       '<p class="subtle">Máximo recomendado: 5 cuentas operativas + tu cuenta de administrador.</p>' +
       '<table><thead><tr><th>Nombre</th><th>Correo</th><th>Rol</th><th>Estado</th><th></th></tr></thead><tbody>' + filas + '</tbody></table>' +
     '</div>';
 
   document.getElementById('btnNuevoUsuario').onclick = abrirModalNuevoUsuario;
+  document.getElementById('btnActualizarUsuarios').onclick = async function () {
+    var btn = this; btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Actualizando...';
+    await renderUsuarios(true);
+  };
   Array.prototype.forEach.call(main.querySelectorAll('[data-accion="toggle"]'), function (b) {
     b.onclick = async function () {
       var nuevoEstado = b.getAttribute('data-estado') === 'Activo' ? 'Inactivo' : 'Activo';
       var r = await api('cambiarEstadoUsuario', { email: b.getAttribute('data-email'), estado: nuevoEstado });
       if (!r.ok) { alert(r.error); return; }
-      renderUsuarios();
+      renderUsuarios(true);
     };
   });
   Array.prototype.forEach.call(main.querySelectorAll('[data-accion="reset"]'), function (b) {
@@ -6471,7 +6500,7 @@ function abrirModalNuevoUsuario() {
     if (!r.ok) { msgBox.innerHTML = '<div class="msg error">' + r.error + '</div>'; btn.disabled = false; btn.textContent = 'Crear usuario'; return; }
     modal.remove();
     alert('Usuario creado.\nContraseña temporal: ' + r.tempPassword + '\n\n(También se envió por correo, si el envío fue posible).');
-    renderUsuarios();
+    renderUsuarios(true);
   };
 }
 
