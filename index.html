@@ -1061,22 +1061,30 @@ var INSTRUMENTOS = {
       { key: 'codigo', label: 'Código' },
       { key: 'idCandidato', label: 'ID_CANDIDATO' },
       { key: 'fechaAplicacion', label: 'Fecha de aplicación' },
+      { key: 'nivel', label: 'Nivel' },
       { key: 'porcentajeVerbal', label: '% Verbal' },
       { key: 'porcentajeNumerico', label: '% Numérico' },
       { key: 'porcentajeAbstracto', label: '% Abstracto' },
-      { key: 'porcentajeGeneral', label: '% General' }
+      { key: 'porcentajeGeneral', label: '% General' },
+      { key: 'porcentajeIntegrado', label: '% Integrado' },
+      { key: 'porcentajeGlobal', label: '% Global' }
     ],
     campos: [
       { key: 'idCandidato', label: 'ID_CANDIDATO (RS-06) *', tipo: 'text', requerido: true, placeholder: 'ej. CAND-01' },
       { key: 'fechaAplicacion', label: 'Fecha de aplicación *', tipo: 'date', requerido: true },
+      { key: 'nivel', label: 'Nivel', tipo: 'select', opciones: ['1', '2', '3'] },
       { key: 'porcentajeVerbal', label: '% Verbal', tipo: 'number' },
       { key: 'etiquetaVerbal', label: 'Etiqueta Verbal', tipo: 'text' },
       { key: 'porcentajeNumerico', label: '% Numérico', tipo: 'number' },
       { key: 'etiquetaNumerico', label: 'Etiqueta Numérico', tipo: 'text' },
       { key: 'porcentajeAbstracto', label: '% Abstracto', tipo: 'number' },
       { key: 'etiquetaAbstracto', label: 'Etiqueta Abstracto', tipo: 'text' },
-      { key: 'porcentajeGeneral', label: '% General', tipo: 'number' },
-      { key: 'etiquetaGeneral', label: 'Etiqueta General', tipo: 'text' }
+      { key: 'porcentajeGeneral', label: '% General (Verbal + Numérico + Abstracto)', tipo: 'number' },
+      { key: 'etiquetaGeneral', label: 'Etiqueta General', tipo: 'text' },
+      { key: 'porcentajeIntegrado', label: '% Integrado', tipo: 'number' },
+      { key: 'etiquetaIntegrado', label: 'Etiqueta Integrado', tipo: 'text' },
+      { key: 'porcentajeGlobal', label: '% Global (las 4 áreas)', tipo: 'number' },
+      { key: 'etiquetaGlobal', label: 'Etiqueta Global', tipo: 'text' }
     ]
   },
   rcs: {
@@ -2790,10 +2798,12 @@ function jsonpPost(action, params, timeoutMs) {
 }
 
 // Llamada autenticada: agrega el token automáticamente y cierra sesión si expiró.
-async function api(action, params) {
+// timeoutMs es opcional — solo lo usan acciones puntuales que de por sí
+// tardan más de lo normal (ver 'generarDescargableReporteBateriasRYS').
+async function api(action, params, timeoutMs) {
   params = params || {};
   params.token = session ? session.token : '';
-  var r = await jsonpPost(action, params);
+  var r = await jsonpPost(action, params, timeoutMs);
   if (!r.ok && r.error && /sesión inválida|expirada/i.test(r.error)) {
     cerrarSesion();
     render();
@@ -3397,6 +3407,9 @@ function abrirModalReporteBateriasRYS() {
     var body = modal.querySelector('#repBatBody');
     if (!rr.ok) { body.innerHTML = '<div class="msg error">' + escapeHtml(rr.error) + '</div>'; return; }
     var d = rr.data;
+    // Se guarda aquí para que "Descargar" reutilice este mismo cálculo en
+    // vez de volver a pedirlo al backend (ver comentario en ese handler).
+    modal._datosReporte = d;
     var candidatosHtml = d.candidatos.map(function (c) {
       return '<div style="border-top:1px solid #eee;padding:10px 0">' +
         '<p style="margin:0"><b>' + escapeHtml(c.codigo) + ' — ' + escapeHtml(c.nombre) + '</b>' +
@@ -3418,7 +3431,14 @@ function abrirModalReporteBateriasRYS() {
   modal.querySelector('#repBatDescargar').onclick = async function () {
     var btn = this; var formato = modal.querySelector('#repBatFormato').value;
     btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Generando...';
-    var rr = await api('generarDescargableReporteBateriasRYS', { proyecto: state.proyectoActivo.codigo, formato: formato });
+    var params = { proyecto: state.proyectoActivo.codigo, formato: formato };
+    // Reenvía el reporte que ya se calculó para la vista previa — así el
+    // backend no vuelve a llamar a Gemini una segunda vez (ver comentario
+    // en apiGenerarDescargableReporteBateriasRYS). Esta acción además crea
+    // un Google Doc y lo exporta, así que se le da más margen que a una
+    // llamada normal antes de darla por "tardó demasiado".
+    if (modal._datosReporte) params.datosReporte = JSON.stringify(modal._datosReporte);
+    var rr = await api('generarDescargableReporteBateriasRYS', params, 70000);
     btn.disabled = false; btn.textContent = 'Descargar';
     manejarDescargable(rr);
   };
@@ -3501,18 +3521,34 @@ async function renderPanelBateriasRYS() {
   // como para repintar una celda después de generar su liga, así el
   // marcado es idéntico sin importar cuándo se construyó (nada de
   // "botón + caja aparte" apilados de formas distintas según el momento).
+  // RAS tiene 3 niveles de dificultad (David, 25-oct-2026): el equipo de
+  // reclutamiento elige el nivel al generar la liga (nunca automático), y
+  // el selector solo aparece para RAS — el resto de las familias no
+  // cambia de comportamiento.
+  function _selectorNivelRASHtml() {
+    return '<select class="selNivelRAS" title="Nivel de dificultad del RAS" ' +
+      'style="font-size:10.5px;padding:3px 4px;border:1px solid var(--border);border-radius:6px;color:#666">' +
+      '<option value="1">Nivel 1 — general</option>' +
+      '<option value="2">Nivel 2 — licenciatura/posgrado</option>' +
+      '<option value="3">Nivel 3 — puestos senior</option>' +
+      '</select>';
+  }
   function _celdaLigaRYSHtml(candidato, familia, info) {
     var sinLigaVigente = !info || info.estatus === 'Revocado';
     if (sinLigaVigente) {
-      return '<button type="button" class="small secondary btnGenRYS" data-candidato="' + escapeHtml(candidato) + '" data-familia="' + escapeHtml(familia) + '">Generar liga</button>';
+      return (familia === 'RAS' ? _selectorNivelRASHtml() : '') +
+        '<button type="button" class="small secondary btnGenRYS" data-candidato="' + escapeHtml(candidato) + '" data-familia="' + escapeHtml(familia) + '">Generar liga</button>';
     }
     if (info.estatus === 'Completado' || info.completado === 'Sí') {
       return '<span class="badge" style="background:#E4F7EA;color:var(--ok)">Completado ✓</span>' +
         (info.fechaCompletado ? '<span class="subtleLigaRYS">' + escapeHtml(info.fechaCompletado) + '</span>' : '') +
+        (info.nivel ? '<span class="subtleLigaRYS">Nivel ' + escapeHtml(String(info.nivel)) + '</span>' : '') +
+        (familia === 'RAS' ? _selectorNivelRASHtml() : '') +
         '<button type="button" class="small secondary btnGenRYS" data-candidato="' + escapeHtml(candidato) + '" data-familia="' + escapeHtml(familia) + '">Generar otra</button>';
     }
     // estatus === 'Activo' — liga pendiente de respuesta.
     return '<span class="badge" style="background:#EFEAFB;color:var(--purple)">Pendiente</span>' +
+      (familia === 'RAS' && info.nivel ? '<span class="subtleLigaRYS">Nivel ' + escapeHtml(String(info.nivel)) + '</span>' : '') +
       '<div class="filaLigaRYS">' +
         '<input type="text" readonly class="inputLigaRYS" value="' + escapeHtml(info.liga) + '" onclick="this.select()">' +
         '<button type="button" class="small secondary btnCopiarRYS">Copiar</button>' +
@@ -3529,15 +3565,19 @@ async function renderPanelBateriasRYS() {
     if (btn) {
       btn.onclick = async function () {
         var textoOriginal = btn.textContent;
+        var selNivel = div.querySelector('.selNivelRAS');
+        var nivel = selNivel ? selNivel.value : undefined;
         btn.disabled = true; btn.textContent = 'Generando...';
-        var r = await api('generarEnlaceRYS', { proyecto: state.proyectoActivo.codigo, idCandidato: candidato, instrumento: familia });
+        var params = { proyecto: state.proyectoActivo.codigo, idCandidato: candidato, instrumento: familia };
+        if (nivel) params.nivel = nivel;
+        var r = await api('generarEnlaceRYS', params);
         if (!r.ok) {
           btn.disabled = false; btn.textContent = textoOriginal;
           var previo = div.querySelector('.rysErrorLiga'); if (previo) previo.remove();
           div.insertAdjacentHTML('beforeend', '<span class="msg error rysErrorLiga" style="display:block;margin-top:4px;padding:4px 8px;font-size:11px">' + escapeHtml(r.error) + '</span>');
           return;
         }
-        div.innerHTML = _celdaLigaRYSHtml(candidato, familia, { estatus: 'Activo', completado: 'No', fechaExpiracion: r.expira, liga: r.liga });
+        div.innerHTML = _celdaLigaRYSHtml(candidato, familia, { estatus: 'Activo', completado: 'No', fechaExpiracion: r.expira, liga: r.liga, nivel: nivel });
         _wireCeldaLigaRYS(div, candidato, familia);
         cargarListaEnlacesRYS();
       };

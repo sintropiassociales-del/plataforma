@@ -98,53 +98,149 @@ function jsonp(action, params) {
 function api(action, params) { params = params || {}; params.token = state.token; return jsonp(action, params); }
 
 /* ============================================================
- * Contenido íntegro del RAS (18 reactivos de opción múltiple, 6 por
- * área), tal como fue aprobado en la doc "Baterías Psicométricas
- * Sintropía (RyS)". IMPORTANTE: esta página NUNCA incluye cuál opción
- * es la correcta — solo el texto y las opciones. El backend
- * (RAS_ITEMS en WebApp.gs) es la única fuente de la clave de
- * calificación; el orden de "opciones" aquí debe coincidir EXACTO con
- * el orden ahí (misma posición = mismo índice de opción).
+ * Contenido íntegro del RAS, por nivel de dificultad (1, 2 o 3 — lo
+ * elige quien genera la liga, ver WebApp.gs/apiGenerarEnlaceRYS).
+ * IMPORTANTE: esta página NUNCA incluye cuál opción es la correcta —
+ * solo el texto y las opciones. El backend (RAS_ITEMS_NIVEL en
+ * WebApp.gs) es la única fuente de la clave de calificación; para
+ * cada nivel, el orden de las secciones (Verbal, Numérico, Abstracto,
+ * Integrado) y el orden de "opciones" de cada reactivo deben coincidir
+ * EXACTO con el orden ahí (misma posición = mismo índice de opción).
+ * Nivel 1 = el original de siempre (6 reactivos por eje) + 3 más por
+ * eje + un eje nuevo "Integrado"; nivel 2 (licenciatura/posgrado) y
+ * nivel 3 (puestos senior) son baterías más cortas y más complejas.
  * ============================================================ */
-var SECCIONES_RAS = [
-  {
-    nombre: 'Relaciones entre conceptos', intro: 'Completa cada analogía eligiendo la opción que mejor continúa la relación.',
-    items: [
-      { texto: 'Médico es a hospital como maestro es a ___', opciones: ['salón', 'escuela', 'libro', 'examen'] },
-      { texto: 'Rápido es a lento como ruidoso es a ___', opciones: ['fuerte', 'silencioso', 'música', 'grito'] },
-      { texto: 'Semilla es a árbol como huevo es a ___', opciones: ['nido', 'ave', 'gallina', 'cascarón'] },
-      { texto: 'Libro es a capítulo como año es a ___', opciones: ['día', 'mes', 'calendario', 'fecha'] },
-      { texto: 'Termómetro es a temperatura como reloj es a ___', opciones: ['hora', 'minutero', 'pared', 'alarma'] },
-      { texto: 'Receta es a platillo como plano es a ___', opciones: ['arquitecto', 'edificio', 'papel', 'medida'] }
-    ]
-  },
-  {
-    nombre: 'Secuencias y operaciones numéricas', intro: 'Resuelve cada secuencia u operación y elige el resultado correcto.',
-    items: [
-      { texto: '¿Qué número sigue? 2, 4, 8, 16, ___', opciones: ['20', '24', '32', '18'] },
-      { texto: 'Un producto cuesta $240 con 25% de descuento. ¿Cuánto se paga?', opciones: ['$200', '$180', '$160', '$215'] },
-      { texto: '¿Qué número sigue? 1, 1, 2, 3, 5, 8, ___', opciones: ['11', '12', '13', '10'] },
-      { texto: 'Un equipo avanza 15 unidades por semana. ¿Cuántas semanas necesita para avanzar 90?', opciones: ['5', '6', '7', '8'] },
-      { texto: '¿Qué número sigue? 3, 6, 12, 24, ___', opciones: ['36', '42', '48', '30'] },
-      { texto: 'Se reparten 180 piezas entre 12 personas por igual. ¿Cuántas le tocan a cada una?', opciones: ['12', '15', '18', '20'] }
-    ]
-  },
-  {
-    nombre: 'Patrones y lógica de secuencias', intro: 'Identifica el patrón y elige lo que completa correctamente cada serie.',
-    items: [
-      { texto: '¿Qué letra sigue? A, C, E, G, ___', opciones: ['H', 'I', 'J', 'F'] },
-      { texto: '¿Qué figura sigue? Círculo, Cuadrado, Círculo, Cuadrado, ___', opciones: ['Triángulo', 'Círculo', 'Cuadrado', 'Rombo'] },
-      { texto: 'Completa la serie: 1-2, 2-4, 3-6, 4-8, 5-___', opciones: ['9', '10', '11', '12'] },
-      { texto: '¿Qué letra sigue? Z, X, V, T, ___', opciones: ['S', 'R', 'Q', 'U'] },
-      { texto: 'Completa el patrón: AB, BC, CD, DE, ___', opciones: ['EF', 'FG', 'DF', 'EG'] },
-      { texto: '¿Qué número no pertenece a la serie? 2, 4, 6, 9, 10', opciones: ['2', '6', '9', '10'] }
-    ]
-  }
-];
-var TOTAL_ITEMS = SECCIONES_RAS.reduce(function (n, s) { return n + s.items.length; }, 0);
+var SECCIONES_RAS_NIVEL = {
+  1: [
+    {
+      nombre: 'Relaciones entre conceptos', intro: 'Completa cada analogía eligiendo la opción que mejor continúa la relación.',
+      items: [
+        { texto: 'Médico es a hospital como maestro es a ___', opciones: ['salón', 'escuela', 'libro', 'examen'] },
+        { texto: 'Rápido es a lento como ruidoso es a ___', opciones: ['fuerte', 'silencioso', 'música', 'grito'] },
+        { texto: 'Semilla es a árbol como huevo es a ___', opciones: ['nido', 'ave', 'gallina', 'cascarón'] },
+        { texto: 'Libro es a capítulo como año es a ___', opciones: ['día', 'mes', 'calendario', 'fecha'] },
+        { texto: 'Termómetro es a temperatura como reloj es a ___', opciones: ['hora', 'minutero', 'pared', 'alarma'] },
+        { texto: 'Receta es a platillo como plano es a ___', opciones: ['arquitecto', 'edificio', 'papel', 'medida'] },
+        { texto: 'Pluma es a escribir como tijera es a ___', opciones: ['cortar', 'papel', 'mesa', 'dibujar'] },
+        { texto: 'Llave es a candado como contraseña es a ___', opciones: ['acceso', 'computadora', 'seguridad', 'clave'] },
+        { texto: 'Odómetro es a distancia como cronómetro es a ___', opciones: ['tiempo', 'velocidad', 'distancia', 'reloj'] }
+      ]
+    },
+    {
+      nombre: 'Secuencias y operaciones numéricas', intro: 'Resuelve cada secuencia u operación y elige el resultado correcto.',
+      items: [
+        { texto: '¿Qué número sigue? 2, 4, 8, 16, ___', opciones: ['20', '24', '32', '18'] },
+        { texto: 'Un producto cuesta $240 con 25% de descuento. ¿Cuánto se paga?', opciones: ['$200', '$180', '$160', '$215'] },
+        { texto: '¿Qué número sigue? 1, 1, 2, 3, 5, 8, ___', opciones: ['11', '12', '13', '10'] },
+        { texto: 'Un equipo avanza 15 unidades por semana. ¿Cuántas semanas necesita para avanzar 90?', opciones: ['5', '6', '7', '8'] },
+        { texto: '¿Qué número sigue? 3, 6, 12, 24, ___', opciones: ['36', '42', '48', '30'] },
+        { texto: 'Se reparten 180 piezas entre 12 personas por igual. ¿Cuántas le tocan a cada una?', opciones: ['12', '15', '18', '20'] },
+        { texto: '¿Qué número sigue? 5, 10, 20, 40, ___', opciones: ['70', '75', '80', '85'] },
+        { texto: 'Un trabajador produce 8 piezas por hora. ¿Cuántas piezas produce en una jornada de 6 horas?', opciones: ['42', '48', '54', '40'] },
+        { texto: 'Si 3 máquinas hacen 90 unidades en un turno, ¿cuántas unidades hacen 5 máquinas en el mismo turno (mismo ritmo)?', opciones: ['120', '150', '180', '100'] }
+      ]
+    },
+    {
+      nombre: 'Patrones y lógica de secuencias', intro: 'Identifica el patrón y elige lo que completa correctamente cada serie.',
+      items: [
+        { texto: '¿Qué letra sigue? A, C, E, G, ___', opciones: ['H', 'I', 'J', 'F'] },
+        { texto: '¿Qué figura sigue? Círculo, Cuadrado, Círculo, Cuadrado, ___', opciones: ['Triángulo', 'Círculo', 'Cuadrado', 'Rombo'] },
+        { texto: 'Completa la serie: 1-2, 2-4, 3-6, 4-8, 5-___', opciones: ['9', '10', '11', '12'] },
+        { texto: '¿Qué letra sigue? Z, X, V, T, ___', opciones: ['S', 'R', 'Q', 'U'] },
+        { texto: 'Completa el patrón: AB, BC, CD, DE, ___', opciones: ['EF', 'FG', 'DF', 'EG'] },
+        { texto: '¿Qué número no pertenece a la serie? 2, 4, 6, 9, 10', opciones: ['2', '6', '9', '10'] },
+        { texto: '¿Qué figura sigue? Triángulo, Triángulo, Cuadrado, Triángulo, Triángulo, Cuadrado, ___', opciones: ['Triángulo', 'Cuadrado', 'Círculo', 'Rombo'] },
+        { texto: 'Completa la serie: 2-3, 4-6, 6-9, 8-12, 10-___', opciones: ['14', '15', '16', '18'] },
+        { texto: '¿Qué número no pertenece a la serie? 3, 6, 9, 16, 12', opciones: ['6', '9', '16', '12'] }
+      ]
+    },
+    {
+      nombre: 'Razonamiento integrado', intro: 'Cada situación combina distintos tipos de razonamiento, como en el trabajo real. Elige la opción que resuelve mejor cada caso.',
+      items: [
+        { texto: 'Un equipo debe entregar un reporte cada lunes. Si hoy es jueves y el reporte de esta semana ya se entregó, ¿cuándo es la fecha del próximo reporte?', opciones: ['El lunes siguiente', 'El viernes', 'Hoy mismo', 'En dos semanas'] },
+        { texto: 'En una oficina, Ana llega siempre antes que Luis, y Luis llega siempre antes que Marco. Si hoy Marco llegó antes que Ana, ¿qué es lo más probable?', opciones: ['Marco cambió su horario', 'Alguien rompió el patrón habitual', 'Ana se retrasó', 'No se puede saber nada'] },
+        { texto: 'Un proceso tiene 3 pasos que siempre se hacen en el mismo orden: revisar, aprobar, enviar. Si el paso "enviar" ya se hizo pero "aprobar" no aparece registrado, ¿qué es lo más probable?', opciones: ['El proceso aún no empezó', 'Se saltó un paso o no quedó registrado', 'El paso enviar fue un error', 'Todo está en orden'] }
+      ]
+    }
+  ],
+  2: [
+    {
+      nombre: 'Vocabulario y lectura crítica', intro: 'Completa o interpreta cada enunciado — vocabulario y lectura crítica de nivel profesional.',
+      items: [
+        { texto: 'Si "parsimonia" significa cautela extrema al gastar o usar recursos, ¿cuál de las siguientes frases describe mejor a alguien parsimonioso?', opciones: ['Evalúa cada gasto con mucho cuidado', 'Gasta sin medir consecuencias', 'Comparte sus recursos fácilmente', 'Ignora el presupuesto'] },
+        { texto: 'En un informe, la palabra "inferencia" se refiere a ___', opciones: ['una conclusión derivada de evidencia disponible', 'un dato recolectado directamente', 'un error de cálculo', 'una opinión sin fundamento'] },
+        { texto: 'Un reporte describe una situación como "ambigua". Esto significa que la situación ___', opciones: ['puede interpretarse de más de una manera', 'está completamente resuelta', 'es claramente positiva', 'no tiene información disponible'] }
+      ]
+    },
+    {
+      nombre: 'Rompecabezas numéricos de trabajo', intro: 'Resuelve cada problema numérico aplicado a situaciones de trabajo (presupuestos, producción, avances).',
+      items: [
+        { texto: 'Un equipo tiene un presupuesto de $48,000 para 4 meses, distribuido en partes iguales. Si en el primer mes gastó $14,000, ¿cuánto le queda disponible para los 3 meses restantes?', opciones: ['$30,000', '$32,000', '$34,000', '$36,000'] },
+        { texto: 'Una línea de producción fabrica 60 piezas por hora a ritmo normal. Si se acelera el ritmo en 20%, ¿cuántas piezas produce en una hora?', opciones: ['66', '72', '78', '84'] },
+        { texto: 'Un proyecto tiene un avance del 40% después de 2 semanas, a ritmo constante. Si debe completarse en 5 semanas en total, ¿qué porcentaje de avance debería tener al final de la semana 4 (mismo ritmo)?', opciones: ['60%', '70%', '80%', '90%'] }
+      ]
+    },
+    {
+      nombre: 'Orden y patrones compuestos', intro: 'Identifica el orden o el patrón correcto en cada situación — rompecabezas de calendarización y patrones combinados.',
+      items: [
+        { texto: 'Un equipo rota turnos siguiendo el orden: Mañana, Tarde, Noche, Mañana, Tarde, Noche... Si hoy es turno de "Tarde", ¿qué turno sigue?', opciones: ['Noche', 'Mañana', 'Tarde', 'Descanso'] },
+        { texto: 'Cuatro tareas (A, B, C, D) deben completarse en orden, pero C depende de que B ya esté terminada, y B depende de A. Si A y B ya se completaron, ¿cuál es la siguiente tarea disponible?', opciones: ['A', 'C', 'D', 'Ninguna'] },
+        { texto: 'Un patrón combina forma y color así: Círculo-Azul, Cuadrado-Rojo, Triángulo-Verde, Círculo-Azul, Cuadrado-Rojo, Triángulo-Verde, ___', opciones: ['Cuadrado-Rojo', 'Triángulo-Verde', 'Círculo-Azul', 'Rombo-Amarillo'] }
+      ]
+    },
+    {
+      nombre: 'Razonamiento integrado', intro: 'Cada situación combina distintos tipos de razonamiento aplicados a decisiones de equipo. Elige la opción más razonable.',
+      items: [
+        { texto: 'Dos integrantes de un equipo reportan haber completado la misma tarea, pero con resultados distintos. ¿Cuál es la primera acción más razonable?', opciones: ['Elegir el resultado de quien tiene más experiencia', 'Revisar ambos resultados y confirmar cuál cumple los criterios acordados', 'Promediar los dos resultados', 'Ignorar ambos y reasignar la tarea'] },
+        { texto: 'Un equipo debe decidir entre dos propuestas: una más rápida pero con mayor riesgo de errores, y otra más lenta pero más segura. La fecha límite no se puede mover y el equipo ya tiene un proceso de revisión final que detecta errores antes de la entrega. ¿Qué opción es más razonable priorizar?', opciones: ['La más rápida, ya que la revisión final puede detectar errores antes de entregar', 'La más lenta, ignorando la fecha límite', 'Ninguna, pedir más tiempo sin justificación', 'Dividir el equipo para hacer ambas a la vez'] },
+        { texto: 'Un miembro del equipo propone una idea que mejora un proceso, pero contradice una política ya establecida por la organización. ¿Cuál es la acción más razonable?', opciones: ['Aplicar la idea de inmediato sin avisar', 'Plantear la idea a quien pueda autorizar un cambio en la política', 'Descartar la idea sin discutirla', 'Aplicarla solo si nadie se da cuenta'] }
+      ]
+    }
+  ],
+  3: [
+    {
+      nombre: 'Vocabulario y lectura crítica directiva', intro: 'Completa o interpreta cada enunciado — vocabulario de nivel directivo/estratégico.',
+      items: [
+        { texto: 'En un contexto directivo, "alineación estratégica" se refiere principalmente a ___', opciones: ['que las acciones de las áreas apunten hacia los mismos objetivos generales', 'que todos los empleados tengan el mismo horario', 'que exista un manual de procedimientos único', 'que los salarios sean equivalentes entre áreas'] },
+        { texto: 'Un director describe una decisión como "reversible con bajo costo". Esto significa que la decisión ___', opciones: ['no se puede cambiar una vez tomada', 'puede corregirse después sin un impacto grave', 'requiere aprobación de varios niveles', 'afecta a toda la organización por igual'] },
+        { texto: '"Delegar con criterio" implica principalmente ___', opciones: ['asignar una tarea considerando la capacidad y el contexto de quien la recibe', 'asignar tareas por turnos sin excepción', 'dar instrucciones muy detalladas siempre', 'evitar dar tareas a quien ya tiene experiencia'] }
+      ]
+    },
+    {
+      nombre: 'Rentabilidad y costos de negocio', intro: 'Resuelve cada problema numérico relacionado con ROI, márgenes y costos a nivel de negocio.',
+      items: [
+        { texto: 'Una inversión de $200,000 genera un retorno de $260,000 en un año. ¿Cuál es el ROI (retorno sobre la inversión) de ese año?', opciones: ['15%', '25%', '30%', '35%'] },
+        { texto: 'Un producto tiene un costo de producción de $80 y se vende en $100. ¿Cuál es el margen de utilidad sobre el precio de venta?', opciones: ['20%', '25%', '30%', '35%'] },
+        { texto: 'Un área reduce sus costos operativos de $500,000 a $420,000 en un trimestre. ¿Qué porcentaje de reducción representa?', opciones: ['16%', '20%', '24%', '28%'] }
+      ]
+    },
+    {
+      nombre: 'Lógica organizacional y estructural', intro: 'Identifica la lógica estructural u organizacional en cada situación.',
+      items: [
+        { texto: 'En una estructura organizacional, el área de Finanzas reporta a Dirección General, y Contabilidad reporta a Finanzas. Si Tesorería reporta a Contabilidad, ¿a cuántos niveles de distancia está Tesorería de Dirección General?', opciones: ['1', '2', '3', '4'] },
+        { texto: 'Dos áreas (Ventas y Operaciones) deben coordinarse para cumplir una meta conjunta, pero cada una reporta a un director distinto, y ningún director tiene autoridad sobre el otro. ¿Qué resolvería mejor la coordinación entre ambas?', opciones: ['Un comité o enlace conjunto con representación de ambas áreas', 'Que una de las áreas deje de reportar a su director', 'Eliminar una de las dos áreas', 'Que ambos directores reporten entre sí'] },
+        { texto: 'Una organización decide centralizar las decisiones de compras en un solo departamento, en lugar de que cada área compre por su cuenta. ¿Cuál es la ventaja estructural más directa de este cambio?', opciones: ['Aumenta la cantidad de proveedores utilizados', 'Facilita negociar mejores condiciones por volumen y mantener control unificado', 'Elimina por completo la necesidad de presupuesto', 'Hace que cada área decida con más libertad'] }
+      ]
+    },
+    {
+      nombre: 'Razonamiento integrado', intro: 'Cada situación combina distintos tipos de razonamiento aplicados a decisiones directivas. Elige la opción más razonable.',
+      items: [
+        { texto: 'Dos áreas presentan resultados contradictorios sobre el mismo indicador, y ambas afirman tener la metodología correcta. Como responsable de la decisión final, ¿cuál es la acción más razonable?', opciones: ['Elegir el resultado del área con más antigüedad', 'Revisar ambas metodologías contra una fuente de referencia común antes de decidir', 'Promediar ambos resultados sin revisión', 'Rechazar ambos y empezar de cero sin analizar la causa'] },
+        { texto: 'Una decisión estratégica debe tomarse con información incompleta y un plazo que no se puede extender. ¿Cuál es el enfoque más razonable?', opciones: ['Esperar a tener toda la información aunque se pierda el plazo', 'No decidir y delegar la responsabilidad sin criterio', 'Decidir con la mejor información disponible, documentando los supuestos y el riesgo asumido', 'Elegir al azar entre las opciones disponibles'] },
+        { texto: 'Un cambio de política reduce costos a corto plazo, pero varios indicios sugieren que podría afectar la retención de talento a mediano plazo. ¿Qué acción directiva es más razonable antes de implementarlo de forma permanente?', opciones: ['Implementarlo de inmediato sin evaluación posterior', 'Evaluar su impacto en un piloto o periodo definido antes de hacerlo permanente', 'Descartarlo sin analizar el ahorro que representa', 'Aplicarlo solo en las áreas que no puedan objetar'] }
+      ]
+    }
+  ]
+};
+var RAS_NIVEL_INTRO = {
+  1: '30 preguntas de opción múltiple, cada una con una sola respuesta correcta.',
+  2: '12 preguntas de opción múltiple, cada una con una sola respuesta correcta — nivel pensado para perfiles con licenciatura o posgrado.',
+  3: '12 preguntas de opción múltiple, cada una con una sola respuesta correcta — nivel pensado para puestos senior.'
+};
+var RAS_NIVEL_DURACION = { 1: 'entre 15 y 20 minutos', 2: 'entre 8 y 10 minutos', 3: 'entre 8 y 10 minutos' };
 
 var qs = new URLSearchParams(location.search);
-var state = { token: qs.get('token') || '', info: null, paso: 'cargando', respuestas: new Array(TOTAL_ITEMS).fill(null) };
+var state = { token: qs.get('token') || '', info: null, nivel: 1, secciones: SECCIONES_RAS_NIVEL[1], paso: 'cargando', respuestas: [] };
 // David: "aunque tarde en llegar la interpretación se tiene que enviar la
 // información (de no ser posible) colocar un mensaje" — mientras la
 // respuesta va de camino, se avisa al navegador para que confirme antes
@@ -174,8 +270,8 @@ function renderYaCompletado() {
 function renderBienvenida() {
   app.innerHTML =
     '<h1>Razonamiento Aplicado Sintropía</h1>' +
-    '<div class="intro-caja"><p style="margin:0 0 8px">18 preguntas de opción múltiple, cada una con una sola respuesta correcta. No es un examen que se apruebe o repruebe — es un apoyo más dentro del proceso.</p>' +
-    '<p style="margin:0">Toma entre 10 y 15 minutos. Responde con calma; no hay penalización por dejar una pregunta sin responder.</p></div>' +
+    '<div class="intro-caja"><p style="margin:0 0 8px">' + escapeHtml(RAS_NIVEL_INTRO[state.nivel] || RAS_NIVEL_INTRO[1]) + ' No es un examen que se apruebe o repruebe — es un apoyo más dentro del proceso.</p>' +
+    '<p style="margin:0">Toma ' + escapeHtml(RAS_NIVEL_DURACION[state.nivel] || RAS_NIVEL_DURACION[1]) + '. Responde con calma; no hay penalización por dejar una pregunta sin responder.</p></div>' +
     '<p class="subtle">Este enlace es personal e intransferible y está vigente hasta el ' + escapeHtml(state.info.expira) + '.</p>' +
     '<div class="fila-botones"><button class="primary" id="btnComenzar">Comenzar</button></div>';
   document.getElementById('btnComenzar').onclick = function () { state.paso = 0; render(); };
@@ -192,12 +288,12 @@ function renderGracias() {
 // índice global del primer reactivo de la sección idx
 function indiceInicioSeccion(idx) {
   var n = 0;
-  for (var i = 0; i < idx; i++) n += SECCIONES_RAS[i].items.length;
+  for (var i = 0; i < idx; i++) n += state.secciones[i].items.length;
   return n;
 }
 
 function renderSeccion(idx) {
-  var sec = SECCIONES_RAS[idx];
+  var sec = state.secciones[idx];
   var inicio = indiceInicioSeccion(idx);
   var itemsHtml = sec.items.map(function (it, li) {
     var gi = inicio + li;
@@ -208,7 +304,7 @@ function renderSeccion(idx) {
       }).join('') + '</div></div>';
   }).join('');
   app.innerHTML =
-    '<div class="progreso">' + SECCIONES_RAS.map(function (_, i) {
+    '<div class="progreso">' + state.secciones.map(function (_, i) {
       return '<div class="paso ' + (i < idx ? 'hecho' : (i === idx ? 'actual' : '')) + '"></div>';
     }).join('') + '</div>' +
     '<h2>' + escapeHtml(sec.nombre) + '</h2>' +
@@ -216,7 +312,7 @@ function renderSeccion(idx) {
     '<div id="secMsg"></div>' + itemsHtml +
     '<div class="fila-botones">' +
       (idx > 0 ? '<button class="secondary" id="btnAtras">Atrás</button>' : '') +
-      '<button class="primary" id="btnSiguiente">' + (idx + 1 < SECCIONES_RAS.length ? 'Continuar' : 'Finalizar') + '</button>' +
+      '<button class="primary" id="btnSiguiente">' + (idx + 1 < state.secciones.length ? 'Continuar' : 'Finalizar') + '</button>' +
     '</div>';
 
   app.querySelectorAll('.op-mc').forEach(function (el) {
@@ -235,7 +331,7 @@ function renderSeccion(idx) {
     var faltan = false;
     for (var li = 0; li < sec.items.length; li++) if (state.respuestas[inicio + li] == null) faltan = true;
     if (faltan) { document.getElementById('secMsg').innerHTML = '<div class="msg error">Responde las ' + sec.items.length + ' preguntas de esta sección antes de continuar.</div>'; return; }
-    if (idx + 1 < SECCIONES_RAS.length) { state.paso = idx + 1; render(); return; }
+    if (idx + 1 < state.secciones.length) { state.paso = idx + 1; render(); return; }
     await enviar();
   };
 }
@@ -244,7 +340,7 @@ async function enviar() {
   state.paso = 'enviando'; render();
   var r = await api('enviarRAS', { respuestas: JSON.stringify(state.respuestas) });
   if (!r.ok) {
-    state.paso = SECCIONES_RAS.length - 1; render();
+    state.paso = state.secciones.length - 1; render();
     document.getElementById('secMsg').innerHTML = '<div class="msg error">' + escapeHtml(r.error || 'No se pudo enviar. Intenta de nuevo.') + '</div>';
     return;
   }
@@ -256,6 +352,12 @@ async function init() {
   var r = await api('infoRAS', {});
   if (!r.ok) { renderError(r.error); return; }
   state.info = r;
+  // El nivel lo decide quien generó la liga (ver WebApp.gs); si por algún
+  // motivo no viene, se usa el nivel 1 (el original) como respaldo.
+  state.nivel = [1, 2, 3].indexOf(Number(r.nivel)) !== -1 ? Number(r.nivel) : 1;
+  state.secciones = SECCIONES_RAS_NIVEL[state.nivel];
+  var totalItems = state.secciones.reduce(function (n, s) { return n + s.items.length; }, 0);
+  state.respuestas = new Array(totalItems).fill(null);
   state.paso = r.completado ? 'yaCompletado' : 'bienvenida';
   render();
 }
