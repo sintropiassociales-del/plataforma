@@ -445,6 +445,17 @@ var CRM_TIPOS = {
       { key: 'responsable', label: 'Responsable', tipo: 'text' }
     ]
   },
+  crm_contactosAdicionales: {
+    titulo: 'contacto adicional',
+    listar: 'listarContactosAdicionalesCRM', guardar: 'guardarContactoAdicionalCRM', eliminar: 'eliminarContactoAdicionalCRM',
+    campos: [
+      { key: 'nombreContacto', label: 'Nombre de contacto *', tipo: 'text', requerido: true },
+      { key: 'cargo', label: 'Cargo', tipo: 'text' },
+      { key: 'correo', label: 'Correo', tipo: 'text' },
+      { key: 'telefono', label: 'Teléfono', tipo: 'text' },
+      { key: 'notas', label: 'Notas', tipo: 'textarea' }
+    ]
+  },
   crm_interesados: {
     titulo: 'Interesado',
     listar: 'listarCRMInteresados', guardar: 'guardarFilaCRMInteresados', eliminar: 'eliminarFilaCRMInteresados',
@@ -5695,7 +5706,14 @@ function _renderDetalleCliente() {
       '<h3 style="margin:0">Seguimientos</h3>' +
       '<button class="secondary small" id="btnNuevoSeguimientoPanel">+ Agregar</button>' +
     '</div>' +
-    '<div id="seguimientosBox"><p class="subtle">Cargando...</p></div>';
+    '<div id="seguimientosBox"><p class="subtle">Cargando...</p></div>' +
+    '<hr style="margin:20px 0;border:none;border-top:1px solid #eee">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center">' +
+      '<h3 style="margin:0">Contactos adicionales</h3>' +
+      '<button class="secondary small" id="btnNuevoContactoAdicionalPanel">+ Agregar</button>' +
+    '</div>' +
+    '<p class="subtle" style="margin:4px 0 8px">Otras personas de esta alianza — puedes incluirlas en copia al enviar correo desde "Enviar correo".</p>' +
+    '<div id="contactosAdicionalesBox"><p class="subtle">Cargando...</p></div>';
 
   panel.querySelector('#btnCerrarDetalleCliente').onclick = function () {
     state.crmClienteSeleccionado = null;
@@ -5729,7 +5747,11 @@ function _renderDetalleCliente() {
   panel.querySelector('#btnNuevoSeguimientoPanel').onclick = function () {
     abrirModalSeguimiento(cliente.codigo, null, function () { return _refrescarTrasSeguimientoPanel(); });
   };
+  panel.querySelector('#btnNuevoContactoAdicionalPanel').onclick = function () {
+    abrirModalContactoAdicional(cliente.codigo, null, function () { return _cargarYRenderContactosAdicionalesPanel(cliente.codigo); });
+  };
   _cargarYRenderSeguimientosPanel(cliente.codigo);
+  _cargarYRenderContactosAdicionalesPanel(cliente.codigo);
 }
 
 // Tras agregar/editar/borrar un seguimiento desde el panel: recarga los
@@ -5863,6 +5885,13 @@ function abrirModalClienteCompleto(codigoInicial, codigosLista) {
         '<button class="secondary small" id="ccNuevoSeguimiento">+ Agregar</button>' +
       '</div>' +
       '<div id="seguimientosBoxModal"><p class="subtle">Cargando...</p></div>' +
+      '<hr style="margin:20px 0;border:none;border-top:1px solid #eee">' +
+      '<div style="display:flex;justify-content:space-between;align-items:center">' +
+        '<h3 style="margin:0">Contactos adicionales</h3>' +
+        '<button class="secondary small" id="ccNuevoContactoAdicional">+ Agregar</button>' +
+      '</div>' +
+      '<p class="subtle" style="margin:4px 0 8px">Otras personas de esta alianza — puedes incluirlas en copia al enviar correo desde "Enviar correo".</p>' +
+      '<div id="contactosAdicionalesBoxModal"><p class="subtle">Cargando...</p></div>' +
       navHtml;
 
     body.querySelector('#ccCerrar').onclick = function () { modal.remove(); };
@@ -5909,6 +5938,13 @@ function abrirModalClienteCompleto(codigoInicial, codigosLista) {
       abrirModalSeguimiento(cliente.codigo, null, function () { return _refrescarSeguimientosModal(); });
     };
     _cargarYRenderSeguimientosPanel(cliente.codigo, 'seguimientosBoxModal', _refrescarSeguimientosModal);
+
+    body.querySelector('#ccNuevoContactoAdicional').onclick = function () {
+      abrirModalContactoAdicional(cliente.codigo, null, function () {
+        return _cargarYRenderContactosAdicionalesPanel(cliente.codigo, 'contactosAdicionalesBoxModal');
+      });
+    };
+    _cargarYRenderContactosAdicionalesPanel(cliente.codigo, 'contactosAdicionalesBoxModal');
 
     var btnAnterior = body.querySelector('#ccAnterior');
     if (!btnAnterior.disabled) btnAnterior.onclick = function () { pintar(idxActual - 1); };
@@ -5991,6 +6027,64 @@ function abrirModalSeguimiento(clienteCodigo, seguimiento, alGuardar) {
     extra: { clienteCodigo: clienteCodigo },
     titulo: 'seguimiento',
     alGuardar: alGuardar
+  });
+}
+
+/* ---- Contactos adicionales por cliente/alianza (una alianza puede tener
+ * más de un correo/contacto — ver _enviarCorreoCRMNucleo en el backend para
+ * cómo se suman al CC del correo masivo cuando se marca esa casilla). Mismo
+ * patrón boxId/onCambio que _cargarYRenderSeguimientosPanel, reusado desde
+ * el panel lateral y el modal "Ver completo". ---- */
+
+function abrirModalContactoAdicional(clienteCodigo, contacto, alGuardar) {
+  abrirModalFila('crm_contactosAdicionales', contacto, {
+    proyecto: '',
+    extra: { clienteCodigo: clienteCodigo },
+    titulo: 'contacto adicional',
+    alGuardar: alGuardar
+  });
+}
+
+async function _cargarYRenderContactosAdicionalesPanel(clienteCodigo, boxId, onCambio) {
+  boxId = boxId || 'contactosAdicionalesBox';
+  onCambio = onCambio || _refrescarTrasSeguimientoPanel;
+  var box = document.getElementById(boxId);
+  if (!box) return;
+  var r = await api('listarContactosAdicionalesCRM', { clienteCodigo: clienteCodigo });
+  if (!r.ok) { box.innerHTML = '<div class="msg error">' + r.error + '</div>'; return; }
+  var filas = r.data;
+  if (filas.length === 0) {
+    box.innerHTML = '<p class="subtle">Todavía no hay contactos adicionales registrados para esta alianza.</p>';
+    return;
+  }
+  box.innerHTML = '<div style="max-height:280px;overflow-y:auto;border:1px solid #eee;border-radius:8px;padding:2px 12px">' +
+    filas.map(function (c) {
+      return '<div style="padding:10px 0;border-bottom:1px solid #f0f0f0">' +
+        '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px">' +
+          '<strong>' + escapeHtml(c.nombreContacto || '—') + (c.cargo ? '  ·  ' + escapeHtml(c.cargo) : '') + '</strong>' +
+          '<span style="white-space:nowrap"><button class="small secondary" data-editca="' + c.codigo + '">Editar</button> ' +
+            '<button class="small del" data-delca="' + c.codigo + '">Eliminar</button></span>' +
+        '</div>' +
+        (c.correo ? '<div>' + escapeHtml(c.correo) + '</div>' : '') +
+        (c.telefono ? '<div class="subtle">' + escapeHtml(c.telefono) + '</div>' : '') +
+        (c.notas ? '<div class="subtle">' + escapeHtml(c.notas) + '</div>' : '') +
+      '</div>';
+    }).join('') +
+  '</div>';
+
+  Array.prototype.forEach.call(box.querySelectorAll('[data-editca]'), function (b) {
+    b.onclick = function () {
+      var c = filas.filter(function (x) { return x.codigo === b.getAttribute('data-editca'); })[0];
+      abrirModalContactoAdicional(clienteCodigo, c, function () { return onCambio(); });
+    };
+  });
+  Array.prototype.forEach.call(box.querySelectorAll('[data-delca]'), function (b) {
+    b.onclick = async function () {
+      if (!confirm('¿Eliminar este contacto adicional? No se puede deshacer.')) return;
+      var r2 = await api('eliminarContactoAdicionalCRM', { codigo: b.getAttribute('data-delca') });
+      if (!r2.ok) { alert(r2.error); return; }
+      await onCambio();
+    };
   });
 }
 
@@ -6427,6 +6521,13 @@ async function abrirModalEnviarCorreo(tipo, codigos) {
         '</div>' +
       '</div>' +
       '<label>Asunto</label><input type="text" id="correoAsunto" placeholder="Ej: Novedades de <<Organización>>">' +
+      '<div class="toolbar" style="gap:10px;flex-wrap:wrap;align-items:flex-start">' +
+        '<div style="flex:1;min-width:220px"><label>CC (copia, opcional)</label><input type="text" id="correoCC" placeholder="correo1@ejemplo.com, correo2@ejemplo.com"></div>' +
+        '<div style="flex:1;min-width:220px"><label>CCO (copia oculta, opcional)</label><input type="text" id="correoCCO" placeholder="correo@ejemplo.com"></div>' +
+      '</div>' +
+      '<p class="subtle" style="margin:0 0 8px">Separa varios correos con coma. Se aplican igual a cada correo individual que se envíe en este lote.</p>' +
+      (esClientes ? '<label style="display:flex;align-items:center;gap:6px;font-weight:500"><input type="checkbox" id="correoIncluirContactosAdicionales" style="width:auto"> Incluir también a los contactos adicionales de cada alianza (en copia)</label>' +
+        '<p class="subtle" style="margin:0 0 8px">Cada alianza puede tener más de un contacto registrado (ver "Contactos adicionales" en su ficha) — si lo marcas, se agregan automáticamente al CC de cada correo de esa alianza, además del CC que escribas arriba.</p>' : '') +
       '<label>Cuerpo del correo</label>' +
       '<div style="border:1.5px solid #ddd;border-radius:8px 8px 0 0;padding:6px;background:#fafafa">' + botonesRteHtml + '</div>' +
       '<div id="correoCuerpo" contenteditable="true" style="border:1.5px solid #ddd;border-top:none;border-radius:0 0 8px 8px;min-height:150px;padding:10px 12px;font-size:14px;line-height:1.5" data-placeholder="Hola <<Nombre de contacto>>, te escribimos de Sintropía Social..."></div>' +
@@ -6674,6 +6775,10 @@ async function abrirModalEnviarCorreo(tipo, codigos) {
     var msgBox = modal.querySelector('#correoMsg');
     var asunto = asuntoInput.value.trim();
     var cuerpo = cuerpoDiv.innerHTML.trim();
+    var cc = modal.querySelector('#correoCC').value.trim();
+    var bcc = modal.querySelector('#correoCCO').value.trim();
+    var chkIncluirCA = modal.querySelector('#correoIncluirContactosAdicionales');
+    var incluirContactosAdicionales = chkIncluirCA ? chkIncluirCA.checked : false;
     var programar = programarChk.checked;
     var fechaProgramada = fechaInput.value;
     var adjuntosIds = adjuntos.map(function (a) { return a.id; }).join(',');
@@ -6693,8 +6798,8 @@ async function abrirModalEnviarCorreo(tipo, codigos) {
     btn.disabled = true; btn.textContent = programar ? 'Programando...' : 'Enviando...';
 
     var r = programar
-      ? await api('programarCorreoCRM', { tipo: tipo, codigos: codigos, asunto: asunto, cuerpo: cuerpo, fechaEnvio: fechaProgramada, adjuntosIds: adjuntosIds })
-      : await api('enviarCorreoCRM', { tipo: tipo, codigos: codigos, asunto: asunto, cuerpo: cuerpo, adjuntosIds: adjuntosIds });
+      ? await api('programarCorreoCRM', { tipo: tipo, codigos: codigos, asunto: asunto, cuerpo: cuerpo, fechaEnvio: fechaProgramada, adjuntosIds: adjuntosIds, cc: cc, bcc: bcc, incluirContactosAdicionales: incluirContactosAdicionales })
+      : await api('enviarCorreoCRM', { tipo: tipo, codigos: codigos, asunto: asunto, cuerpo: cuerpo, adjuntosIds: adjuntosIds, cc: cc, bcc: bcc, incluirContactosAdicionales: incluirContactosAdicionales });
 
     btn.disabled = false; btn.textContent = programar ? 'Programar correo' : 'Enviar correo';
 
