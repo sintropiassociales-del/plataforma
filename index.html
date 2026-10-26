@@ -5412,7 +5412,13 @@ function renderCRMClientesTabla() {
     };
     document.getElementById('btnActualizarClientes').onclick = async function () {
       var btn = this; btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Actualizando...';
+      // El botón vive dentro de "crmClientesShell", que NO se reconstruye en
+      // cada llamada (ver comentario arriba de renderCRMClientesTabla) — así
+      // que, a diferencia de otras vistas que sí se reconstruyen enteras,
+      // aquí hay que restaurarlo a mano al terminar o se queda "Actualizando..."
+      // para siempre aunque los datos ya se hayan refrescado.
       await renderCRMClientes(true);
+      btn.disabled = false; btn.innerHTML = '&#8635; Actualizar';
     };
     document.getElementById('btnEnviarCorreoClientes').onclick = function () {
       if (!state.crmClientesSeleccion.length) { alert('Marca la casilla de al menos un cliente para enviarle un correo.'); return; }
@@ -6142,7 +6148,11 @@ function renderCRMInteresadosTabla() {
     };
     document.getElementById('btnActualizarInteresados').onclick = async function () {
       var btn = this; btn.disabled = true; btn.innerHTML = '<span class="spinner"></span>Actualizando...';
+      // Mismo motivo que btnActualizarClientes: el shell de Interesados
+      // tampoco se reconstruye en cada llamada, así que el botón hay que
+      // restaurarlo a mano al terminar.
       await renderCRMInteresados(true);
+      btn.disabled = false; btn.innerHTML = '&#8635; Actualizar';
     };
     document.getElementById('btnEnviarCorreoInteresados').onclick = function () {
       if (!state.crmInteresadosSeleccion.length) { alert('Marca la casilla de al menos un interesado para enviarle un correo.'); return; }
