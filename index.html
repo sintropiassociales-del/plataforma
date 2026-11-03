@@ -5343,6 +5343,7 @@ async function renderCRM() {
       '<button data-crmsub="clientes" class="' + (state.crmSubview === 'clientes' ? 'active' : '') + '">Clientes / prospectos</button>' +
       '<button data-crmsub="interesados" class="' + (state.crmSubview === 'interesados' ? 'active' : '') + '">Interesados</button>' +
       '<button data-crmsub="metricas" class="' + (state.crmSubview === 'metricas' ? 'active' : '') + '">Indicadores</button>' +
+      '<button data-crmsub="muestraabierta" class="' + (state.crmSubview === 'muestraabierta' ? 'active' : '') + '">Muestra abierta</button>' +
     '</div>' +
     '<div id="crmContent"><p class="subtle">Cargando...</p></div>';
   Array.prototype.forEach.call(main.querySelectorAll('[data-crmsub]'), function (b) {
@@ -5350,6 +5351,7 @@ async function renderCRM() {
   });
   if (state.crmSubview === 'clientes') { await renderCRMClientes(); }
   else if (state.crmSubview === 'interesados') { await renderCRMInteresados(); }
+  else if (state.crmSubview === 'muestraabierta') { await renderCRMMuestraAbierta(); }
   else { await renderCRMMetricas(); }
 }
 
@@ -6405,6 +6407,241 @@ async function renderCRMMetricas() {
     '<h3 style="margin:0 0 10px">Por estatus</h3>' +
     '<div class="card" style="padding:16px 18px">' + filasEstatus + '</div>' +
     '<p class="subtle" style="margin-top:14px">"Este mes" se refiere siempre al mes en curso (' + escapeHtml(_nombreMes(m.mes)) + '). Si quieres comparar con meses anteriores o ajustar qué cuenta cada indicador, dime y lo afinamos.</p>';
+}
+
+/* ---------------- Muestra abierta: ligas personalizadas de un solo uso ----------------
+ * Genera, para cualquiera de las 13 herramientas públicas (muestras), una
+ * liga personalizada de un solo uso a partir de un cliente/prospecto ya
+ * existente en CRM (o uno de sus Contactos adicionales) — ver
+ * apiGenerarEnlaceMuestra en WebApp.gs. El link va directo al cuestionario
+ * (sin pedir datos) y el correo con el resultado completo solo sale si la
+ * persona llena el formulario al terminar, no automático como en el flujo
+ * público normal.
+ * Las claves ('SemaforoSE', 'PulsoMercado', etc.) son las mismas que ya usa
+ * el backend en TIPOS_MUESTRA_CORREO — no inventar claves nuevas aquí.
+ * ------------------------------------------------------------------- */
+
+var MUESTRAS_ABIERTAS_CATALOGO = [
+  { clave: 'SemaforoSE', nombre: 'Estudio socioeconómico y gestión de riesgos', archivo: 'muestra_se.html' },
+  { clave: 'AnalisisDatos', nombre: 'Dashboard interactivo de tus datos', archivo: 'muestra_dashboard.html' },
+  { clave: 'PulsoMercado', nombre: 'Pulso de Mercado', archivo: 'muestra_pulso_mercado.html' },
+  { clave: 'DisenioInstruccional', nombre: 'Diseño instruccional de cursos', archivo: 'muestra_disenio_instruccional.html' },
+  { clave: 'IMES', nombre: 'IMES Preparatoria', archivo: 'muestra_imes.html' },
+  { clave: 'IMESUniversidad', nombre: 'IMES Universidad', archivo: 'muestra_imes_universidad.html' },
+  { clave: 'Simulacion', nombre: '"Tres puertas al trabajo"', archivo: 'juego-sintropia.html' },
+  { clave: 'Diagnostico', nombre: 'Diagnóstico Social', archivo: 'diagnostico.html' },
+  { clave: 'Territorio', nombre: 'Mapa Territorial de tu proyecto', archivo: 'muestra_territorio.html' },
+  { clave: 'Seguimiento', nombre: 'Sintropía Track', archivo: 'muestra_track.html' },
+  { clave: 'BusquedaEmpleo', nombre: 'Estoy buscando empleo', archivo: 'muestra_candidato.html' },
+  { clave: 'CitasPDF', nombre: 'Buscador de citas PDF', archivo: 'muestra_pdfcitas.html' },
+  { clave: 'InstrumentoIdea', nombre: '¿Necesitas un instrumento a tu medida?', archivo: 'muestra_instrumento.html' }
+];
+var MUESTRAS_ABIERTAS_BASE_URL = 'https://sintropiassociales-del.github.io/panel/';
+
+function _nombreMuestraAbierta(clave) {
+  var m = MUESTRAS_ABIERTAS_CATALOGO.filter(function (x) { return x.clave === clave; })[0];
+  return m ? m.nombre : clave;
+}
+
+async function renderCRMMuestraAbierta() {
+  var box = document.getElementById('crmContent');
+  if (!box) return;
+  box.innerHTML = '<p class="subtle">Cargando...</p>';
+
+  var cargas = [];
+  if (!state.crmClientesCargados) cargas.push(cargarCRMClientes());
+  var pEnlaces = api('listarEnlacesMuestra', {});
+  var pSolicitudes = api('listarSolicitudesOtraPruebaMuestra', {});
+  cargas.push(pEnlaces, pSolicitudes);
+  await Promise.all(cargas);
+  var rEnlaces = await pEnlaces, rSolicitudes = await pSolicitudes;
+  var enlaces = rEnlaces.ok ? rEnlaces.data : [];
+  var solicitudes = (rSolicitudes.ok ? rSolicitudes.data : []).filter(function (s) { return s.estatus !== 'Atendida'; });
+
+  enlaces.sort(function (a, b) { return (b.fechaGeneracion || '').localeCompare(a.fechaGeneracion || ''); });
+
+  var filasEnlaces = enlaces.length === 0
+    ? '<p class="subtle">Todavía no se ha generado ninguna liga.</p>'
+    : '<div class="tablaScrollX"><table><thead><tr><th>Cliente</th><th>Herramienta</th><th>Contacto</th><th>Estatus</th><th>Generada</th><th>Usada</th><th>Liga</th></tr></thead><tbody>' +
+      enlaces.map(function (e) {
+        var pill = e.estatus === 'Completado'
+          ? '<span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;background:#E4F7EA;color:var(--ok)">Completado</span>'
+          : '<span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;background:#FFF1E4;color:#B8660A">Pendiente</span>';
+        return '<tr>' +
+          '<td>' + escapeHtml(e.clienteCodigo) + '</td>' +
+          '<td>' + escapeHtml(_nombreMuestraAbierta(e.herramienta)) + '</td>' +
+          '<td>' + escapeHtml(e.nombreContacto || '—') + '<div class="subtle">' + escapeHtml(e.correo || '') + '</div></td>' +
+          '<td>' + pill + '</td>' +
+          '<td>' + escapeHtml(e.fechaGeneracion || '') + '</td>' +
+          '<td>' + escapeHtml(e.fechaUso || '—') + '</td>' +
+          '<td><button class="small secondary" data-copyliga="' + escapeHtml(e.liga) + '">Copiar liga</button></td>' +
+        '</tr>';
+      }).join('') + '</tbody></table></div>';
+
+  var filasSolicitudes = solicitudes.length === 0 ? '' : solicitudes.map(function (s) {
+    return '<div class="card" style="padding:12px 14px;margin-bottom:8px">' +
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;gap:8px;flex-wrap:wrap">' +
+        '<strong>' + escapeHtml(s.nombreContacto) + '</strong>' +
+        '<button class="small secondary" data-atendersol="' + s.codigo + '">Marcar atendida</button>' +
+      '</div>' +
+      '<div>' + escapeHtml(s.correo) + '</div>' +
+      '<div class="subtle">Pide: ' + escapeHtml(s.pruebas) + '</div>' +
+      (s.clienteCodigo ? '<div class="subtle">Cliente: ' + escapeHtml(s.clienteCodigo) + '</div>' : '') +
+    '</div>';
+  }).join('');
+
+  box.innerHTML =
+    '<p class="subtle" style="margin-bottom:14px">Genera ligas personalizadas de un solo uso para cualquiera de las 13 herramientas públicas — el link va directo al cuestionario (sin pedir datos) usando la información ya registrada del cliente, y el correo con el resultado completo solo sale si la persona llena el formulario al terminar.</p>' +
+    '<div class="toolbar" style="margin-bottom:16px">' +
+      '<button class="primary" id="btnNuevaLigaMuestra">+ Generar liga</button>' +
+    '</div>' +
+    (solicitudes.length ? '<h3 style="margin:0 0 10px">¿Deseas otra prueba? — solicitudes pendientes</h3>' + filasSolicitudes : '') +
+    '<h3 style="margin:18px 0 10px">Ligas generadas</h3>' +
+    filasEnlaces;
+
+  var btnNueva = box.querySelector('#btnNuevaLigaMuestra');
+  if (btnNueva) btnNueva.onclick = function () { abrirModalGenerarLigaMuestra(); };
+
+  Array.prototype.forEach.call(box.querySelectorAll('[data-copyliga]'), function (b) {
+    b.onclick = function () {
+      var liga = b.getAttribute('data-copyliga');
+      var textoOriginal = b.textContent;
+      function marcarCopiada() { b.textContent = '¡Copiada!'; setTimeout(function () { b.textContent = textoOriginal; }, 1500); }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(liga).then(marcarCopiada).catch(function () { prompt('Copia la liga:', liga); });
+      } else { prompt('Copia la liga:', liga); }
+    };
+  });
+  Array.prototype.forEach.call(box.querySelectorAll('[data-atendersol]'), function (b) {
+    b.onclick = async function () {
+      var r = await api('marcarAtendidaSolicitudOtraPrueba', { codigo: b.getAttribute('data-atendersol') });
+      if (!r.ok) { alert(r.error); return; }
+      await renderCRMMuestraAbierta();
+    };
+  });
+}
+
+function abrirModalGenerarLigaMuestra() {
+  var modal = el(
+    '<div class="modal-bg"><div class="modal wide">' +
+      '<h2>Generar liga — Muestra abierta</h2>' +
+      '<label>Cliente / prospecto</label>' +
+      '<input type="text" id="ligaBuscarCliente" placeholder="Escribe para buscar por organización o contacto...">' +
+      '<div id="ligaListaClientes" style="max-height:160px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;margin-top:4px"></div>' +
+      '<div id="ligaClienteElegido" style="display:none;margin-top:10px">' +
+        '<div class="msg info">' +
+          '<strong id="ligaClienteNombre"></strong><br>' +
+          '<span id="ligaClienteContacto" class="subtle"></span>' +
+          ' <button type="button" class="small secondary" id="btnLigaCambiarCliente" style="margin-left:8px">Cambiar</button>' +
+        '</div>' +
+        '<label style="margin-top:10px">Contacto a usar</label>' +
+        '<select id="ligaContactoSel"></select>' +
+        '<label style="margin-top:12px">Herramienta(s)</label>' +
+        '<div id="ligaHerramientas" style="max-height:220px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;padding:8px 12px"></div>' +
+      '</div>' +
+      '<div id="ligaMsg"></div>' +
+      '<div class="modal-actions">' +
+        '<button class="secondary" id="ligaCancelar">Cerrar</button>' +
+        '<button class="primary" id="ligaGenerar" disabled>Generar liga(s)</button>' +
+      '</div>' +
+    '</div></div>'
+  );
+  document.body.appendChild(modal);
+  modal.querySelector('#ligaCancelar').onclick = function () { modal.remove(); };
+
+  var clienteElegido = null;
+
+  modal.querySelector('#ligaHerramientas').innerHTML = MUESTRAS_ABIERTAS_CATALOGO.map(function (m) {
+    return '<label style="display:flex;align-items:center;gap:6px;font-weight:400;margin:4px 0">' +
+      '<input type="checkbox" class="ligaHerramientaChk" value="' + m.clave + '" style="width:auto"> ' + escapeHtml(m.nombre) +
+    '</label>';
+  }).join('');
+
+  function actualizarBotonGenerar() {
+    var algunaHerramienta = modal.querySelectorAll('.ligaHerramientaChk:checked').length > 0;
+    modal.querySelector('#ligaGenerar').disabled = !(clienteElegido && algunaHerramienta);
+  }
+  Array.prototype.forEach.call(modal.querySelectorAll('.ligaHerramientaChk'), function (chk) { chk.onchange = actualizarBotonGenerar; });
+
+  var buscarInput = modal.querySelector('#ligaBuscarCliente');
+  var listaBox = modal.querySelector('#ligaListaClientes');
+  buscarInput.oninput = function () {
+    var q = buscarInput.value.trim().toLowerCase();
+    if (q.length < 2) { listaBox.innerHTML = ''; return; }
+    var resultados = state.crmClientes.filter(function (c) {
+      return (c.organizacion || '').toLowerCase().indexOf(q) !== -1 || (c.nombreContacto || '').toLowerCase().indexOf(q) !== -1;
+    }).slice(0, 15);
+    listaBox.innerHTML = resultados.length
+      ? resultados.map(function (c) {
+          return '<div class="ligaResultadoCliente" data-codigo="' + c.codigo + '" style="padding:8px 10px;cursor:pointer;border-bottom:1px solid #f0f0f0">' +
+            '<strong>' + escapeHtml(c.organizacion) + '</strong> <span class="subtle">' + escapeHtml(c.nombreContacto || '') + '</span></div>';
+        }).join('')
+      : '<div class="subtle" style="padding:8px 10px">Sin resultados.</div>';
+    Array.prototype.forEach.call(listaBox.querySelectorAll('.ligaResultadoCliente'), function (d) {
+      d.onclick = function () { elegirClienteLigaMuestra(d.getAttribute('data-codigo')); };
+    });
+  };
+
+  async function elegirClienteLigaMuestra(codigo) {
+    clienteElegido = state.crmClientes.filter(function (c) { return c.codigo === codigo; })[0];
+    if (!clienteElegido) return;
+    buscarInput.style.display = 'none';
+    listaBox.style.display = 'none';
+    var cajaElegido = modal.querySelector('#ligaClienteElegido');
+    cajaElegido.style.display = 'block';
+    modal.querySelector('#ligaClienteNombre').textContent = clienteElegido.organizacion;
+    modal.querySelector('#ligaClienteContacto').textContent =
+      (clienteElegido.nombreContacto || 'Sin contacto') + (clienteElegido.correo ? ' · ' + clienteElegido.correo : ' · sin correo');
+
+    var sel = modal.querySelector('#ligaContactoSel');
+    sel.innerHTML = '<option value="">' +
+      escapeHtml(clienteElegido.nombreContacto || 'Contacto principal') +
+      (clienteElegido.correo ? ' (' + escapeHtml(clienteElegido.correo) + ')' : '') + '</option>';
+    var rc = await api('listarContactosAdicionalesCRM', { clienteCodigo: codigo });
+    if (rc.ok) {
+      rc.data.forEach(function (c) {
+        var opt = document.createElement('option');
+        opt.value = c.codigo;
+        opt.textContent = c.nombreContacto + (c.correo ? ' (' + c.correo + ')' : '');
+        sel.appendChild(opt);
+      });
+    }
+    actualizarBotonGenerar();
+  }
+  modal.querySelector('#btnLigaCambiarCliente').onclick = function () {
+    clienteElegido = null;
+    buscarInput.style.display = '';
+    listaBox.style.display = '';
+    modal.querySelector('#ligaClienteElegido').style.display = 'none';
+    buscarInput.value = '';
+    listaBox.innerHTML = '';
+    actualizarBotonGenerar();
+  };
+
+  modal.querySelector('#ligaGenerar').onclick = async function () {
+    if (!clienteElegido) return;
+    var herramientas = Array.prototype.map.call(modal.querySelectorAll('.ligaHerramientaChk:checked'), function (c) { return c.value; });
+    if (!herramientas.length) return;
+    var contactoCodigo = modal.querySelector('#ligaContactoSel').value;
+    var btn = modal.querySelector('#ligaGenerar');
+    btn.disabled = true; btn.textContent = 'Generando...';
+    var msgBox = modal.querySelector('#ligaMsg');
+    msgBox.innerHTML = '';
+    var okCount = 0, erroresHtml = '';
+    for (var i = 0; i < herramientas.length; i++) {
+      var clave = herramientas[i];
+      var cfg = MUESTRAS_ABIERTAS_CATALOGO.filter(function (m) { return m.clave === clave; })[0];
+      var r = await api('generarEnlaceMuestra', {
+        clienteCodigo: clienteElegido.codigo, contactoCodigo: contactoCodigo, herramienta: clave,
+        baseUrl: MUESTRAS_ABIERTAS_BASE_URL + cfg.archivo
+      });
+      if (r.ok) okCount++;
+      else erroresHtml += '<div class="msg error">' + escapeHtml(cfg.nombre) + ': ' + escapeHtml(r.error) + '</div>';
+    }
+    btn.disabled = false; btn.textContent = 'Generar liga(s)';
+    msgBox.innerHTML = (okCount ? '<div class="msg ok">Se generaron ' + okCount + ' liga(s) correctamente.</div>' : '') + erroresHtml;
+    if (okCount) setTimeout(function () { modal.remove(); renderCRMMuestraAbierta(); }, 1200);
+  };
 }
 
 /* ---------------- Mailing (Clientes e Interesados) ---------------- */
