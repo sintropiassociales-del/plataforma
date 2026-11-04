@@ -6460,23 +6460,43 @@ async function renderCRMMuestraAbierta() {
 
   enlaces.sort(function (a, b) { return (b.fechaGeneracion || '').localeCompare(a.fechaGeneracion || ''); });
 
-  var filasEnlaces = enlaces.length === 0
+  // Tablero por estatus (Pendiente → Terminados), en vez de una tabla
+  // plana — "Terminados" es el estatus "Completado" que pone
+  // apiCompletarEnlaceMuestra en cuanto la persona termina el
+  // cuestionario y ve su resultado inicial (ver comentario en
+  // WebApp.gs), sin esperar a que llene el formulario final.
+  var COLUMNAS_TABLERO_MUESTRA = [
+    { estatus: 'Pendiente', titulo: 'Pendiente', color: '#B8660A' },
+    { estatus: 'Completado', titulo: 'Terminados', color: 'var(--ok)' }
+  ];
+  var tableroEnlacesHtml = enlaces.length === 0
     ? '<p class="subtle">Todavía no se ha generado ninguna liga.</p>'
-    : '<div class="tablaScrollX"><table><thead><tr><th>Cliente</th><th>Herramienta</th><th>Contacto</th><th>Estatus</th><th>Generada</th><th>Usada</th><th>Liga</th></tr></thead><tbody>' +
-      enlaces.map(function (e) {
-        var pill = e.estatus === 'Completado'
-          ? '<span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;background:#E4F7EA;color:var(--ok)">Completado</span>'
-          : '<span style="display:inline-block;padding:2px 10px;border-radius:12px;font-size:12px;font-weight:600;background:#FFF1E4;color:#B8660A">Pendiente</span>';
-        return '<tr>' +
-          '<td>' + escapeHtml(e.clienteCodigo) + '</td>' +
-          '<td>' + escapeHtml(_nombreMuestraAbierta(e.herramienta)) + '</td>' +
-          '<td>' + escapeHtml(e.nombreContacto || '—') + '<div class="subtle">' + escapeHtml(e.correo || '') + '</div></td>' +
-          '<td>' + pill + '</td>' +
-          '<td>' + escapeHtml(e.fechaGeneracion || '') + '</td>' +
-          '<td>' + escapeHtml(e.fechaUso || '—') + '</td>' +
-          '<td><button class="small secondary" data-copyliga="' + escapeHtml(e.liga) + '">Copiar liga</button></td>' +
-        '</tr>';
-      }).join('') + '</tbody></table></div>';
+    : '<div style="display:flex;gap:16px;overflow-x:auto;padding-bottom:6px;align-items:flex-start">' +
+      COLUMNAS_TABLERO_MUESTRA.map(function (col) {
+        var deEstaColumna = enlaces.filter(function (e) { return (e.estatus || 'Pendiente') === col.estatus; });
+        var tarjetasHtml = deEstaColumna.length === 0
+          ? '<p class="subtle" style="padding:2px">Sin ligas aquí.</p>'
+          : deEstaColumna.map(function (e) {
+              var cliente = state.crmClientes.filter(function (c) { return c.codigo === e.clienteCodigo; })[0];
+              return '<div class="card" style="padding:14px 16px;margin-bottom:10px">' +
+                '<div style="font-weight:700;font-size:14px;margin-bottom:2px">' + escapeHtml(cliente ? cliente.organizacion : e.clienteCodigo) + '</div>' +
+                '<div style="font-size:13px;color:var(--purple-dark);font-weight:600;margin-bottom:6px">' + escapeHtml(_nombreMuestraAbierta(e.herramienta)) + '</div>' +
+                '<div class="subtle">' + escapeHtml(e.nombreContacto || '—') + (e.correo ? ' · ' + escapeHtml(e.correo) : '') + '</div>' +
+                '<div class="subtle" style="margin-top:4px">Generada: ' + escapeHtml(e.fechaGeneracion || '—') +
+                  (e.fechaUso ? '<br>Usada: ' + escapeHtml(e.fechaUso) : '') + '</div>' +
+                '<div style="margin-top:10px"><button class="small secondary" data-copyliga="' + escapeHtml(e.liga) + '">Copiar liga</button></div>' +
+              '</div>';
+            }).join('');
+        return '<div style="flex:1;min-width:260px">' +
+          '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">' +
+            '<span style="width:9px;height:9px;border-radius:50%;background:' + col.color + ';display:inline-block;flex-shrink:0"></span>' +
+            '<strong style="font-size:14px">' + col.titulo + '</strong>' +
+            '<span class="subtle">' + deEstaColumna.length + '</span>' +
+          '</div>' +
+          tarjetasHtml +
+        '</div>';
+      }).join('') +
+    '</div>';
 
   var filasSolicitudes = solicitudes.length === 0 ? '' : solicitudes.map(function (s) {
     return '<div class="card" style="padding:12px 14px;margin-bottom:8px">' +
@@ -6497,7 +6517,7 @@ async function renderCRMMuestraAbierta() {
     '</div>' +
     (solicitudes.length ? '<h3 style="margin:0 0 10px">¿Deseas otra prueba? — solicitudes pendientes</h3>' + filasSolicitudes : '') +
     '<h3 style="margin:18px 0 10px">Ligas generadas</h3>' +
-    filasEnlaces;
+    tableroEnlacesHtml;
 
   var btnNueva = box.querySelector('#btnNuevaLigaMuestra');
   if (btnNueva) btnNueva.onclick = function () { abrirModalGenerarLigaMuestra(); };
