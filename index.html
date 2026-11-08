@@ -5211,17 +5211,18 @@ async function abrirModalVerCorreosProgramados() {
           '<td>' + escapeHtml(c.fechaProgramada) + '</td>' +
           '<td>' + escapeHtml(c.tipo) + '</td>' +
           '<td>' + escapeHtml(c.asunto) + '</td>' +
+          '<td>' + escapeHtml(c.remitenteCorreo || 'comunicacion@sintropiasocial.com') + '</td>' +
           '<td>' + (c.adjuntos || 0) + '</td>' +
           '<td>' + escapeHtml(c.estatus) + (c.resultado ? ' <span class="subtle" title="' + escapeHtml(c.resultado) + '">ⓘ</span>' : '') + '</td>' +
           '<td>' + (c.estatus === 'Pendiente' ? '<button type="button" class="small secondary btnCancelarProg" data-codigo="' + escapeHtml(c.codigo) + '">Cancelar</button>' : '') + '</td>' +
         '</tr>';
       }).join('')
-    : '<tr><td colspan="6" class="subtle">No hay correos programados.</td></tr>';
+    : '<tr><td colspan="7" class="subtle">No hay correos programados.</td></tr>';
   var modalProg = el(
     '<div class="modal-bg"><div class="modal wide">' +
       '<h2>Correos programados</h2>' +
       '<p class="subtle">El estatus "Pendiente" quiere decir que todavía no llega su fecha/hora de envío, o que el disparador automático (cada 15 min) aún no lo procesa. Pasa el mouse sobre la ⓘ junto al estatus para ver el resultado exacto (cuántos se mandaron, o el error si algo falló).</p>' +
-      '<div style="overflow-x:auto"><table><thead><tr><th>Fecha y hora</th><th>Tipo</th><th>Asunto</th><th>Adjuntos</th><th>Estatus</th><th></th></tr></thead><tbody>' + filasHtml + '</tbody></table></div>' +
+      '<div style="overflow-x:auto"><table><thead><tr><th>Fecha y hora</th><th>Tipo</th><th>Asunto</th><th>Remitente</th><th>Adjuntos</th><th>Estatus</th><th></th></tr></thead><tbody>' + filasHtml + '</tbody></table></div>' +
       '<div class="modal-actions"><button class="secondary" id="progCerrar">Cerrar</button></div>' +
     '</div></div>'
   );
@@ -6694,12 +6695,23 @@ function _reemplazarTagsPreview(texto, registro, campos) {
 var SITIO_WEB_CORREO_CRM = 'https://sintropiassociales-del.github.io/';
 var REMITENTE_CORREO_CRM_PREVIEW = 'comunicacion@sintropiasocial.com';
 
+// Remitentes habilitados para el selector "Enviar desde" del mailing CRM —
+// deben coincidir exactamente con las claves de REMITENTES_CRM_PERMITIDOS
+// en WebApp.gs (el backend es quien de verdad valida/resuelve la clave; esto
+// es solo para pintar el <select> y la vista previa del pie del correo).
+var REMITENTES_CRM = [
+  { clave: 'comunicacion', correo: 'comunicacion@sintropiasocial.com', etiqueta: 'Comunicación — comunicacion@sintropiasocial.com' },
+  { clave: 'contacto', correo: 'contacto@sintropiasocial.com', etiqueta: 'Contacto Sintropía — contacto@sintropiasocial.com' },
+  { clave: 'dsalgado', correo: 'dsalgado@sintropiasocial.com', etiqueta: 'David Salgado — dsalgado@sintropiasocial.com' }
+];
+
 // Espejo (solo visual, para la vista previa) del sobre de correo que arma
 // _envolverHtmlCorreoCRM en WebApp.gs — encabezado morado + el cuerpo + el
 // pie con el wordmark, el sitio y el correo de contacto. Si cambias el
 // diseño allá, refleja el mismo cambio aquí para que lo que ve quien
 // redacta coincida con lo que de verdad se envía.
-function _envolverHtmlCorreoPreview(cuerpoHtml) {
+function _envolverHtmlCorreoPreview(cuerpoHtml, correoRemitente) {
+  var correo = correoRemitente || REMITENTE_CORREO_CRM_PREVIEW;
   return '<div style="font-family:Arial,Helvetica,sans-serif;max-width:560px;margin:0 auto;color:#2c2c2c">' +
     '<div style="background:#631EEB;padding:18px 24px;border-radius:10px 10px 0 0">' +
       '<span style="color:#fff;font-size:17px;font-weight:700">Sintropía <span style="color:#FF7929">Social</span></span>' +
@@ -6713,7 +6725,7 @@ function _envolverHtmlCorreoPreview(cuerpoHtml) {
         '<div style="font-size:12px;color:#8a8a8a;line-height:1.6">' +
           '<a href="' + SITIO_WEB_CORREO_CRM + '" style="color:#631EEB;text-decoration:none">Sintropía Social</a>' +
           '&nbsp;·&nbsp;' +
-          '<a href="mailto:' + REMITENTE_CORREO_CRM_PREVIEW + '" style="color:#631EEB;text-decoration:none">' + REMITENTE_CORREO_CRM_PREVIEW + '</a>' +
+          '<a href="mailto:' + correo + '" style="color:#631EEB;text-decoration:none">' + correo + '</a>' +
         '</div>' +
       '</div>' +
     '</div>' +
@@ -6787,6 +6799,12 @@ async function abrirModalEnviarCorreo(tipo, codigos) {
           '<button class="small primary" id="btnGenerarIA">Generar borrador</button>' +
         '</div>' +
       '</div>' +
+      '<label>Enviar desde</label>' +
+      '<select id="correoRemitente">' +
+        REMITENTES_CRM.map(function (r) {
+          return '<option value="' + escapeHtml(r.clave) + '"' + (r.clave === 'comunicacion' ? ' selected' : '') + '>' + escapeHtml(r.etiqueta) + '</option>';
+        }).join('') +
+      '</select>' +
       '<label>Asunto</label><input type="text" id="correoAsunto" placeholder="Ej: Novedades de <<Organización>>">' +
       '<div class="toolbar" style="gap:10px;flex-wrap:wrap;align-items:flex-start">' +
         '<div style="flex:1;min-width:220px"><label>CC (copia, opcional)</label><input type="text" id="correoCC" placeholder="correo1@ejemplo.com, correo2@ejemplo.com"></div>' +
@@ -6839,6 +6857,10 @@ async function abrirModalEnviarCorreo(tipo, codigos) {
     sel.addRange(rangoGuardado);
   }
 
+  var remitenteSel = modal.querySelector('#correoRemitente');
+  function remitenteElegido() {
+    return REMITENTES_CRM.filter(function (r) { return r.clave === remitenteSel.value; })[0] || REMITENTES_CRM[0];
+  }
   function actualizarVistaPrevia() {
     var caja = modal.querySelector('#correoVistaPrevia');
     var muestra = conCorreo[0];
@@ -6850,11 +6872,12 @@ async function abrirModalEnviarCorreo(tipo, codigos) {
       '<p class="subtle" style="margin-bottom:4px">Vista previa para: ' + escapeHtml(nombreMuestra) + '</p>' +
       '<p class="subtle" style="margin:0 0 8px"><b>Asunto:</b> ' + (escapeHtml(asuntoPrev) || '(sin asunto)') + '</p>' +
       '<div style="border:1px solid #eee;border-radius:8px;padding:16px;background:#fafafa">' +
-        _envolverHtmlCorreoPreview(cuerpoPrev || '<span class="subtle">(sin cuerpo)</span>') +
+        _envolverHtmlCorreoPreview(cuerpoPrev || '<span class="subtle">(sin cuerpo)</span>', remitenteElegido().correo) +
       '</div>';
   }
   asuntoInput.oninput = actualizarVistaPrevia;
   cuerpoDiv.oninput = actualizarVistaPrevia;
+  remitenteSel.onchange = actualizarVistaPrevia;
   actualizarVistaPrevia();
 
   /* -------- Adjuntos: subir, listar, quitar -------- */
@@ -6904,16 +6927,17 @@ async function abrirModalEnviarCorreo(tipo, codigos) {
             '<td>' + escapeHtml(c.fechaProgramada) + '</td>' +
             '<td>' + escapeHtml(c.tipo) + '</td>' +
             '<td>' + escapeHtml(c.asunto) + '</td>' +
+            '<td>' + escapeHtml(c.remitenteCorreo || 'comunicacion@sintropiasocial.com') + '</td>' +
             '<td>' + (c.adjuntos || 0) + '</td>' +
             '<td>' + escapeHtml(c.estatus) + (c.resultado ? ' <span class="subtle" title="' + escapeHtml(c.resultado) + '">ⓘ</span>' : '') + '</td>' +
             '<td>' + (c.estatus === 'Pendiente' ? '<button type="button" class="small secondary btnCancelarProg" data-codigo="' + escapeHtml(c.codigo) + '">Cancelar</button>' : '') + '</td>' +
           '</tr>';
         }).join('')
-      : '<tr><td colspan="6" class="subtle">No hay correos programados.</td></tr>';
+      : '<tr><td colspan="7" class="subtle">No hay correos programados.</td></tr>';
     var modalProg = el(
       '<div class="modal-bg"><div class="modal wide">' +
         '<h2>Correos programados</h2>' +
-        '<div style="overflow-x:auto"><table><thead><tr><th>Fecha y hora</th><th>Tipo</th><th>Asunto</th><th>Adjuntos</th><th>Estatus</th><th></th></tr></thead><tbody>' + filasHtml + '</tbody></table></div>' +
+        '<div style="overflow-x:auto"><table><thead><tr><th>Fecha y hora</th><th>Tipo</th><th>Asunto</th><th>Remitente</th><th>Adjuntos</th><th>Estatus</th><th></th></tr></thead><tbody>' + filasHtml + '</tbody></table></div>' +
         '<div class="modal-actions"><button class="secondary" id="progCerrar">Cerrar</button></div>' +
       '</div></div>'
     );
@@ -7049,6 +7073,7 @@ async function abrirModalEnviarCorreo(tipo, codigos) {
     var programar = programarChk.checked;
     var fechaProgramada = fechaInput.value;
     var adjuntosIds = adjuntos.map(function (a) { return a.id; }).join(',');
+    var remitente = remitenteSel.value;
 
     if (!asunto) { msgBox.innerHTML = '<div class="msg error">Falta el asunto del correo.</div>'; return; }
     if (!cuerpo) { msgBox.innerHTML = '<div class="msg error">Falta el cuerpo del correo.</div>'; return; }
@@ -7065,8 +7090,8 @@ async function abrirModalEnviarCorreo(tipo, codigos) {
     btn.disabled = true; btn.textContent = programar ? 'Programando...' : 'Enviando...';
 
     var r = programar
-      ? await api('programarCorreoCRM', { tipo: tipo, codigos: codigos, asunto: asunto, cuerpo: cuerpo, fechaEnvio: fechaProgramada, adjuntosIds: adjuntosIds, cc: cc, bcc: bcc, incluirContactosAdicionales: incluirContactosAdicionales })
-      : await api('enviarCorreoCRM', { tipo: tipo, codigos: codigos, asunto: asunto, cuerpo: cuerpo, adjuntosIds: adjuntosIds, cc: cc, bcc: bcc, incluirContactosAdicionales: incluirContactosAdicionales });
+      ? await api('programarCorreoCRM', { tipo: tipo, codigos: codigos, asunto: asunto, cuerpo: cuerpo, fechaEnvio: fechaProgramada, adjuntosIds: adjuntosIds, cc: cc, bcc: bcc, incluirContactosAdicionales: incluirContactosAdicionales, remitente: remitente })
+      : await api('enviarCorreoCRM', { tipo: tipo, codigos: codigos, asunto: asunto, cuerpo: cuerpo, adjuntosIds: adjuntosIds, cc: cc, bcc: bcc, incluirContactosAdicionales: incluirContactosAdicionales, remitente: remitente });
 
     btn.disabled = false; btn.textContent = programar ? 'Programar correo' : 'Enviar correo';
 
